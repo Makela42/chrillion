@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Chrillion · the Christmas daily run</title>
+  <meta name="description" content="7 Christmas prompts. 25 seconds each. The rarer your answer, the more you score.">
+  <meta name="theme-color" content="#0f1f17">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎄</text></svg>">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Chrillion · the Christmas daily run">
+  <meta property="og:description" content="7 Christmas prompts. 25 seconds each. The rarer your answer, the more you score.">
+  <meta property="og:image" content="/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Jersey+15&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas id="snow" aria-hidden="true"></canvas>
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="appbar" id="appbar">
+    <button class="wordmark" id="btn-home" data-name>Chrillion</button>
+    <div class="appbar-actions">
+      <button class="icon-btn" id="btn-music" aria-label="Music" aria-pressed="false" title="Music">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-sfx" aria-label="Sound effects" aria-pressed="true" title="Sound effects">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="mute" d="m16 9 6 6m0-6-6 6"/></svg>
+      </button>
+      <button class="pill-gold" id="btn-unlock-top"><i data-sprite="gift" data-size="18"></i><span>Unlock</span></button>
+      <button class="icon-btn" id="btn-menu" aria-label="Open menu" title="Menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ============ HOME ============ -->
+    <section class="screen" id="menu">
+      <div class="hero">
+        <div class="hero-text">
+          <p class="eyebrow" id="hero-eyebrow">Daily Sleigh Run</p>
+          <h1 class="hero-title">Your daily seven.</h1>
+          <p class="hero-sub" id="hero-sub">7 Christmas prompts · 25 seconds each</p>
+        </div>
+        <canvas class="hero-knit" id="hero-knit" aria-hidden="true"></canvas>
+      </div>
+
+      <div class="tiles-main">
+        <button class="tile tile-daily" id="btn-daily">
+          <span class="tile-ico" data-sprite="play" data-size="22"></span>
+          <span class="tile-text"><b>Today's Sleigh Run</b><small id="daily-sub"></small></span>
+          <span class="badge badge-streak" id="streak-badge" hidden></span>
+        </button>
+        <button class="tile tile-online" id="btn-online">
+          <span class="tile-ico" data-sprite="people" data-size="22"></span>
+          <span class="tile-text"><b>Play Online</b><small>Live rooms · play together</small></span>
+          <span class="badge badge-new">NEW</span>
+        </button>
+      </div>
+
+      <div class="tiles-grid">
+        <button class="tile-sm" id="btn-unlimited"><span class="tile-sm-ico" data-sprite="infinity" data-size="26"></span><span class="tile-text"><b>Unlimited</b><small id="unl-sub">Fresh runs</small></span></button>
+        <button class="tile-sm" id="btn-archive"><span class="tile-sm-ico" data-sprite="calendar" data-size="26"></span><span class="tile-text"><b>Archive</b><small id="arch-sub">Past runs</small></span></button>
+        <button class="tile-sm" id="btn-stats"><span class="tile-sm-ico" data-sprite="chart" data-size="26"></span><span class="tile-text"><b>Stats</b><small id="stats-sub">Streaks & records</small></span></button>
+        <button class="tile-sm" id="btn-how"><span class="tile-sm-ico" data-sprite="question" data-size="26"></span><span class="tile-text"><b>How to play</b><small>Tiers & scoring</small></span></button>
+      </div>
+
+      <p class="xmas-count" id="xmas-count"></p>
+      <p class="next-daily" data-countdown></p>
+    </section>
+
+    <!-- ============ GAME ============ -->
+    <section class="screen" id="game" hidden>
+      <div class="topbar">
+        <button class="icon-btn" id="btn-quit" aria-label="Back to home">←</button>
+        <ol class="dots" id="dots" aria-label="Progress"></ol>
+        <div class="score-pill"><span id="score">0</span> pts</div>
+      </div>
+
+      <div class="timer" role="progressbar" aria-label="Time left">
+        <div class="timer-fill" id="timer-fill"></div>
+      </div>
+      <div class="timer-label"><span id="timer-sec">25</span>s</div>
+
+      <article class="prompt-card">
+        <p class="prompt-num" id="prompt-num"></p>
+        <h2 class="prompt-text" id="prompt-text"></h2>
+      </article>
+
+      <p class="answer-msg" id="answer-msg" aria-live="polite"></p>
+      <form id="answer-form" autocomplete="off">
+        <input id="answer" type="text" placeholder="Type your answer…" maxlength="60"
+               autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Your answer">
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <div class="feedback" id="feedback" hidden>
+        <div class="fb-emoji" id="fb-emoji"></div>
+        <div class="fb-label" id="fb-label"></div>
+        <div class="fb-points" id="fb-points"></div>
+        <p class="fb-said" id="fb-said"></p>
+        <p class="fb-blurb" id="fb-blurb"></p>
+        <div class="fb-best" id="fb-best"></div>
+        <button class="btn btn-primary" id="btn-next">Next →</button>
+      </div>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section class="screen" id="summary" hidden>
+      <div class="sum-head">
+        <span class="sum-brand" data-name>Chrillion</span>
+        <span class="eyebrow" id="sum-mode"></span>
+      </div>
+      <div class="sum-score-row">
+        <span class="sum-total" id="sum-score">0</span>
+        <span class="sum-side"><span class="sum-max" id="sum-max">/ 700</span><span class="sum-rating" id="sum-rating"></span></span>
+      </div>
+
+      <div class="stat-tiles">
+        <div class="stile"><span class="stile-k" id="st-top-k">Today</span><b id="st-top">—</b><small id="st-rank"></small></div>
+        <div class="stile"><span class="stile-k">Streak</span><b id="st-streak">0</b><small>days</small></div>
+        <div class="stile"><span class="stile-k">Miracles</span><b id="st-mir">0</b><small>this run</small></div>
+      </div>
+
+      <div class="card dist-card" id="dist-card">
+        <div class="card-head"><h3>Where you landed</h3><span>0 → 700</span></div>
+        <svg id="dist-chart" viewBox="0 0 340 172" role="img" aria-label="How your score compares with today's players"></svg>
+        <p class="dist-text" id="dist-text"></p>
+        <p class="dist-note" id="dist-note"></p>
+      </div>
+
+      <div class="card recap-card">
+        <div class="card-head"><h3>Gift log</h3><span>taller = rarer</span></div>
+        <svg id="recap-chart" viewBox="0 0 340 170" role="img" aria-label="Points for each prompt"></svg>
+      </div>
+
+      <div class="sum-grid" id="sum-grid"></div>
+      <div class="sum-actions">
+        <button class="btn btn-primary" id="btn-share">Share result</button>
+        <button class="btn btn-secondary" id="btn-again" hidden>Play another run</button>
+      </div>
+      <button class="upsell" id="upsell" hidden>
+        <span class="upsell-ico" data-sprite="infinity" data-size="26"></span>
+        <span class="upsell-text"><b>Want another go?</b><small>Supporters get endless fresh runs and every past run.</small></span>
+        <span class="upsell-arrow" aria-hidden="true">›</span>
+      </button>
+
+      <div class="bd-title"><h3>Every answer</h3><span>Tap a prompt to see them all</span></div>
+      <ol class="breakdown" id="breakdown"></ol>
+      <button class="btn btn-ghost btn-block missing-btn" id="btn-missing">Missing an answer? Tell us</button>
+
+      <p class="next-daily" data-countdown></p>
+      <button class="btn btn-ghost btn-block" id="btn-menu-home">Back to home</button>
+    </section>
+
+    <!-- ============ ARCHIVE ============ -->
+    <section class="screen" id="archive" hidden>
+      <div class="screen-head">
+        <button class="icon-btn" data-home aria-label="Back to home">←</button>
+        <h2>Archive</h2>
+      </div>
+      <p class="muted" id="archive-note"></p>
+      <ol class="archive-list" id="archive-list"></ol>
+    </section>
+
+    <!-- ============ ONLINE ============ -->
+    <section class="screen" id="online" hidden></section>
+  </main>
+
+  <!-- ============ MENU SHEET ============ -->
+  <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="sheet-panel">
+      <div class="sheet-top">
+        <span class="eyebrow">Menu</span>
+        <button class="icon-btn" id="btn-sheet-close" aria-label="Close menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <h2 class="sheet-title"><span data-name>Chrillion</span><em>.</em></h2>
+      <button class="supporter-card" id="sheet-supporter">
+        <small>Unlimited &amp; archive</small>
+        <b id="sup-title">Become a supporter</b>
+        <span id="sup-sub"></span>
+      </button>
+      <div class="sheet-toggles">
+        <button class="toggle" id="tg-sfx" aria-pressed="true"><span>Sound effects</span><i aria-hidden="true"></i></button>
+        <button class="toggle" id="tg-music" aria-pressed="false"><span>Music</span><i aria-hidden="true"></i></button>
+      </div>
+      <nav class="sheet-list">
+        <button data-go="daily"><b>Today's Sleigh Run</b><span id="sl-daily"></span></button>
+        <button data-go="online"><b>Play Online</b><span>Live rooms with friends</span></button>
+        <button data-go="unlimited"><b>Unlimited</b><span id="sl-unl">Supporters</span></button>
+        <button data-go="archive"><b>Archive</b><span id="sl-archive">Every past run</span></button>
+        <button data-go="stats"><b>My stats</b><span>Streaks &amp; records</span></button>
+        <button data-go="how"><b>How to play</b><span>Tiers &amp; scoring</span></button>
+        <button data-go="faq"><b>FAQ</b><span>Common questions</span></button>
+        <button data-go="feedback"><b>Feedback</b><span>Bugs, missing answers, ideas</span></button>
+      </nav>
+      <p class="sheet-foot" id="sheet-foot"></p>
+    </div>
+  </div>
+
+  <!-- ============ DIALOGS ============ -->
+  <dialog id="dlg-how">
+    <h2>How to play</h2>
+    <p>You get <b>7 Christmas prompts</b> and <b>25 seconds</b> for each. Type <b>one answer</b> per prompt.</p>
+    <p>Every valid answer has a <b>fixed</b> point value set in advance. Common answers score low and rare answers score high, so you see your score as soon as you submit.</p>
+    <ul class="tier-list" id="tier-list"></ul>
+    <p class="muted">The Daily Sleigh Run is the same for everyone and resets at midnight. Unlimited Runs shuffle new prompts every time.</p>
+    <form method="dialog"><button class="btn btn-primary btn-block">Let's go</button></form>
+  </dialog>
+
+  <dialog id="dlg-info">
+    <h2 id="info-title"></h2>
+    <div id="info-body" class="info-body"></div>
+    <form method="dialog"><button class="btn btn-primary btn-block">Got it</button></form>
+  </dialog>
+
+  <dialog id="dlg-stats">
+    <h2>Your stats</h2>
+    <div class="stat-grid" id="stat-grid"></div>
+    <form method="dialog"><button class="btn btn-primary btn-block">Close</button></form>
+  </dialog>
+
+  <dialog id="dlg-paywall">
+    <div class="pay-mark" data-sprite="gift" data-size="56"></div>
+    <h2>Become a supporter</h2>
+    <ul class="perks">
+      <li><i data-sprite="infinity" data-size="22"></i><span><b>Unlimited Runs</b>, freshly shuffled every time</span></li>
+      <li><i data-sprite="calendar" data-size="22"></i><span><b>The full archive</b> of every past Daily Sleigh Run</span></li>
+      <li><i data-sprite="star" data-size="22"></i><span>Helps keep Chrillion free for everyone</span></li>
+    </ul>
+    <p class="price" id="pay-price"></p>
+    <button class="btn btn-primary btn-block" id="btn-buy">Unlock</button>
+    <details class="restore">
+      <summary>Already paid? Restore purchase</summary>
+      <form id="restore-form">
+        <input id="restore-email" type="email" placeholder="Email used at checkout" autocomplete="email" aria-label="Email used at checkout" required>
+        <button class="btn btn-secondary" id="btn-restore" type="submit">Restore</button>
+      </form>
+    </details>
+    <form method="dialog"><button class="btn btn-ghost btn-block">Maybe later</button></form>
+  </dialog>
+
+  <dialog id="dlg-feedback" class="dlg-feedback">
+    <div class="dlg-bar"><span class="eyebrow">Feedback</span>
+      <form method="dialog"><button class="dlg-x" aria-label="Close">✕</button></form></div>
+    <h2>Send us your feedback.</h2>
+    <p>Found a bug, spotted a missing answer or have an idea? We'd love to hear it.</p>
+    <form id="feedback-form" class="fb-form">
+      <label for="fb-email"><b>Your email</b> <span class="muted">(optional)</span></label>
+      <input id="fb-email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="200">
+      <label for="fb-message"><b>Your message</b></label>
+      <textarea id="fb-message" rows="5" maxlength="2000" placeholder="Tell us what happened or what you'd like to see." required></textarea>
+      <p class="muted fb-privacy">Your message (and email, if you add one) is stored privately so we can read it. We'll only use your email to reply.</p>
+      <button class="btn btn-primary btn-block" id="fb-send" type="submit">Send feedback</button>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-share">
+    <h2>Share your run</h2>
+    <canvas class="share-card" id="share-card" width="1080" height="1350" aria-label="Your result card"></canvas>
+    <div class="share-main">
+      <button class="btn btn-primary" id="sh-native">Share…</button>
+      <button class="btn btn-secondary" id="sh-image">Save image</button>
+    </div>
+    <button class="btn btn-ghost btn-block" id="sh-copy">Copy text</button>
+    <p class="share-label">Send it to</p>
+    <div class="share-grid" id="share-grid"></div>
+    <p class="muted share-note">Instagram, TikTok or Snapchat: tap <b>Save image</b>, then post it to your story.</p>
+    <form method="dialog"><button class="btn btn-ghost btn-block">Close</button></form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="config.js"></script>
+  <script src="sounds.js"></script>
+  <script src="sprites.js"></script>
+  <script src="fx.js"></script>
+  <script src="prompts.js"></script>
+  <script src="prompts-2.js"></script>
+  <script src="prompts-3.js"></script>
+  <script src="prompts-4.js"></script>
+  <script src="prompts-5.js"></script>
+  <script src="prompts-6.js"></script>
+  <script src="prompts-7.js"></script>
+  <script src="prompts-8.js"></script>
+  <script src="prompts-9.js"></script>
+  <script src="prompts-10.js"></script>
+  <script src="prompts-11.js"></script>
+  <script src="prompts-12.js"></script>
+  <script src="prompts-13.js"></script>
+  <script src="prompts-14.js"></script>
+  <script src="prompts-15.js"></script>
+  <script src="prompts-16.js"></script>
+  <script src="prompts-17.js"></script>
+  <script src="prompts-18.js"></script>
+  <script src="prompts-19.js"></script>
+  <script src="game.js"></script>
+  <script src="online-core.js"></script>
+  <script src="online-ui.js"></script>
+</body>
+</html>
