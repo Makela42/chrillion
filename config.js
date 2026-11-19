@@ -7,4 +7,5 @@
 window.CHRILLION_ONLINE = {
   supabaseUrl: "https://egwzlshvahwdhtwtkaww.supabase.co",      // e.g. "https://abcdefgh.supabase.co"
   supabaseAnonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVnd3psc2h2YWh3ZGh0d3RrYXd3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTUxMDUyODAsImV4cCI6MjExMDY4MTI4MH0.VVxSl-nM7kMwrALj8I-7izs9zm5N7MsfAyzUc9xyZD8",  // Project Settings → API → the "anon public" / publishable key
+stripePublishableKey: "pk_live_51UdYhUQj8OhrTLfYYogoIijM3dWwctB2jJWPD91Vdz8EqALH7Gw9gbZrC7rnTubWLufPZ5HbeM1tf03rL0kJ4rzi00j7zvpcay"
 };
