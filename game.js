@@ -244,7 +244,7 @@
       const { url } = await api("/api/checkout", { method: "POST" });
       location.href = url;
     } catch (e) {
-      toast("Checkout isn't available right now.");
+     window.open("https://buy.stripe.com/YOUR_LINK_ID", "_blank", "noopener,noreferrer");
       btn.disabled = false;
       btn.textContent = `Unlock for ${CONFIG.price}`;
     }
