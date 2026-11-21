@@ -65,6 +65,8 @@
         </button>
       </div>
 
+      <button class="card tree-card" id="tree-card" hidden><div id="home-tree"></div><span class="tree-cap" id="tree-cap"></span></button>
+
       <div class="tiles-grid">
         <button class="tile-sm" id="btn-unlimited"><span class="tile-sm-ico" data-sprite="infinity" data-size="26"></span><span class="tile-text"><b>Unlimited</b><small id="unl-sub">Fresh runs</small></span></button>
         <button class="tile-sm" id="btn-archive"><span class="tile-sm-ico" data-sprite="calendar" data-size="26"></span><span class="tile-text"><b>Archive</b><small id="arch-sub">Past runs</small></span></button>
@@ -157,6 +159,17 @@
         <span class="upsell-text"><b>Want another go?</b><small>Supporters get endless fresh runs and every past run.</small></span>
         <span class="upsell-arrow" aria-hidden="true">›</span>
       </button>
+
+      <div class="card next-card" id="next-card">
+        <div class="card-head"><h3>Your advent tree</h3><span class="next-streak" id="next-streak"></span></div>
+        <div id="next-tree" class="next-tree"></div>
+        <p class="next-msg" id="next-msg"></p>
+        <p class="next-daily next-count" data-countdown></p>
+        <div class="next-actions">
+          <button class="btn btn-primary" id="btn-next-unl" hidden></button>
+          <button class="btn btn-secondary" id="btn-next-online">Challenge friends online</button>
+        </div>
+      </div>
 
       <div class="bd-title"><h3>Every answer</h3><span>Tap a prompt to see them all</span></div>
       <ol class="breakdown" id="breakdown"></ol>
@@ -295,6 +308,7 @@
   <script src="sounds.js"></script>
   <script src="sprites.js"></script>
   <script src="journey.js"></script>
+  <script src="tree.js"></script>
   <script src="sleigh-art.js"></script>
   <script src="fx.js"></script>
   <script src="scene.js"></script>

@@ -183,7 +183,7 @@
 
   // Each run is mostly general Christmas prompts (5 of 7) plus 2 from the rest of the pool
   // (niche Christmas trivia, word games and everyday categories).
-  const CORE_PER_RUN = 5;
+  const CORE_PER_RUN = 7;
   const CORE_IDS = new Set([
     "reindeer", "xmas-movie", "xmas-song", "tree-decor", "xmas-food", "stocking", "twelve-days", "cookie", "xmas-plant",
     "famous-elf", "tv-special", "xmas-drink", "gingerbread", "xmas-book", "leave-out", "snowman", "xmas-candy", "xmas-spices",
@@ -410,7 +410,8 @@
     $("#hero-sub").textContent = played
       ? `You scored ${total(saved.results)} of ${MAX_SCORE}: ${rating(total(saved.results))}.`
       : "7 Christmas prompts · 25 seconds each";
-    $("#daily-sub").textContent = played ? "See your results" : "Same 7 for everyone";
+    $("#daily-sub").textContent = played ? "Done ✓ · see your results" : streak > 0 ? `Keep your ${streak}-day streak alive!` : "Same 7 for everyone";
+    renderTree($("#home-tree"), true);
     const badge = $("#streak-badge");
     badge.hidden = streak < 1;
     badge.innerHTML = (Spr ? Spr.svg("flame", 14) : "") + `<span>${streak}</span>`;
@@ -659,6 +660,31 @@
     renderFeedback(p, res);
   }
 
+  // ---------- advent tree + "what's next" (the reason to come back tomorrow) ----------
+  function renderTree(el, compact, newDay) {
+    const orn = store.get("ornaments", []);
+    if (compact) {
+      $("#tree-card").hidden = !window.AdventTree || !orn.length;
+      $("#tree-cap").textContent = `Your advent tree · ${orn.length} ornament${orn.length === 1 ? "" : "s"} · ${xmasText()}`;
+    }
+    if (window.AdventTree && el && (orn.length || !compact)) window.AdventTree.render(el, orn, { compact, newDay });
+  }
+  function renderNext() {
+    const daily = state.mode === "daily";
+    const streak = currentStreak();
+    $("#next-card").hidden = !window.AdventTree && !daily;
+    renderTree($("#next-tree"), false, state.fresh ? state.newOrn : null);
+    $("#next-streak").textContent = streak ? `🔥 ${streak}-day streak` : "";
+    $("#next-msg").textContent = daily
+      ? (state.newOrn ? "New ornament hung! Come back tomorrow for another one" : "Come back tomorrow for a new ornament") + (streak ? ` and make your streak ${streak + 1}.` : ".")
+      : "Daily Sleigh Runs hang ornaments on your tree. Don't miss tomorrow's!";
+    state.newOrn = null;
+    const b = $("#btn-next-unl");
+    const free = freeRunLeft();
+    b.hidden = !(isUnlocked() || free);
+    b.textContent = free ? "Play your FREE Unlimited run 🎁" : "Play another run";
+  }
+
   // Jingle chats while you think.
   const SAY = {
     start: ["Think rare. The obvious stuff barely scores!", "Ooh, I know this one… do you?", "Skip the first thing in your head!", "Deep cuts fill the sleigh!", "Dig into that Christmas brain!", "Rare answers = more presents!"],
@@ -754,6 +780,8 @@
         s.lastDay = state.day;
         s.miracles += miracles;
         store.set("stats", s);
+        const orn = store.get("ornaments", []);
+        if (!orn.some((o) => o.day === state.day)) { orn.push({ day: state.day, kind: window.AdventTree ? window.AdventTree.kindFor(score) : "plain" }); store.set("ornaments", orn); state.newOrn = state.day; }
       }
     } else if (state.mode === "archive") {
       saveProgress({ started: state.prompts.length, done: true });
@@ -786,6 +814,7 @@
     const ms = window.Journey && window.Journey.reached(score);
     $("#sum-journey").textContent = ms ? `You reached the ${ms.name}!` : "Score 50 to reach the Candy Cane!";
     track("run_complete", { mode: state.mode, score });
+    renderNext();
     $("#sum-grid").innerHTML = state.results.map((r) => tierSprite(r.tier, 30)).join("");
     $("#btn-again").hidden = state.mode !== "unlimited";
     $("#upsell").hidden = isUnlocked();
@@ -1418,6 +1447,9 @@
     $("#btn-menu-home").addEventListener("click", () => showScreen("menu"));
     $$("[data-home]").forEach((b) => b.addEventListener("click", () => showScreen("menu")));
     $("#btn-again").addEventListener("click", startUnlimited);
+    $("#btn-next-unl").addEventListener("click", startUnlimited);
+    $("#btn-next-online").addEventListener("click", openOnline);
+    $("#tree-card").addEventListener("click", () => toast("Finish each Daily Sleigh Run to hang a new ornament. Better runs earn rarer ones!"));
     $("#upsell").addEventListener("click", openPaywall);
     $("#btn-share").addEventListener("click", openShare);
     $("#feedback-form").addEventListener("submit", sendFeedback);
