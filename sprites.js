@@ -1,5 +1,5 @@
 /*
-  Chrillion art: one hand-drawn pixel sprite set (the "knitted sweater" look).
+  Merrillion art: one hand-drawn pixel sprite set (the "knitted sweater" look).
   Every icon, tier mark, avatar and animation uses these, so the art style stays consistent.
 */
 (() => {

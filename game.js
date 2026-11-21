@@ -5,7 +5,7 @@
   // CONFIG: change these freely
   // =====================================================================
   const CONFIG = {
-    name: "Chrillion",
+    name: "Merrillion",
     promptsPerDive: 7,
     secondsPerPrompt: 25,
     epoch: "2026-12-01",      // the date of Daily Sleigh Run #1 (YYYY-MM-DD); earlier days show as "Preview"
@@ -17,7 +17,7 @@
 
   // Fixed point tiers. Every answer in the prompt files belongs to exactly one.
   const TIERS = {
-    miracle: { pts: 100, label: "Christmas Miracle", emoji: "⭐", desc: "The one handpicked best answer" },
+    miracle: { pts: 100, label: "One in a Merrillion", emoji: "⭐", desc: "The one handpicked best answer" },
     t75:     { pts: 75,  label: "Rare Find",         emoji: "🎁", desc: "Real deep cut" },
     t50:     { pts: 50,  label: "Good Pick",         emoji: "🎄", desc: "Solid, not everyone gets it" },
     t25:     { pts: 25,  label: "Classic",           emoji: "⛄", desc: "Well known" },
@@ -34,7 +34,7 @@
 
   // Tidy the answer lists once on load: if the same answer was listed in two tiers,
   // keep it only in the more common one (so "Santa Claus" is Obvious, never a Rare Find).
-  // The handpicked Christmas Miracle and the Regifted trap always keep their spot.
+  // The handpicked One in a Merrillion and the Regifted trap always keep their spot.
   function tidyPrompts() {
     PROMPTS.forEach((p) => {
       const claimed = new Set();
@@ -365,7 +365,7 @@
     if (window.Fx && id !== "game" && id !== "summary") window.Fx.clear();
     if (window.Scene && id !== "game") window.Scene.stop();
     if (window.Title && id !== "menu") window.Title.stop();
-    if (id !== "online" && window.ChrillionOnlineUI && window.ChrillionOnlineUI.isOpen()) window.ChrillionOnlineUI.leave();
+    if (id !== "online" && window.MerrillionOnlineUI && window.MerrillionOnlineUI.isOpen()) window.MerrillionOnlineUI.leave();
   }
 
   function xmasText() {
@@ -464,7 +464,7 @@
   }
 
   function openOnline() {
-    if (window.ChrillionOnlineUI) { showScreen("online"); window.ChrillionOnlineUI.open(); }
+    if (window.MerrillionOnlineUI) { showScreen("online"); window.MerrillionOnlineUI.open(); }
     else toast("Online play is loading… try again in a moment.");
   }
 
@@ -636,7 +636,7 @@
 
   // Jingle the elf reacts to every answer.
   const REACTIONS = {
-    miracle: ["NO WAY. A Christmas Miracle!", "Elf-credible! Nobody gets that one.", "Rare drop! Santa's taking notes.", "Absolute cinema.", "You actually ate that."],
+    miracle: ["NO WAY. A One in a Merrillion!", "Elf-credible! Nobody gets that one.", "Rare drop! Santa's taking notes.", "Absolute cinema.", "You actually ate that."],
     t75: ["Big brain pick!", "Ooh, deep cut. Respect.", "That's actually so good.", "Locked in!", "W answer."],
     t50: ["Nice, not everyone gets that!", "Solid pick.", "Clutch!", "Chat, we're so back.", "Chilly pick, I like it."],
     t25: ["Classic. Can't go wrong.", "Respect the classics.", "A crowd favourite!", "Safe and sound."],
@@ -1078,7 +1078,7 @@
     ctx.fillText("CAN YOU BEAT IT?", W / 2, H - 140);
     ctx.fillStyle = "#f2c14e";
     ctx.font = '46px "Jersey 15", Impact, sans-serif';
-    ctx.fillText(ONLINE ? location.host.toUpperCase() : "CHRILLION", W / 2, H - 92);
+    ctx.fillText(ONLINE ? location.host.toUpperCase() : "MERRILLION", W / 2, H - 92);
   }
 
   async function openShare() {
@@ -1090,7 +1090,7 @@
   async function nativeShare() {
     const text = shareText();
     const blob = await new Promise((r) => $("#share-card").toBlob(r, "image/png"));
-    const file = blob ? new File([blob], "chrillion-run.png", { type: "image/png" }) : null;
+    const file = blob ? new File([blob], "merrillion-run.png", { type: "image/png" }) : null;
     try {
       if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
       if (navigator.share) { await navigator.share({ title: shareTitle(), text, url: shareUrl() || undefined }); return; }
@@ -1100,7 +1100,7 @@
 
   function saveImage() {
     const a = document.createElement("a");
-    a.download = "chrillion-run.png";
+    a.download = "merrillion-run.png";
     a.href = $("#share-card").toDataURL("image/png");
     document.body.appendChild(a);
     a.click();
@@ -1197,20 +1197,20 @@
 
   // FAQ as an accordion: tap a question to open it.
   const FAQ = [
-    ["What is Chrillion?", "A Christmas word game. Every day there's a Daily Sleigh Run of 7 Christmas prompts, like “Name one of Santa's reindeer”. You get 25 seconds per prompt, and the rarer your answer, the more it's worth."],
+    ["What is Merrillion?", "A Christmas word game. Every day there's a Daily Sleigh Run of 7 Christmas prompts, like “Name one of Santa's reindeer”. You get 25 seconds per prompt, and the rarer your answer, the more it's worth."],
     ["Who is the game for?", "Anyone who loves Christmas, trivia or a bit of friendly competition. The prompts are made so most people can answer something, and the deep cuts reward people who really know their stuff."],
-    ["How many prompts are in a Daily Sleigh Run?", "Seven, with 25 seconds each. A perfect run (a Christmas Miracle on every prompt) scores 700."],
-    ["How does rare-answer scoring work?", "Every answer has a fixed value set in advance by how familiar it is: Obvious 10, Classic 25, Good Pick 50, Rare Find 75, and one handpicked Christmas Miracle worth 100. The “clever” answer everyone tries is Regifted, worth 15. Your score never depends on what other players typed."],
+    ["How many prompts are in a Daily Sleigh Run?", "Seven, with 25 seconds each. A perfect run (a One in a Merrillion on every prompt) scores 700."],
+    ["How does rare-answer scoring work?", "Every answer has a fixed value set in advance by how familiar it is: Obvious 10, Classic 25, Good Pick 50, Rare Find 75, and one handpicked One in a Merrillion worth 100. The “clever” answer everyone tries is Regifted, worth 15. Your score never depends on what other players typed."],
     ["Can I try again after a wrong answer?", "Yes. If your answer isn't on the list, the answer bar shakes and you can keep trying until the timer runs out. Once a valid answer lands, it's locked in."],
     ["Do spelling mistakes count?", "Small ones are fine. Capitals, accents and “the” are ignored, and if you're one or two letters off we'll ask “Did you mean…?” so you can confirm."],
     ["How are the answer lists made?", "Each list is pulled together from reference sources (encyclopedias, wikis, film, music and food databases) with some AI help, then cleaned up and checked. Different spellings of the same answer are merged."],
-    ["Why is the Christmas Miracle sometimes less rare than a Rare Find?", "It isn't chosen on rarity alone. It's the answer that's most satisfying to land, usually with a fun story behind it, and one that at least a few players actually get."],
+    ["Why is the One in a Merrillion sometimes less rare than a Rare Find?", "It isn't chosen on rarity alone. It's the answer that's most satisfying to land, usually with a fun story behind it, and one that at least a few players actually get."],
     ["Why wasn't my answer accepted?", "It's probably missing from the list, sorry! The lists get updated between runs, so it may count in future."],
     ["When does the Daily Sleigh Run reset?", "At midnight in your time zone. Everyone gets the same 7 prompts that day."],
     ["What happens if I close the game mid-run?", "Your progress is saved. When you come back you'll pick up where you left off, but the prompt you were on when you left counts as out of time."],
     ["Does my progress sync between devices?", "Not yet. Your stats and streak live in this browser. If you're a supporter, use “Restore purchase” with your checkout email to unlock on a new device."],
     ["Can I play with friends?", "Yes! Play Online → Create a private room and send the code, or try Practice with bots. Everyone sits in a circle and takes turns in Pass the Parcel."],
-    ["Is Chrillion free to play?", `The Daily Sleigh Run and online play are free, no account needed. Supporters (${CONFIG.price}, one time) also get Unlimited Runs and the full archive.`],
+    ["Is Merrillion free to play?", `The Daily Sleigh Run and online play are free, no account needed. Supporters (${CONFIG.price}, one time) also get Unlimited Runs and the full archive.`],
   ];
   function openFaq() {
     openInfo("FAQ", `<div class="faq">${FAQ.map(([q, a]) => `<details><summary><span>${esc(q)}</span><i aria-hidden="true"></i></summary><p>${esc(a)}</p></details>`).join("")}</div>`);
@@ -1409,7 +1409,7 @@
     if (!store.get("seenHow", false)) { store.set("seenHow", true); openHow(); }
 
     // Shared with online-ui.js, and a hook for automated tests.
-    window.Chrillion = { judge, key, TIERS, PROMPTS, store, toast, showScreen, esc, CONFIG, tierSprite };
+    window.Merrillion = { judge, key, TIERS, PROMPTS, store, toast, showScreen, esc, CONFIG, tierSprite };
     window.CHRILLION_DEBUG = { judge, key, dailyPrompts, dayNumber, PROMPTS, drawDistribution, renderRecap };
   }
 

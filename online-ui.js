@@ -1,10 +1,10 @@
 /*
-  Chrillion Online: "Pass the Parcel" screens.
+  Merrillion Online: "Pass the Parcel" screens.
   Players sit in a circle; the parcel moves to whoever's turn it is.
 */
 (() => {
   "use strict";
-  const C = window.Chrillion, O = window.ChrillionOnline;
+  const C = window.Merrillion, O = window.MerrillionOnline;
   if (!C || !O) return;
 
   const $ = (s) => document.querySelector(s);
@@ -270,7 +270,7 @@
 
   async function invite() {
     const link = /^https?:/.test(location.protocol) ? `${location.origin}${location.pathname}?room=${client.code}` : "";
-    const text = link ? `Play Pass the Parcel with me on Chrillion! Room ${client.code}: ${link}` : `Join my Chrillion room! Code ${client.code}`;
+    const text = link ? `Play Pass the Parcel with me on Merrillion! Room ${client.code}: ${link}` : `Join my Merrillion room! Code ${client.code}`;
     Sfx.play("share");
     try {
       if (navigator.share && matchMedia("(pointer: coarse)").matches) await navigator.share({ text });
@@ -516,7 +516,7 @@
   }
 
   // ---------- API for game.js ----------
-  window.ChrillionOnlineUI = {
+  window.MerrillionOnlineUI = {
     open() { isOpen = true; if (!client) renderEntry(); },
     leave() { isOpen = false; leave(); root.innerHTML = ""; },
     isOpen: () => isOpen,
@@ -528,6 +528,6 @@
   const room = new URLSearchParams(location.search).get("room");
   if (room && /^[A-Za-z]{4}$/.test(room)) {
     try { history.replaceState(null, "", location.pathname); } catch (e) { /* ignore */ }
-    setTimeout(() => window.ChrillionOnlineUI.joinRoom(room.toUpperCase()), 200);
+    setTimeout(() => window.MerrillionOnlineUI.joinRoom(room.toUpperCase()), 200);
   }
 })();

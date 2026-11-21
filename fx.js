@@ -1,5 +1,5 @@
 /*
-  Chrillion reward animation, drawn on one canvas for smooth motion.
+  Merrillion reward animation, drawn on one canvas for smooth motion.
   Fx.celebrate(tier): the full-colour sleigh flies over and drops shaded gift boxes; rarer answers drop more.
   Presents stay piled up for the whole run. Fx.clear() empties it; Fx.fadeOut() fades it (results screen).
 */

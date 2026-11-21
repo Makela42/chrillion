@@ -1,5 +1,5 @@
 /*
-  Chrillion live scenes: a little pixel-art window that plays while you answer.
+  Merrillion live scenes: a little pixel-art window that plays while you answer.
   Scene.play(n) starts scene n (snowball fight, Santa on the rooftops, sledding); Scene.stop() pauses it.
 */
 (() => {

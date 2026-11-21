@@ -1,5 +1,5 @@
 /*
-  Chrillion sound design: everything is synthesized with the Web Audio API (no audio files).
+  Merrillion sound design: everything is synthesized with the Web Audio API (no audio files).
   Sfx.play(name, arg) for effects; Sfx.setSfx(bool) / Sfx.setMusic(bool) for the toggles.
 */
 (() => {

@@ -1,5 +1,5 @@
 /*
-  Chrillion title scene: a moonlit village with Santa's sleigh flying across the sky.
+  Merrillion title scene: a moonlit village with Santa's sleigh flying across the sky.
   Drawn with smooth canvas shapes (not pixels) so it moves fluidly at full frame rate.
   Title.start() / Title.stop() are called by game.js when the home screen shows or hides.
 */

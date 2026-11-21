@@ -1,4 +1,4 @@
-# Chrillion: the Christmas daily run
+# Merrillion: the Christmas daily run
 
 7 Christmas prompts, 25 seconds each, one answer per prompt. Rarer answers score more (fixed tiers: 100 / 75 / 50 / 25 / 15 / 10 / 0; anything not on the list is **Invalid**).
 - **Daily Sleigh Run**: free, the same for everyone, resets at local midnight.
@@ -31,7 +31,7 @@ Online play works between two tabs of the same browser until Supabase is connect
 
 ### 1. Stripe (payments)
 1. Create an account at stripe.com.
-2. **Product catalog → Add product**: "Chrillion Supporter", **one-time** price. Copy the **Price ID** (`price_…`).
+2. **Product catalog → Add product**: "Merrillion Supporter", **one-time** price. Copy the **Price ID** (`price_…`).
 3. **Developers → API keys**: copy the **Secret key** (`sk_test_…` for testing).
 
 ### 2. GitHub (holds the code)

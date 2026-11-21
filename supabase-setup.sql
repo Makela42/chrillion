@@ -1,4 +1,4 @@
--- Chrillion: run this once in Supabase → SQL Editor → New query → Run.
+-- Merrillion: run this once in Supabase → SQL Editor → New query → Run.
 -- It stores one score per player per daily dive so the results screen can show
 -- "better than X% of today's players". Players can add scores but can't read or edit rows.
 
