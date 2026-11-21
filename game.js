@@ -811,6 +811,7 @@
     $("#sum-rating").textContent = rating(score);
     $("#sum-miles").textContent = `${(score * 10).toLocaleString()} sleigh miles`;
     $("#recap-score").textContent = `${score} pts`;
+    $("#dist-score").textContent = `You: ${score} pts`;
     const ms = window.Journey && window.Journey.reached(score);
     $("#sum-journey").textContent = ms ? `You reached the ${ms.name}!` : "Score 50 to reach the Candy Cane!";
     track("run_complete", { mode: state.mode, score });
