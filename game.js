@@ -11,6 +11,7 @@
     epoch: "2026-12-01",      // the date of Daily Sleigh Run #1 (YYYY-MM-DD); earlier days show as "Preview"
     price: "$2.99",           // display only; the real price is set in Stripe
     apiBase: "",              // where the /api functions live ("" = same site)
+    paymentLink: "https://buy.stripe.com/test_8x28wPcDFeDk5Zs40A5ZC00",   // your Stripe Payment Link (opened by Unlock)
     minPlayersForCurve: 5,    // players needed before the "better than X%" curve appears
   };
 
@@ -282,6 +283,7 @@
   }
 
   async function buy() {
+    if (CONFIG.paymentLink) { location.href = CONFIG.paymentLink; return; }   // Stripe Payment Link; it should redirect back with ?session_id={CHECKOUT_SESSION_ID}
     const btn = $("#btn-buy");
     btn.disabled = true;
     btn.textContent = "Opening checkout…";
