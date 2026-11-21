@@ -12,13 +12,16 @@
   <meta property="og:description" content="7 Christmas prompts. 25 seconds each. The rarer your answer, the more you score.">
   <meta property="og:image" content="/og-image.png">
   <meta name="twitter:card" content="summary_large_image">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":new Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src="https://www.googletagmanager.com/gtm.js?id="+i+dl;f.parentNode.insertBefore(j,f);})(window,document,"script","dataLayer","GTM-PRMRMDT6");</script>
+  <!-- End Google Tag Manager -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jersey+15&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <canvas id="snow" aria-hidden="true"></canvas>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PRMRMDT6" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <!-- ============ TOP BAR ============ -->
   <header class="appbar" id="appbar">
@@ -69,8 +72,10 @@
         <button class="tile-sm" id="btn-how"><span class="tile-sm-ico" data-sprite="question" data-size="26"></span><span class="tile-text"><b>How to play</b><small>Tiers & scoring</small></span></button>
       </div>
 
+      <button class="save-pill" id="btn-account"><span data-sprite="star" data-size="16"></span> Sign in to save your streak</button>
       <p class="xmas-count" id="xmas-count"></p>
       <p class="next-daily" data-countdown></p>
+      <footer class="site-foot"><button data-go="more">+ More games</button><button data-go="privacy">Privacy</button><button data-go="faq">FAQ</button><a href="mailto:merrilion.help@gmail.com">merrilion.help@gmail.com</a></footer>
     </section>
 
     <!-- ============ GAME ============ -->
@@ -81,11 +86,13 @@
         <div class="score-pill"><span id="score">0</span> pts</div>
       </div>
 
+      <div id="journey" class="journey-wrap"></div>
       <div class="timer" role="progressbar" aria-label="Time left">
         <div class="timer-fill" id="timer-fill"></div>
       </div>
       <div class="timer-label"><span id="timer-sec">25</span>s</div>
       <canvas class="scene" id="scene" aria-hidden="true"></canvas>
+      <div class="scene-say" id="scene-say"><span class="say-elf" data-sprite="elf" data-size="30"></span><span class="say-bubble" id="say-text"></span></div>
 
       <article class="prompt-card">
         <p class="prompt-num" id="prompt-num"></p>
@@ -200,7 +207,10 @@
         <button data-go="stats"><b>My stats</b><span>Streaks &amp; records</span></button>
         <button data-go="how"><b>How to play</b><span>Tiers &amp; scoring</span></button>
         <button data-go="faq"><b>FAQ</b><span>Common questions</span></button>
+        <button data-go="account"><b>My account</b><span id="sl-acct">Save your streak</span></button>
         <button data-go="feedback"><b>Feedback</b><span>Bugs, missing answers, ideas</span></button>
+        <button data-go="more"><b>+ More games</b><span>Coming soon</span></button>
+        <button data-go="privacy"><b>Privacy</b><span>What we store</span></button>
       </nav>
       <p class="sheet-foot" id="sheet-foot"></p>
     </div>
@@ -279,9 +289,12 @@
 
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+    <script src="bg.js"></script>
   <script src="config.js"></script>
+  <script src="account.js"></script>
   <script src="sounds.js"></script>
   <script src="sprites.js"></script>
+  <script src="journey.js"></script>
   <script src="sleigh-art.js"></script>
   <script src="fx.js"></script>
   <script src="scene.js"></script>

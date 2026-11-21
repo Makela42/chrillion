@@ -8,7 +8,7 @@
     name: "Merrillion",
     promptsPerDive: 7,
     secondsPerPrompt: 25,
-    epoch: "2026-12-01",      // the date of Daily Sleigh Run #1 (YYYY-MM-DD); earlier days show as "Preview"
+    epoch: "2026-11-21",      // the day the site opened = Daily Sleigh Run #1 (YYYY-MM-DD)
     price: "$3.99",           // display only; the real price is set in Stripe
     apiBase: "",              // where the /api functions live ("" = same site)
     paymentLink: "https://buy.stripe.com/fZufZj3HxePUbGL3r5g7e00",   // your Stripe Payment Link (opened by Unlock)
@@ -255,6 +255,7 @@
   function cleanUrl() { try { history.replaceState(null, "", location.pathname); } catch (e) { /* ignore */ } }
 
   function unlockedNow(msg) {
+    track("unlock");
     Sfx.play("unlock");
     toast(msg);
     renderMenu();
@@ -365,6 +366,7 @@
     if (window.Fx && id !== "game" && id !== "summary") window.Fx.clear();
     if (window.Scene && id !== "game") window.Scene.stop();
     if (window.Title && id !== "menu") window.Title.stop();
+    if (window.BgScene) window.BgScene.setMood(id === "game" ? "game" : id === "summary" ? "summary" : "menu");
     if (id !== "online" && window.MerrillionOnlineUI && window.MerrillionOnlineUI.isOpen()) window.MerrillionOnlineUI.leave();
   }
 
@@ -404,7 +406,7 @@
     const streak = currentStreak();
     const pastDays = Math.max(0, day - 1);
 
-    $("#hero-eyebrow").textContent = day >= 1 ? `Daily Sleigh Run #${day} · ${dayDate(day)}` : "Preview sleigh run · starts Dec 1";
+    $("#hero-eyebrow").textContent = day >= 1 ? `Sleigh Run #${day} · Streak ${streak}` : "Preview sleigh run";
     $("#hero-sub").textContent = played
       ? `You scored ${total(saved.results)} of ${MAX_SCORE}: ${rating(total(saved.results))}.`
       : "7 Christmas prompts · 25 seconds each";
@@ -413,12 +415,15 @@
     badge.hidden = streak < 1;
     badge.innerHTML = (Spr ? Spr.svg("flame", 14) : "") + `<span>${streak}</span>`;
 
-    $("#unl-sub").textContent = unlocked ? "Play as many as you like" : "Supporters only";
-    $("#arch-sub").textContent = pastDays ? `${pastDays} past run${pastDays === 1 ? "" : "s"}` : "Opens Dec 2";
+    $("#unl-sub").textContent = unlocked ? "Play as many as you like" : freeRunLeft() ? "1 free run on us" : "Supporters only";
+    $("#arch-sub").textContent = pastDays ? `${pastDays} past run${pastDays === 1 ? "" : "s"}` : "Opens tomorrow";
     const s = loadStats();
     $("#stats-sub").textContent = s.played ? `Best ${s.best} · streak ${streak}` : "Streaks & records";
     $("#xmas-count").textContent = xmasText();
 
+    const acct = window.Account && window.Account.user();
+    $("#btn-account").lastChild.textContent = acct ? " Signed in · streak saved" : " Sign in to save your streak";
+    $("#sl-acct").textContent = acct ? "Signed in" : "Save your streak";
     const top = $("#btn-unlock-top");
     top.hidden = unlocked;
     renderSheet();
@@ -435,7 +440,7 @@
       ? "Unlimited Runs and the full archive are unlocked. Thank you!"
       : `Every past run + endless fresh runs · ${CONFIG.price} once`;
     $("#sl-daily").textContent = day >= 1 ? `No. ${day}` : "Preview";
-    $("#sl-unl").textContent = unlocked ? "Unlocked ∞" : "Supporters";
+    $("#sl-unl").textContent = unlocked ? "Unlocked ∞" : freeRunLeft() ? "1 free run" : "Supporters";
     $("#sl-archive").textContent = day > 1 ? `${day - 1} past run${day - 1 === 1 ? "" : "s"}` : "Every past run";
     $("#tg-sfx").setAttribute("aria-pressed", String(Sfx.isSfx()));
     $("#tg-music").setAttribute("aria-pressed", String(Sfx.isMusic()));
@@ -460,6 +465,9 @@
       how: openHow,
       faq: openFaq,
       feedback: () => openFeedback(),
+      account: openAccount,
+      more: openMoreGames,
+      privacy: openPrivacy,
     }[where] || (() => {}))();
   }
 
@@ -506,7 +514,7 @@
     startPrompt();
   }
 
-  function startDaily() { startStored("daily", dayNumber()); }
+  function startDaily() { track("run_start", { mode: "daily" }); startStored("daily", dayNumber()); }
 
   function startArchive(day) {
     if (!isUnlocked()) { openPaywall(); return; }
@@ -519,8 +527,14 @@
     startStored("archive", day);
   }
 
+  function freeRunLeft() { return !isUnlocked() && !store.get("freeUnl", false); }
   function startUnlimited() {
-    if (!isUnlocked()) { openPaywall(); return; }
+    if (!isUnlocked()) {
+      if (!freeRunLeft()) { openPaywall(); return; }
+      store.set("freeUnl", true);
+      toast("Your free Unlimited Run, on the house 🎁");
+    }
+    track("run_start", { mode: "unlimited" });
     state = { mode: "unlimited", prompts: randomPrompts(), i: 0, results: [] };
     if (window.Fx) window.Fx.clear();
     showScreen("game");
@@ -546,9 +560,15 @@
     state.answered = false;
     state.lastSec = null;
     $("#prompt-num").textContent = `Prompt ${state.i + 1} of ${state.prompts.length}`;
-    $("#prompt-text").textContent = p.text;
+    // Words drop in one by one.
+    $("#prompt-text").innerHTML = p.text.split(" ").map((w, i) => `<span class="pw" style="--i:${i}">${esc(w)}</span>`).join(" ");
+    const card = $(".prompt-card");
+    card.classList.remove("card-in"); void card.offsetWidth; card.classList.add("card-in");
     $("#feedback").hidden = true;
+    $("#answer-form").classList.remove("shake");   // only shake on an invalid answer
     $("#answer-form").hidden = false;
+    say(pickLine(SAY.start));
+    if (window.Journey) window.Journey.set(total(state.results), false);
     $("#answer-msg").textContent = "";
     state.pending = null;
     const input = $("#answer");
@@ -578,6 +598,8 @@
     $(".timer").classList.toggle("urgent", left <= 5000);
     if (sec !== state.lastSec) {
       if (sec <= 5 && sec >= 1 && state.lastSec !== null) Sfx.play("tick", sec);
+      if (sec === 15) say(pickLine(SAY.mid));
+      if (sec === 6) say(pickLine(SAY.late));
       state.lastSec = sec;
     }
     if (left <= 0) finishPrompt(null, true);
@@ -590,6 +612,8 @@
     f.classList.remove("shake");
     void f.offsetWidth;            // restart the animation
     f.classList.add("shake");
+    setTimeout(() => f.classList.remove("shake"), 420);
+    say(pickLine(SAY.nope));
     Sfx.play("nope");
     $("#answer").select();
   }
@@ -631,7 +655,24 @@
     if (window.Scene) window.Scene.stop();
     if (window.Fx) window.Fx.celebrate(r.tier);
     renderDots();
+    if (window.Journey) window.Journey.set(total(state.results));
     renderFeedback(p, res);
+  }
+
+  // Jingle chats while you think.
+  const SAY = {
+    start: ["Think rare. The obvious stuff barely scores!", "Ooh, I know this one… do you?", "Skip the first thing in your head!", "Deep cuts fill the sleigh!", "Dig into that Christmas brain!", "Rare answers = more presents!"],
+    mid: ["Tick tock, the reindeer are waiting!", "Still thinking? Go weird!", "Halfway there!", "Santa's checking his watch…"],
+    late: ["Quick! The sleigh's leaving!", "Any answer beats no answer!", "Hurry, hurry, hurry!"],
+    nope: ["Not on Santa's list! Try again.", "Hmm, nope. Another one!", "Close… but not quite!"],
+  };
+  const pickLine = (a) => a[Math.floor(Math.random() * a.length)];
+  function say(text) {
+    const b = $("#say-text");
+    if (!b) return;
+    b.textContent = text;
+    const w = b.parentElement;
+    w.classList.remove("say-pop"); void w.offsetWidth; w.classList.add("say-pop");
   }
 
   // Jingle the elf reacts to every answer.
@@ -725,6 +766,7 @@
     }
     state.fresh = true;   // play the count-up + fanfare
     showSummary();
+    if (window.Account) window.Account.push();
   }
 
   // ---------- results ----------
@@ -741,6 +783,9 @@
     $("#sum-rating").textContent = rating(score);
     $("#sum-miles").textContent = `${(score * 10).toLocaleString()} sleigh miles`;
     $("#recap-score").textContent = `${score} pts`;
+    const ms = window.Journey && window.Journey.reached(score);
+    $("#sum-journey").textContent = ms ? `You reached the ${ms.name}!` : "Score 50 to reach the Candy Cane!";
+    track("run_complete", { mode: state.mode, score });
     $("#sum-grid").innerHTML = state.results.map((r) => tierSprite(r.tier, 30)).join("");
     $("#btn-again").hidden = state.mode !== "unlimited";
     $("#upsell").hidden = isUnlocked();
@@ -945,7 +990,7 @@
     drawDistribution(score, null);
     const est = `Better than ~${percentile(simulatedHist(), score)}% of players`;
     const day = state.day;
-    if (day < 1) { setDistText(est, "Estimated curve. Live player comparison starts with Sleigh Run #1 on December 1."); $("#st-rank").textContent = "from Dec 1"; return; }
+    if (day < 1) { setDistText(est, "Estimated curve. Live player comparison starts with Sleigh Run #1."); $("#st-rank").textContent = "soon"; return; }
     if (!cloud()) { setDistText(est, "Estimated curve. Live player comparison turns on once the site is online."); $("#st-rank").textContent = "once online"; return; }
     setDistText(est, "Estimated curve · loading today's players…");
     try {
@@ -1117,7 +1162,7 @@
     const list = $("#archive-list");
     list.innerHTML = "";
     if (today <= 1) {
-      $("#archive-note").textContent = "The archive fills up once Daily Sleigh Runs begin on December 1. Every past run will appear here.";
+      $("#archive-note").textContent = "Every past Daily Sleigh Run lands here, starting tomorrow.";
     } else {
       $("#archive-note").textContent = unlocked
         ? "Play any past Daily Sleigh Run. Archive scores don't affect your streak."
@@ -1147,10 +1192,22 @@
     ["miracle", "t75", "t50", "t25", "trap", "t10", "timeout"].forEach((k) => {
       const t = TIERS[k];
       const li = document.createElement("li");
+      li.style.setProperty("--tc", TIER_COLORS[k]);
+      li.dataset.tier = k;
       li.innerHTML = `<span>${tierSprite(k, 22)}</span><span>${esc(t.label)}<span class="desc">${esc(t.desc)}</span></span><b>${t.pts}</b>`;
       ul.appendChild(li);
     });
     $("#dlg-how").showModal();
+  }
+
+  const CONTACT = "merrilion.help@gmail.com";
+  function track(event, params) { try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
+  function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
+  function openMoreGames() {
+    openInfo("More games", `<div class="more-games"><div class="mg-card"><b>Coming soon</b><p>More daily rare-answer games are being wrapped up in Santa's workshop. 🎁</p></div><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
+  }
+  function openPrivacy() {
+    openInfo("Privacy", `<p>Merrillion keeps your stats and streak in your browser. If you sign in, we store your email and stats in your account so they sync between devices.</p><p>We use Google Analytics (via Google Tag Manager) to count visits and see which features people use. Payments are handled by Stripe; we never see your card.</p><p>Feedback you send is stored so we can read it. We don't sell your data.</p><p>Questions or delete requests: <a href="mailto:${CONTACT}">${CONTACT}</a></p>`);
   }
 
   function openInfo(title, html) {
@@ -1208,9 +1265,9 @@
     ["Why wasn't my answer accepted?", "It's probably missing from the list, sorry! The lists get updated between runs, so it may count in future."],
     ["When does the Daily Sleigh Run reset?", "At midnight in your time zone. Everyone gets the same 7 prompts that day."],
     ["What happens if I close the game mid-run?", "Your progress is saved. When you come back you'll pick up where you left off, but the prompt you were on when you left counts as out of time."],
-    ["Does my progress sync between devices?", "Not yet. Your stats and streak live in this browser. If you're a supporter, use “Restore purchase” with your checkout email to unlock on a new device."],
+    ["Does my progress sync between devices?", "Yes, if you sign in (Menu → My account) we save your streak and stats to your account. Without an account they live in this browser. If you're a supporter, use “Restore purchase” with your checkout email to unlock on a new device."],
     ["Can I play with friends?", "Yes! Play Online → Create a private room and send the code, or try Practice with bots. Everyone sits in a circle and takes turns in Pass the Parcel."],
-    ["Is Merrillion free to play?", `The Daily Sleigh Run and online play are free, no account needed. Supporters (${CONFIG.price}, one time) also get Unlimited Runs and the full archive.`],
+    ["Is Merrillion free to play?", `The Daily Sleigh Run and online play are free, no account needed. Everyone gets one free Unlimited Run. Supporters (${CONFIG.price}, one time) get Unlimited Runs and the full archive.`],
   ];
   function openFaq() {
     openInfo("FAQ", `<div class="faq">${FAQ.map(([q, a]) => `<details><summary><span>${esc(q)}</span><i aria-hidden="true"></i></summary><p>${esc(a)}</p></details>`).join("")}</div>`);
@@ -1353,6 +1410,8 @@
     $("#btn-daily").addEventListener("click", startDaily);
     $("#btn-online").addEventListener("click", openOnline);
     $("#btn-unlimited").addEventListener("click", startUnlimited);
+    $("#btn-account").addEventListener("click", openAccount);
+    $$(".site-foot [data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
     $("#btn-archive").addEventListener("click", openArchive);
     $("#btn-how").addEventListener("click", openHow);
     $("#btn-stats").addEventListener("click", openStats);
@@ -1402,9 +1461,10 @@
     renderMenu();
     updateClocks();
     setInterval(updateClocks, 1000);
-    startSnow();
     handleCheckoutReturn();
     reverifyToken();
+    if (window.Journey) window.Journey.mount($("#journey"));
+    if (window.Account) window.Account.init({ getStats: loadStats, setStats: (s) => { store.set("stats", s); renderMenu(); }, onChange: () => renderMenu() });
 
     if (!store.get("seenHow", false)) { store.set("seenHow", true); openHow(); }
 

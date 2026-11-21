@@ -44,9 +44,7 @@ html, body { margin: 0; overflow-x: hidden; }
 
 body {
   min-height: 100vh;
-  background-color: var(--page);
-  background-image: var(--knit), linear-gradient(180deg, var(--page) 0%, var(--page-deep) 100%);
-  background-attachment: fixed;
+  background: #0b1030;   /* bg.js paints the animated night scene behind everything */
   color: var(--page-ink);
   font-family: var(--font-body);
   font-size: 16px;
@@ -745,3 +743,44 @@ button, a, summary, input { -webkit-tap-highlight-color: transparent; touch-acti
 .breakdown > li[data-tier="timeout"] .bd-prompt, .breakdown > li[data-tier="timeout"] .bd-caret { color: #c9d6e6; }
 .breakdown > li[data-tier="timeout"] .ans-groups { background: var(--patch); color: var(--ink); }
 .ol-locked[data-tier="timeout"] { background: #1b2a44; color: #fff; }
+
+/* ---- festive tier colours in How to play ---- */
+.tier-list li { background: color-mix(in srgb, var(--tc, #999) 16%, transparent); border-left: 6px solid var(--tc, #999); }
+.tier-list li b { color: color-mix(in srgb, var(--tc, #333) 80%, #000); }
+.tier-list li[data-tier="miracle"] { background: linear-gradient(90deg, color-mix(in srgb, var(--tc) 32%, transparent), color-mix(in srgb, var(--tc) 10%, transparent)); }
+.tier-list li[data-tier="timeout"] { background: #1b2a44; color: #fff; border-left-color: #fff; }
+.tier-list li[data-tier="timeout"] .desc, .tier-list li[data-tier="timeout"] b { color: #fff; }
+
+/* ---- prompt entrance ---- */
+.prompt-card.card-in { animation: cardIn 0.55s cubic-bezier(.2,.9,.25,1.15); }
+@keyframes cardIn { from { opacity: 0; transform: translateY(18px) scale(0.96) rotate(-0.6deg); } to { opacity: 1; transform: none; } }
+.pw { display: inline-block; opacity: 0; transform: translateY(14px) scale(0.85); filter: blur(3px); animation: pwIn 0.5s cubic-bezier(.2,.9,.3,1.25) forwards; animation-delay: calc(0.12s + var(--i) * 0.055s); }
+@keyframes pwIn { to { opacity: 1; transform: none; filter: none; } }
+
+/* ---- elf chatter during prompts ---- */
+.scene-say { display: flex; align-items: center; gap: 8px; justify-content: center; margin: -4px 0 4px; min-height: 34px; }
+.say-bubble { position: relative; background: #fffaf0; color: var(--ink); border: 2px solid var(--ink); border-radius: 12px; padding: 4px 12px; font: 400 18px/1.2 var(--font-display); letter-spacing: 0.03em; box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.say-bubble:empty { display: none; }
+.say-bubble::before { content: ""; position: absolute; left: -8px; top: 50%; margin-top: -5px; border: 5px solid transparent; border-right: 6px solid var(--ink); border-left: 0; }
+.say-elf { display: inline-flex; transform-origin: 50% 100%; }
+.scene-say.say-pop .say-bubble { animation: sayPop 0.45s cubic-bezier(.2,.9,.3,1.4); }
+.scene-say.say-pop .say-elf { animation: elfHop 0.5s ease; }
+@keyframes sayPop { from { opacity: 0; transform: translateY(6px) scale(0.8); } to { opacity: 1; transform: none; } }
+@keyframes elfHop { 0%,100% { transform: none; } 40% { transform: translateY(-6px) rotate(-6deg); } }
+#game.revealing .scene-say { display: none; }
+.journey-wrap { margin: 6px auto 4px; max-width: 640px; }
+
+/* ---- home: save pill + footer ---- */
+.save-pill { display: flex; align-items: center; gap: 8px; margin: 14px auto 0; padding: 8px 16px; border-radius: 999px; border: 2px solid rgba(255,255,255,.55); background: rgba(11,16,48,.55); color: #fff; font: 400 18px var(--font-display); letter-spacing: .05em; cursor: pointer; backdrop-filter: blur(4px); transition: transform .2s ease, background .2s ease; }
+.save-pill:hover { transform: translateY(-2px); background: rgba(11,16,48,.75); }
+.site-foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin: 22px 0 8px; padding: 12px; border-top: 2px dashed rgba(255,255,255,.25); }
+.site-foot button, .site-foot a { appearance: none; background: none; border: 0; padding: 0; cursor: pointer; color: #f2c14e; font: 400 17px var(--font-display); letter-spacing: .05em; text-decoration: underline; text-underline-offset: 3px; }
+.mg-card { padding: 16px; border-radius: 10px; background: linear-gradient(135deg, #2f8a4e, #1d5c36); color: #fff; margin-bottom: 10px; }
+.mg-card b { font: 400 24px var(--font-display); }
+.mg-card p { margin: 4px 0 0; }
+@media (prefers-reduced-motion: reduce) { .pw, .prompt-card.card-in, .scene-say.say-pop * { animation: none !important; opacity: 1; transform: none; filter: none; } }
+/* progress bar on the night background */
+.journey-wrap .journey { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.6); }
+.journey-wrap .j-next { opacity: .9; }
+.journey-wrap .j-track { background: rgba(255,255,255,.18); box-shadow: inset 0 2px 3px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.25); }
+.journey-wrap .j-ms:not(.on) { filter: grayscale(1) brightness(1.6); opacity: .55; }
