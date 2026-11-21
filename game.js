@@ -9,7 +9,7 @@
     promptsPerDive: 7,
     secondsPerPrompt: 25,
     epoch: "2026-12-01",      // the date of Daily Sleigh Run #1 (YYYY-MM-DD); earlier days show as "Preview"
-    price: "$2.99",           // display only; the real price is set in Stripe
+    price: "$3.99",           // display only; the real price is set in Stripe
     apiBase: "",              // where the /api functions live ("" = same site)
     paymentLink: "https://buy.stripe.com/test_8x28wPcDFeDk5Zs40A5ZC00",   // your Stripe Payment Link (opened by Unlock)
     minPlayersForCurve: 5,    // players needed before the "better than X%" curve appears
