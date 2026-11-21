@@ -20,7 +20,9 @@
 
   // Online games need categories with lots of answers, since every turn needs a fresh one.
   const answerCount = (p) => ["t75", "t50", "t25", "t10"].reduce((n, t) => n + (p[t] || []).length, 2);
-  const POOL = C.PROMPTS.filter((p) => p.broad || answerCount(p) >= 45);
+  // Christmas categories first; fall back to any big list if there aren't enough.
+  const XMAS = C.PROMPTS.filter((p) => C.isCore && C.isCore(p) && answerCount(p) >= 45);
+  const POOL = XMAS.length >= 15 ? XMAS : C.PROMPTS.filter((p) => p.broad || answerCount(p) >= 45);
 
   let client = null, isOpen = false, lastTurn = "", lastLog = 0, lastSec = null, lastPhase = "", popUntil = 0, seen = new Set();
 

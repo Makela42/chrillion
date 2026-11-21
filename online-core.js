@@ -19,7 +19,9 @@
 
   function loadScript(src) {
     return new Promise((resolve, reject) => {
-      if (document.querySelector(`script[src="${src}"]`)) return resolve();
+      if (window.supabase && window.supabase.createClient) return resolve();
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) { existing.addEventListener("load", () => resolve()); existing.addEventListener("error", () => reject(new Error("Couldn't load " + src))); setTimeout(() => (window.supabase ? resolve() : null), 50); return; }
       const s = document.createElement("script");
       s.src = src;
       s.onload = resolve;
@@ -387,5 +389,5 @@
     }
   }
 
-  window.ChrillionOnline = { RoomClient, createTransport, onlineMode, randId, DEFAULT_SETTINGS, LIMITS, DEFAULT_TIMINGS, clampSettings };
+  window.MerrillionOnline = window.ChrillionOnline = { RoomClient, createTransport, onlineMode, randId, DEFAULT_SETTINGS, LIMITS, DEFAULT_TIMINGS, clampSettings };
 })();

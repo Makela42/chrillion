@@ -1502,7 +1502,7 @@
     if (!store.get("seenHow", false)) { store.set("seenHow", true); openHow(); }
 
     // Shared with online-ui.js, and a hook for automated tests.
-    window.Merrillion = { judge, key, TIERS, PROMPTS, store, toast, showScreen, esc, CONFIG, tierSprite };
+    window.Merrillion = { isCore, judge, key, TIERS, PROMPTS, store, toast, showScreen, esc, CONFIG, tierSprite };
     window.CHRILLION_DEBUG = { judge, key, dailyPrompts, dayNumber, PROMPTS, drawDistribution, renderRecap };
   }
 
