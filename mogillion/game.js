@@ -11,7 +11,7 @@
     epoch: "2026-11-21",      // the day the site opened = Daily Mog Check #1 (YYYY-MM-DD)
     price: "$3.99",           // display only; the real price is set in Stripe
     apiBase: "",              // where the /api functions live ("" = same site; paths below are absolute "/api/...")
-    paymentLink: "",   // the Mog Pass Stripe Payment Link (its own link, separate from Merrillion's)
+    paymentLink: "https://buy.stripe.com/eVqdRb4LB37caCH8Lpg7e01",   // the Mog Pass Stripe Payment Link (its own link, separate from Merrillion's)
     siteUrl: "https://www.merrillion.site/mogillion/",   // used in share / challenge links
     scoreDayOffset: 100000,   // Mogillion scores share the daily_scores table with Merrillion, offset so curves never mix
     minPlayersForCurve: 5,    // players needed before the "better than X%" curve appears
