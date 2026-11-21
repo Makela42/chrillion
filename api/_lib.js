@@ -44,3 +44,20 @@ function siteUrl(req) {
 }
 
 module.exports = { sign, verify, stripe, siteUrl };
+
+// Each game has its own pass. Mogillion purchases come from the Payment Link whose id is MOG_PAYMENT_LINK_ID,
+// and Mogillion tokens are signed with a "mog:" prefix so a Merrillion pass can't unlock Mogillion (or the reverse).
+function gameOf(req) {
+  const g = (req.query && req.query.game) || (req.body && req.body.game);
+  return g === "mogillion" ? "mogillion" : "merrillion";
+}
+function scopeId(game, id) { return game === "mogillion" ? "mog:" + id : String(id); }
+function tokenGame(token) { return String(token).startsWith("mog:") ? "mogillion" : "merrillion"; }
+function sessionGame(s) {
+  const mog = process.env.MOG_PAYMENT_LINK_ID;
+  return mog && s && s.payment_link === mog ? "mogillion" : "merrillion";
+}
+module.exports.gameOf = gameOf;
+module.exports.scopeId = scopeId;
+module.exports.tokenGame = tokenGame;
+module.exports.sessionGame = sessionGame;

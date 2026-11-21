@@ -11,7 +11,7 @@
     epoch: "2026-11-21",      // the day the site opened = Daily Mog Check #1 (YYYY-MM-DD)
     price: "$3.99",           // display only; the real price is set in Stripe
     apiBase: "",              // where the /api functions live ("" = same site; paths below are absolute "/api/...")
-    paymentLink: "https://buy.stripe.com/fZufZj3HxePUbGL3r5g7e00",   // shared Supporter Pass (also unlocks Merrillion)
+    paymentLink: "",   // the Mog Pass Stripe Payment Link (its own link, separate from Merrillion's)
     siteUrl: "https://www.merrillion.site/mogillion/",   // used in share / challenge links
     scoreDayOffset: 100000,   // Mogillion scores share the daily_scores table with Merrillion, offset so curves never mix
     minPlayersForCurve: 5,    // players needed before the "better than X%" curve appears
@@ -229,17 +229,8 @@
   const LOCAL = !ONLINE || ["localhost", "127.0.0.1"].includes(location.hostname);
 
   function getToken() { return store.get("unlockToken", null); }
-  // One Supporter Pass unlocks both games: a Merrillion supporter token also counts here.
-  function merrillionToken() {
-    try { return localStorage.getItem("chrillion:unlockToken") || localStorage.getItem("chrillion:token"); } catch (e) { return null; }
-  }
-  function isUnlocked() {
-    const t = getToken();
-    if (t && (t !== "dev" || LOCAL)) return true;
-    const m = merrillionToken();
-    if (!m) return false;
-    try { const v = JSON.parse(m); return !!v && (v !== "dev" || LOCAL); } catch (e) { return m !== "dev" || LOCAL; }
-  }
+  // The Mog Pass only unlocks Mogillion (Merrillion has its own pass).
+  function isUnlocked() { const t = getToken(); return !!t && (t !== "dev" || LOCAL); }
   function track(event, params) { try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
 
   async function api(path, opts) {
@@ -263,7 +254,7 @@
     if (!sid) return;
     cleanUrl();
     try {
-      const { token } = await api("/api/unlock?session_id=" + encodeURIComponent(sid));
+      const { token } = await api("/api/unlock?game=mogillion&session_id=" + encodeURIComponent(sid));
       store.set("unlockToken", token);
       unlockedNow("👑 Mog Pass unlocked. Thank you!");
     } catch (e) {
@@ -275,13 +266,14 @@
     const t = getToken();
     if (!t || t === "dev" || !ONLINE) return;
     try {
-      const r = await api("/api/unlock?token=" + encodeURIComponent(t));
+      const r = await api("/api/unlock?game=mogillion&token=" + encodeURIComponent(t));
       if (r.valid === false) { store.set("unlockToken", null); renderMenu(); }
     } catch (e) { /* network/API missing: keep the unlock */ }
   }
 
   async function buy() {
     if (CONFIG.paymentLink) { location.href = CONFIG.paymentLink; return; }   // Stripe Payment Link
+    toast("The Mog Pass checkout opens very soon. Your free run is still waiting!"); return;
     const btn = $("#btn-buy");
     btn.disabled = true;
     btn.textContent = "Opening checkout…";
@@ -289,7 +281,7 @@
       const { url } = await api("/api/checkout", { method: "POST" });
       location.href = url;
     } catch (e) {
-      window.open("https://buy.stripe.com/fZufZj3HxePUbGL3r5g7e00", "_blank", "noopener,noreferrer");
+      toast("Checkout is unavailable right now. Try again soon.");
       btn.disabled = false;
       btn.textContent = `Unlock for ${CONFIG.price}`;
     }
@@ -303,7 +295,7 @@
     btn.disabled = true;
     try {
       const { token } = await api("/api/restore", {
-        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }),
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, game: "mogillion" }),
       });
       store.set("unlockToken", token);
       $("#dlg-paywall").close();
@@ -461,10 +453,10 @@
     const day = dayNumber();
     const card = $("#sheet-supporter");
     card.classList.toggle("is-supporter", unlocked);
-    $("#sup-title").textContent = unlocked ? "You're a Mog Pass holder 👑" : "Get the Supporter Pass";
+    $("#sup-title").textContent = unlocked ? "You're a Mog Pass holder 👑" : "Get the Mog Pass";
     $("#sup-sub").textContent = unlocked
       ? "Unlimited Runs and the full archive are unlocked. Thank you!"
-      : `One pass for Mogillion + Merrillion · ${CONFIG.price} once`;
+      : `Unlimited runs + every past Mog Check · ${CONFIG.price} once`;
     $("#sl-daily").textContent = day >= 1 ? `No. ${day}` : "Preview";
     $("#sl-unl").textContent = unlocked ? "Unlocked ∞" : freeRunLeft() ? "1 free run" : "Mog Pass";
     $("#sl-archive").textContent = day > 1 ? `${day - 1} past run${day - 1 === 1 ? "" : "s"}` : "Every past run";
@@ -1344,7 +1336,7 @@
     ["Does my progress sync between devices?", "Yes, if you sign in (Menu → My account) we save your streak and stats to your account. Without an account they live in this browser. If you have the Supporter Pass, use “Restore purchase” with your checkout email to unlock on a new device."],
     ["Can I challenge a friend?", "Yes! On the results screen tap “Challenge a friend”. They get a link with your score, and when they finish their own Daily Mog Check you both see who mogged who."],
     ["What is Pass the Mirror?", "The online mode. Play Online, create a private room and send the code, or try Practice with bots. Everyone sits in a circle and the mirror goes round: on your turn, give any valid answer nobody has used yet, or lose a heart when time runs out."],
-    ["What is the Supporter Pass?", `A one-time ${CONFIG.price} unlock for Unlimited Runs and the full archive of past Daily Mog Checks. One pass unlocks Mogillion and its sister game Merrillion. No subscription.`],
+    ["What is the Mog Pass?", `A one-time ${CONFIG.price} unlock for Unlimited Runs and the full archive of past Daily Mog Checks. It only unlocks Mogillion. No subscription.`],
     ["Is Mogillion free to play?", "The Daily Mog Check and online play are free, no account needed. Everyone gets one free Unlimited Run. The Supporter Pass is optional."],
   ];
   function openFaq() {
@@ -1367,7 +1359,7 @@
   }
 
   function openPaywall() {
-    $("#pay-price").textContent = `One Supporter Pass unlocks Mogillion + Merrillion (${CONFIG.price} once)`;
+    $("#pay-price").textContent = `Mog Pass · ${CONFIG.price} once · Unlimited + every past Mog Check`;
     const btn = $("#btn-buy");
     btn.disabled = !ONLINE;
     btn.textContent = ONLINE ? `Unlock for ${CONFIG.price}` : "Checkout works once the site is online";
@@ -1461,7 +1453,7 @@
       cleanUrl();
       if (LOCAL) { store.set("unlockToken", "dev"); setTimeout(() => toast("Owner unlock active on this computer"), 300); }
       else {
-        api("/api/unlock?owner=" + encodeURIComponent(ownerCode))
+        api("/api/unlock?game=mogillion&owner=" + encodeURIComponent(ownerCode))
           .then(({ token }) => { store.set("unlockToken", token); unlockedNow("Owner unlock active. Unlimited runs are yours!"); })
           .catch(() => toast("That owner code didn't work."));
       }
