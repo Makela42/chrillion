@@ -1241,7 +1241,7 @@
     $("#dlg-how").showModal();
   }
 
-  const CONTACT = "merrilion.help@gmail.com";
+  const CONTACT = "merrillion.help@gmail.com";
   function track(event, params) { try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
   function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
   function openMoreGames() {
