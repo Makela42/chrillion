@@ -784,3 +784,4 @@ button, a, summary, input { -webkit-tap-highlight-color: transparent; touch-acti
 .journey-wrap .j-next { opacity: .9; }
 .journey-wrap .j-track { background: rgba(255,255,255,.18); box-shadow: inset 0 2px 3px rgba(0,0,0,.4), 0 0 0 1px rgba(255,255,255,.25); }
 .journey-wrap .j-ms:not(.on) { filter: grayscale(1) brightness(1.6); opacity: .55; }
+.sum-journey { display: block; font: 400 17px var(--font-display); letter-spacing: .04em; color: var(--green, #23924a); }
