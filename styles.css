@@ -811,3 +811,10 @@ button, a, summary, input { -webkit-tap-highlight-color: transparent; touch-acti
 .cross-promo .cp-k { display: block; font: 400 15px var(--font-display); letter-spacing: .06em; text-transform: uppercase; color: #9fb3c4; }
 .cross-promo b { display: block; font: 400 24px/1.15 var(--font-display); letter-spacing: .03em; color: #4fd8ff; margin: 2px 0 4px; }
 .cross-promo small { display: block; font-size: 13.5px; color: #c9d4de; }
+/* "our other game" tile + results button */
+.tile-other { grid-column: 1 / -1; text-decoration: none; background: linear-gradient(135deg, #1b1f26 0%, #10141b 60%, #1a2a3a 100%) !important; border: 2px solid #4fd8ff !important; box-shadow: 0 6px 20px rgba(79,216,255,.2); transition: transform .25s cubic-bezier(.2,.9,.3,1.2); }
+.tile-other:hover { transform: translateY(-2px); }
+.tile-other b { color: #4fd8ff !important; }
+.tile-other small { color: #c9d4de !important; }
+.tile-other .tile-sm-ico { font-size: 24px; display: inline-flex; align-items: center; justify-content: center; }
+.btn-other { display: block; text-align: center; text-decoration: none; background: linear-gradient(135deg, #1b1f26, #1a2a3a); color: #4fd8ff; border: 2px solid #4fd8ff; }
