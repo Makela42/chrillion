@@ -1245,7 +1245,7 @@
   function track(event, params) { try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
   function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
   function openMoreGames() {
-    openInfo("More games", `<div class="more-games"><div class="mg-card"><b>Coming soon</b><p>More daily rare-answer games are being wrapped up in Santa's workshop. 🎁</p></div><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
+    openInfo("More games", `<div class="more-games"><a class="mg-card mg-mog" href="/mogillion/"><b>Mogillion →</b><p>The daily looksmaxxing word game. Name the rarest glow-up answers, collect Aura Cards and mog your friends.</p></a><div class="mg-card mg-soon"><b>More coming soon</b><p>More daily rare-answer games are being wrapped up in Santa's workshop. 🎁</p></div><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
   }
   function openPrivacy() {
     openInfo("Privacy", `<p>Merrillion keeps your stats and streak in your browser. If you sign in, we store your email and stats in your account so they sync between devices.</p><p>We use Google Analytics (via Google Tag Manager) to count visits and see which features people use. Payments are handled by Stripe; we never see your card.</p><p>Feedback you send is stored so we can read it. We don't sell your data.</p><p>Questions or delete requests: <a href="mailto:${CONTACT}">${CONTACT}</a></p>`);

@@ -798,3 +798,8 @@ button, a, summary, input { -webkit-tap-highlight-color: transparent; touch-acti
 .next-tree { max-width: 280px; margin: 0 auto; }
 .tr-legend svg { width: 14px !important; height: 13px !important; flex: 0 0 auto; }
 .dist-score { font: 400 18px var(--font-display); color: #e2562b; letter-spacing: .04em; }
+.mg-card { display: block; text-decoration: none; }
+.mg-mog { background: linear-gradient(135deg, #1b1f26, #0e1116); border: 2px solid #4fd8ff; color: #eef3f7; transition: transform .2s ease; }
+.mg-mog:hover { transform: translateY(-2px); }
+.mg-mog b { color: #4fd8ff; }
+.mg-soon { opacity: .85; }
