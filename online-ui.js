@@ -38,19 +38,21 @@
   let bots = [], botTimer = null;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-  async function practice() {
-    saveNameField();
-    connecting("Setting the table for you and 5 bots…");
-    const code = "bots-" + O.randId(6);
+  function practice() { saveNameField(); return botGame(5, "bots-", "Setting the table for you and 5 bots…", 1); }
+
+  // Bots are always labelled with a robot so nobody mistakes them for real players.
+  async function botGame(count, prefix, msg, failScale) {
+    connecting(msg);
+    const code = prefix + O.randId(6);
     try {
       const host = new O.RoomClient({ code, isPublic: false, transport: "memory", me: profile(), prompts: POOL, judge: C.judge, keyOf: C.key,
         timings: timings(), settings: { seats: 6, lives: 2, minTurn: 6 } });
       await host.connect();
-      for (const b of BOTS) {
+      for (const b of BOTS.slice().sort(() => Math.random() - 0.5).slice(0, count)) {
         await sleep(5);
-        const c = new O.RoomClient({ code, isPublic: false, transport: "memory", me: { id: O.randId(12), name: b.name, emoji: b.emoji },
+        const c = new O.RoomClient({ code, isPublic: false, transport: "memory", me: { id: O.randId(12), name: b.name + " 🤖", emoji: b.emoji },
           prompts: POOL, judge: C.judge, keyOf: C.key, timings: timings() });
-        c.profile = b;
+        c.profile = Object.assign({}, b, { fail: Math.min(0.5, b.fail * failScale) });
         await c.connect();
         bots.push(c);
       }
@@ -174,10 +176,23 @@
         const c = await connect("pp-" + n, true);
         await new Promise((r) => setTimeout(r, 1200));
         const v = c.view();
-        if ((v.phase === "lobby" && c.players.size <= c.settings.seats) || n === 30) { enterRoom(c); return; }
+        if ((v.phase === "lobby" && c.players.size <= c.settings.seats) || n === 30) { enterRoom(c); waitForPlayers(c); return; }
         c.leave();
       }
     } catch (e) { renderEntry("Couldn't connect to online play. Check your connection and try again."); }
+  }
+
+  // Quick Play: if nobody else shows up soon, bots fill the table so there's always a game.
+  const QUICK_WAIT = 12000;
+  function waitForPlayers(c) {
+    if (c.players.size > 1) return;
+    C.toast(`Looking for players… bots join in ${QUICK_WAIT / 1000}s if nobody shows up`);
+    setTimeout(() => {
+      if (client !== c || !isOpen) return;                       // player left or already moved on
+      if (c.players.size > 1 || c.view().phase !== "lobby") return;   // a real player joined
+      c.leave(); client = null;
+      botGame(4, "bots-q", "Nobody else is here yet. Bringing in some bots…", 1.4);
+    }, QUICK_WAIT);
   }
 
   async function joinRoom(code, isPublic) {
@@ -194,11 +209,12 @@
     seen = new Set([myId]);
     lastTurn = ""; lastLog = 0; lastSec = null; lastPhase = ""; popUntil = 0;
     const practicing = c.code.startsWith("bots-");
-    const label = practicing ? "Practice" : c.isPublic ? `Room ${c.code.replace("pp-", "")}` : c.code;
+    const quickBots = c.code.startsWith("bots-q");
+    const label = quickBots ? "Quick Play" : practicing ? "Practice" : c.isPublic ? `Room ${c.code.replace("pp-", "")}` : c.code;
     root.innerHTML = `
       <div class="ol-top">
         <button class="icon-btn" id="ol-leave" aria-label="Leave room">←</button>
-        <div class="ol-room"><span class="eyebrow">${practicing ? "You vs 5 bots" : c.isPublic ? "Public room" : "Private room"}</span><b>${esc(label)}</b></div>
+        <div class="ol-room"><span class="eyebrow">${quickBots ? `You vs ${bots.length} bots` : practicing ? "You vs 5 bots" : c.isPublic ? "Public room" : "Private room"}</span><b>${esc(label)}</b></div>
         ${c.isPublic || practicing ? "" : '<button class="btn btn-ghost ol-invite" id="ol-invite">Invite</button>'}
       </div>
       <div class="pp-stage" id="pp-stage">
