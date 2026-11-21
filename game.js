@@ -190,7 +190,15 @@
     "card-images", "cracker-contents", "toy-crazes", "bad-gifts", "under-the-tree", "wrapping-supplies", "north-pole-things",
     "things-you-light", "winter-clothing", "winter-weather", "winter-sports", "santa-outfit", "famous-snowmen", "xmas-colors",
     "gen-xmas-day", "world-desserts", "family-games",
+    // the best-known movie prompts join the daily mix too
+    "home-alone-actors", "elf-actors", "christmas-story-chars", "xmas-vacation-chars", "polar-express-chars", "charlie-brown-xmas",
+    "nightmare-chars", "grinch-steals", "xmas-villains", "wonderful-life-chars", "muppet-carol",
   ]);
+  // Hand-picked days (eye-catching sets for launch). Falls back to the normal shuffle if an id is missing.
+  const FEATURED = {
+    1: ["reindeer", "modern-xmas-pop", "movie-home-alone-chars", "nostalgia-2000s-gift", "core-argue", "nostalgia-ad", "bad-gifts"],
+  };
+  const RESET = { 1: "v2" };
   const isCore = (p) => !!p.core || CORE_IDS.has(p.id);
   let pools = null;
   function getPools() {
@@ -214,6 +222,7 @@
   }
 
   function dailyPrompts(day) {
+    if (FEATURED[day]) { const f = FEATURED[day].map((id) => PROMPTS.find((p) => p.id === id)).filter(Boolean); if (f.length === CONFIG.promptsPerDive) return f; }
     const { core, other } = getPools();
     const nCore = Math.min(CORE_PER_RUN, core.length), nOther = CONFIG.promptsPerDive - nCore;
     const out = [], seen = new Set();
@@ -400,7 +409,7 @@
 
   function renderMenu() {
     const day = dayNumber();
-    const saved = store.get("daily:" + day, null);
+    const saved = store.get(dayKey(day), null);
     const played = saved && saved.done;
     const unlocked = isUnlocked();
     const streak = currentStreak();
@@ -480,7 +489,9 @@
   // =====================================================================
   // Runs
   // =====================================================================
-  function storeKey() { return (state.mode === "archive" ? "archive:" : "daily:") + state.day; }
+  function storeKey() { return state.mode === "archive" ? "archive:" + state.day : dayKey(state.day); }
+  // A day listed in RESET gets a fresh save slot, so everyone replays it (used when a day's prompts are swapped).
+  function dayKey(day) { return "daily:" + day + (RESET[day] ? ":" + RESET[day] : ""); }
 
   function saveProgress(extra) {
     store.set(storeKey(), Object.assign({
@@ -519,7 +530,7 @@
 
   function startArchive(day) {
     if (!isUnlocked()) { openPaywall(); return; }
-    const daily = store.get("daily:" + day, null);
+    const daily = store.get(dayKey(day), null);
     if (daily && daily.done) {   // already played that day live: just show it
       state = { mode: "daily", day, prompts: promptsFromIds(daily.ids) || dailyPrompts(day), i: 0, results: daily.results };
       showSummary();
@@ -768,7 +779,7 @@
     const score = total(state.results);
     const miracles = state.results.filter((r) => r.tier === "miracle").length;
     if (state.mode === "daily") {
-      const already = store.get("daily:" + state.day, {});
+      const already = store.get(dayKey(state.day), {});
       if (!already.done) {
         saveProgress({ started: state.prompts.length, done: true });
         const s = loadStats();
@@ -1198,7 +1209,7 @@
         ? "Play any past Daily Sleigh Run. Archive scores don't affect your streak."
         : "The archive is for supporters. Tap any run to unlock.";
       for (let d = today - 1; d >= 1; d--) {
-        const daily = store.get("daily:" + d, null);
+        const daily = store.get(dayKey(d), null);
         const arch = store.get("archive:" + d, null);
         const done = (daily && daily.done && daily) || (arch && arch.done && arch);
         const li = document.createElement("li");
