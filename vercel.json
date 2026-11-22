@@ -1,5 +1,6 @@
 {
   "redirects": [
-    { "source": "/mogillion", "destination": "/mogillion/", "permanent": true }
+    { "source": "/mogillion", "destination": "/mogillion/", "permanent": true },
+    { "source": "/trillion", "destination": "/trillion/", "permanent": true }
   ]
 }

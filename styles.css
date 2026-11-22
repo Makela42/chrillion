@@ -818,3 +818,4 @@ button, a, summary, input { -webkit-tap-highlight-color: transparent; touch-acti
 .tile-other small { color: #c9d4de !important; }
 .tile-other .tile-sm-ico { font-size: 24px; display: inline-flex; align-items: center; justify-content: center; }
 .btn-other { display: block; text-align: center; text-decoration: none; background: linear-gradient(135deg, #1b1f26, #1a2a3a); color: #4fd8ff; border: 2px solid #4fd8ff; }
+.mg-tri { background: #f6efdc; border: 2px solid #1d5240; color: #1d5240; } .mg-tri b { color: #1d5240; font-family: Georgia, serif; } .mg-tri p { color: #3b3b2f; }

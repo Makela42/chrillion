@@ -49,13 +49,15 @@ module.exports = { sign, verify, stripe, siteUrl };
 // and Mogillion tokens are signed with a "mog:" prefix so a Merrillion pass can't unlock Mogillion (or the reverse).
 function gameOf(req) {
   const g = (req.query && req.query.game) || (req.body && req.body.game);
-  return g === "mogillion" ? "mogillion" : "merrillion";
+  return g === "mogillion" || g === "trillion" ? g : "merrillion";
 }
-function scopeId(game, id) { return game === "mogillion" ? "mog:" + id : String(id); }
-function tokenGame(token) { return String(token).startsWith("mog:") ? "mogillion" : "merrillion"; }
+function scopeId(game, id) { return game === "mogillion" ? "mog:" + id : game === "trillion" ? "tri:" + id : String(id); }
+function tokenGame(token) { const t = String(token); return t.startsWith("mog:") ? "mogillion" : t.startsWith("tri:") ? "trillion" : "merrillion"; }
 function sessionGame(s) {
-  const mog = process.env.MOG_PAYMENT_LINK_ID;
-  return mog && s && s.payment_link === mog ? "mogillion" : "merrillion";
+  const mog = process.env.MOG_PAYMENT_LINK_ID, tri = process.env.TRI_PAYMENT_LINK_ID;
+  if (mog && s && s.payment_link === mog) return "mogillion";
+  if (tri && s && s.payment_link === tri) return "trillion";
+  return "merrillion";
 }
 module.exports.gameOf = gameOf;
 module.exports.scopeId = scopeId;
