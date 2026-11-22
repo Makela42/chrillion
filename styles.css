@@ -819,3 +819,54 @@ button, a, summary, input { -webkit-tap-highlight-color: transparent; touch-acti
 .tile-other .tile-sm-ico { font-size: 24px; display: inline-flex; align-items: center; justify-content: center; }
 .btn-other { display: block; text-align: center; text-decoration: none; background: linear-gradient(135deg, #1b1f26, #1a2a3a); color: #4fd8ff; border: 2px solid #4fd8ff; }
 .mg-tri { background: #f6efdc; border: 2px solid #1d5240; color: #1d5240; } .mg-tri b { color: #1d5240; font-family: Georgia, serif; } .mg-tri p { color: #3b3b2f; }
+
+/* Cross-promo now points to Trillion: green + gold certificate look */
+.tile-other, .cross-promo, .btn-other { background: linear-gradient(135deg, #14523d 0%, #0c3326 65%, #1d5a3f 100%) !important; border: 2px solid #e8b93c !important; box-shadow: 0 6px 20px rgba(232,185,60,.25) !important; color: #f5ecd7 !important; }
+.tile-other b, .cross-promo b, .btn-other { color: #f2c14e !important; }
+.tile-other small, .cross-promo small { color: #e9dfc4 !important; }
+.cross-promo .cp-k { color: #bcd8c8 !important; }
+.cross-promo:hover { box-shadow: 0 10px 28px rgba(232,185,60,.35) !important; }
+
+/* More games: poster cards */
+.more-games { display: grid; gap: 12px; }
+.mgp { position: relative; overflow: hidden; display: grid; grid-template-columns: 56px 1fr; gap: 4px 12px; align-items: center; padding: 16px 14px 14px; border-radius: 14px; text-decoration: none; color: #fff; box-shadow: 0 6px 16px rgba(0,0,0,.28); transition: transform .22s cubic-bezier(.2,.9,.3,1.2), box-shadow .22s ease; animation: mgp-in .5s cubic-bezier(.2,.9,.3,1.1) both; animation-delay: calc(var(--i, 0) * 90ms); isolation: isolate; }
+a.mgp:hover, a.mgp:focus-visible { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,.38); }
+a.mgp:active { transform: translateY(0) scale(.985); }
+.mgp-ico { width: 56px; height: 56px; filter: drop-shadow(0 3px 4px rgba(0,0,0,.35)); }
+.mgp-txt { display: block; min-width: 0; }
+.mgp-txt b { display: block; font: 400 30px/1 var(--font-display, Impact, sans-serif); letter-spacing: .04em; text-transform: uppercase; }
+.mgp-pitch { display: block; margin-top: 4px; font-size: 13.5px; line-height: 1.3; opacity: .92; }
+.mgp-go { grid-column: 1 / -1; justify-self: end; margin-top: 6px; padding: 7px 16px; border-radius: 999px; font: 700 14px/1 system-ui, sans-serif; letter-spacing: .03em; }
+.mgp-here { opacity: .8; }
+.mgp-here .mgp-go { background: rgba(255,255,255,.16) !important; color: #fff !important; border: 1px dashed rgba(255,255,255,.5); box-shadow: none !important; }
+.mgp-sky { position: absolute; inset: 0; z-index: -1; pointer-events: none; }
+/* Merrillion: festive red/green with snow */
+.mgp-mer { background: linear-gradient(135deg, #c8282e 0%, #8f1a22 58%, #1d6b3d 100%); border: 2px solid #ffd34e; }
+.mgp-mer .mgp-sky { background: radial-gradient(circle, #fff 1.5px, transparent 2.5px) 0 0/34px 34px, radial-gradient(circle, rgba(255,255,255,.7) 1px, transparent 2px) 14px 17px/26px 26px; opacity: .55; animation: mgp-snow 9s linear infinite; }
+.mgp-mer .mgp-txt b { color: #fff; text-shadow: 0 2px 0 #6e1118; }
+.mgp-mer .mgp-go { background: #ffd34e; color: #6e1118; box-shadow: 0 3px 0 #b8902a; }
+/* Mogillion: matte graphite, chrome, icy glow */
+.mgp-mog { background: linear-gradient(145deg, #2a2f38 0%, #14171c 60%, #0b0d11 100%); border: 2px solid #9fb3c4; color: #eef3f7; box-shadow: 0 6px 16px rgba(0,0,0,.35), 0 0 22px rgba(79,216,255,.22); }
+.mgp-mog .mgp-sky { background: radial-gradient(circle at 88% 12%, rgba(79,216,255,.4), transparent 55%), linear-gradient(120deg, transparent 40%, rgba(255,255,255,.07) 48%, transparent 56%); }
+.mgp-mog .mgp-txt b { color: #4fd8ff; text-shadow: 0 0 12px rgba(79,216,255,.55); }
+.mgp-mog .mgp-go { background: #4fd8ff; color: #06121a; box-shadow: 0 0 14px rgba(79,216,255,.5); }
+/* Trillion: deep green, gold, certificate and ticker */
+.mgp-tri { background: linear-gradient(135deg, #14503c, #0b2f23); border: 2px solid #d9a93c; padding-top: 28px; }
+.mgp-tri .mgp-sky { background: repeating-linear-gradient(45deg, rgba(217,169,60,.07) 0 6px, transparent 6px 12px); box-shadow: inset 0 0 0 4px #0b2f23, inset 0 0 0 5px rgba(217,169,60,.55); }
+.mgp-tri .mgp-txt b { font-family: Georgia, "Times New Roman", serif; font-weight: 700; font-size: 27px; letter-spacing: .06em; color: #f1d58a; }
+.mgp-tri .mgp-go { background: #d9a93c; color: #0b2f23; box-shadow: 0 3px 0 #96721a; }
+.mgp-tick { position: absolute; top: 0; left: 0; right: 0; padding: 3px 12px; white-space: nowrap; overflow: hidden; font: 700 10.5px/1.4 ui-monospace, Consolas, monospace; letter-spacing: .08em; color: #7be0a0; background: rgba(0,0,0,.35); }
+.mgp-soon { padding: 10px 14px; border-radius: 12px; border: 2px dashed rgba(128,128,128,.55); text-align: center; font-size: 13.5px; opacity: .85; animation: mgp-in .5s ease both; animation-delay: calc(var(--i, 0) * 90ms); }
+@keyframes mgp-in { from { opacity: 0; transform: translateY(14px) scale(.97); } to { opacity: 1; transform: none; } }
+@keyframes mgp-snow { to { background-position: 0 34px, 14px 43px; } }
+@media (prefers-reduced-motion: reduce) { .mgp, .mgp-soon, .mgp-mer .mgp-sky { animation: none !important; } .mgp { transition: none; } a.mgp:hover, a.mgp:active { transform: none; } }
+
+/* ---- polish pass: callouts + miracle banner ---- */
+.sum-callouts { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; gap: 6px; }
+.sum-callouts:empty { display: none; }
+.sum-callouts li { padding: 8px 12px; border: 2px dashed var(--stitch); border-radius: 10px; background: rgba(242,193,78,.22); color: var(--ink); font: 400 19px/1.15 var(--font-display); letter-spacing: .03em; }
+.miracle-banner { position: fixed; inset: 0; z-index: 60; display: grid; place-content: center; text-align: center; pointer-events: none; background: radial-gradient(circle, rgba(242,193,78,.55), rgba(110,22,32,0) 70%); font-family: var(--font-display); color: #f6ecd6; text-shadow: 0 4px 0 #8e1f26; animation: mb-in 2s ease both; }
+.miracle-banner span { font-size: clamp(28px, 8vw, 48px); letter-spacing: .12em; color: var(--gold); }
+.miracle-banner b { font-weight: 400; font-size: clamp(52px, 17vw, 110px); line-height: .95; }
+@keyframes mb-in { 0% { opacity: 0; transform: scale(.7) rotate(-3deg); } 15% { opacity: 1; transform: scale(1.08) rotate(1deg); } 25% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .miracle-banner { animation: mb-fade 1.6s ease both; } @keyframes mb-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } } }

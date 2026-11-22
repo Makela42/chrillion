@@ -111,7 +111,7 @@
     const note = O.onlineMode() === "supabase" ? ""
       : "Test mode: until Supabase is connected (see README), rooms only work between tabs in this browser. Open a second tab to try it!";
     root.innerHTML = `
-      <div class="screen-head"><button class="icon-btn" data-home aria-label="Back to home">←</button><h2>Trading Floor</h2></div>
+      <div class="screen-head"><button class="icon-btn" data-home aria-label="Back to home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg></button><h2>Trading Floor</h2></div>
       <div class="card ol-card">
         <label class="ol-label" for="ol-name">Your name</label>
         <input id="ol-name" class="ol-input" maxlength="16" autocomplete="nickname">
@@ -159,7 +159,7 @@
   }
   function saveNameField() { const f = $("#ol-name"); if (f) { const n = cleanName(f.value); if (n) C.store.set("onlineName", n); } }
   function connecting(text) {
-    root.innerHTML = `<div class="screen-head"><button class="icon-btn" data-home aria-label="Back to home">←</button><h2>Trading Floor</h2></div>
+    root.innerHTML = `<div class="screen-head"><button class="icon-btn" data-home aria-label="Back to home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg></button><h2>Trading Floor</h2></div>
       <div class="card ol-panel ol-center"><div class="ol-big">${ico("chart")}</div><p>${esc(text)}</p></div>`;
   }
 
@@ -214,7 +214,7 @@
     const label = quickBots ? "Quick Play" : practicing ? "Practice" : c.isPublic ? `Room ${c.code.replace("pp-", "")}` : c.code;
     root.innerHTML = `
       <div class="ol-top">
-        <button class="icon-btn" id="ol-leave" aria-label="Leave room">←</button>
+        <button class="icon-btn" id="ol-leave" aria-label="Leave room"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg></button>
         <div class="ol-room"><span class="eyebrow">${quickBots ? `You vs ${bots.length} bots` : practicing ? "You vs 5 bots" : c.isPublic ? "Public room" : "Private room"}</span><b>${esc(label)}</b></div>
         ${c.isPublic || practicing ? "" : '<button class="btn btn-ghost ol-invite" id="ol-invite">Invite</button>'}
       </div>

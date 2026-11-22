@@ -73,17 +73,17 @@
           <p class="hero-sub" id="hero-sub">7 prompts · 25 seconds each</p>
           <div class="stamp" aria-hidden="true"><span>Unredeemed</span></div>
         </div>
-        <canvas class="hero-scene" id="hero-scene" aria-hidden="true"></canvas>
+        <div class="hero-stage"><canvas class="hero-scene" id="hero-scene" aria-hidden="true"></canvas><div class="cast" aria-hidden="true"><span data-person="trader"></span><span data-person="boss"></span><span class="cast-lead" data-person="ceo"></span><span data-person="analyst"></span><span data-person="banker"></span></div></div>
       </div>
 
       <div class="tiles-main">
         <button class="tile tile-daily" id="btn-daily">
-          <span class="tile-ico" data-sprite="play" data-size="24"></span>
+          <span class="tile-ico tile-person" data-person="ceo"></span>
           <span class="tile-text"><b>Daily Market Open</b><small id="daily-sub"></small></span>
           <span class="badge badge-streak" id="streak-badge" hidden></span>
         </button>
         <button class="tile tile-online" id="btn-online">
-          <span class="tile-ico" data-sprite="people" data-size="24"></span>
+          <span class="tile-ico tile-person" data-person="trader"></span>
           <span class="tile-text"><b>Trading Floor</b><small>Live rooms · play together</small></span>
           <span class="badge badge-new">NEW</span>
         </button>
@@ -100,6 +100,7 @@
       </div>
 
       <button class="save-pill" id="btn-account"><span data-sprite="seal" data-size="18"></span> Sign in to save your streak</button>
+      <p class="career" id="career"></p>
       <p class="mkt-status" id="mkt-status"></p>
       <p class="next-daily" data-countdown></p>
       <footer class="site-foot"><button data-go="more">+ More games</button><button data-go="privacy">Privacy</button><button data-go="faq">FAQ</button><a href="mailto:merrillion.help@gmail.com">merrillion.help@gmail.com</a></footer>
@@ -108,7 +109,7 @@
     <!-- ============ GAME ============ -->
     <section class="screen" id="game" hidden>
       <div class="topbar">
-        <button class="icon-btn" id="btn-quit" aria-label="Back to home">←</button>
+        <button class="icon-btn" id="btn-quit" aria-label="Back to home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg></button>
         <ol class="dots" id="dots" aria-label="Progress"></ol>
         <div class="score-pill"><span id="score">0</span> pts</div>
       </div>
@@ -137,6 +138,7 @@
 
       <div class="feedback" id="feedback" hidden>
         <div class="fb-mascot"><span class="fb-elf" id="fb-elf"></span><div class="fb-bubble" id="fb-bubble"></div></div>
+        <div class="fb-stamp" id="fb-stamp" aria-hidden="true"><span>One in a<br>Trillion</span></div>
         <div class="fb-emoji" id="fb-emoji"></div>
         <div class="fb-label" id="fb-label"></div>
         <div class="fb-points" id="fb-points"></div>
@@ -149,10 +151,12 @@
 
     <!-- ============ RESULTS ============ -->
     <section class="screen" id="summary" hidden>
+      <div class="cast cast-sum" aria-hidden="true"><span data-person="founder"></span><span data-person="ceo"></span><span data-person="boss"></span></div>
       <div class="sum-head">
         <span class="sum-brand" data-name>Trillion</span>
         <span class="eyebrow" id="sum-mode"></span>
       </div>
+      <p class="sum-callout" id="sum-callout" hidden></p>
       <div class="sum-score-row">
         <span class="sum-total" id="sum-score">0</span>
         <span class="sum-side"><span class="sum-max" id="sum-max">/ 700</span><span class="sum-rating" id="sum-rating"></span><span class="sum-miles" id="sum-miles"></span><span class="sum-journey" id="sum-journey"></span></span>
@@ -213,7 +217,7 @@
     <!-- ============ ARCHIVE ============ -->
     <section class="screen" id="archive" hidden>
       <div class="screen-head">
-        <button class="icon-btn" data-home aria-label="Back to home">←</button>
+        <button class="icon-btn" data-home aria-label="Back to home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg></button>
         <h2>Archive</h2>
       </div>
       <p class="muted" id="archive-note"></p>
@@ -253,7 +257,7 @@
         <button data-go="faq"><b>FAQ</b><span>Common questions</span></button>
         <button data-go="account"><b>My account</b><span id="sl-acct">Save your streak</span></button>
         <button data-go="feedback"><b>Feedback</b><span>Bugs, missing answers, ideas</span></button>
-        <button data-go="more"><b>+ More games</b><span>Merrillion · Mogillion</span></button>
+        <button data-go="more"><b>+ More games</b><span>Merrillion</span></button>
         <button data-go="privacy"><b>Privacy</b><span>What we store</span></button>
       </nav>
       <p class="sheet-foot" id="sheet-foot"></p>
@@ -304,7 +308,7 @@
 
   <dialog id="dlg-feedback" class="dlg-feedback">
     <div class="dlg-bar"><span class="eyebrow">Feedback</span>
-      <form method="dialog"><button class="dlg-x" aria-label="Close">✕</button></form></div>
+      <form method="dialog"><button class="dlg-x" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form></div>
     <h2>Send us your feedback.</h2>
     <p>Found a bug, spotted a missing answer or have an idea? We'd love to hear it.</p>
     <form id="feedback-form" class="fb-form">
@@ -338,6 +342,7 @@
   <script src="account.js"></script>
   <script src="sounds.js"></script>
   <script src="sprites.js"></script>
+  <script src="people.js"></script>
   <script src="icons.js"></script>
   <script src="journey.js"></script>
   <script src="tree.js"></script>

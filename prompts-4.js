@@ -21,7 +21,7 @@
       "Ice Age: A Mammoth Christmas|A Mammoth Christmas", "Mickey's Magical Christmas: Snowed in at the House of Mouse", "A Garfield Christmas", "Santa Claus Is Comin' to Town",
       "Mr. Magoo's Christmas Carol", "Frosty the Snowman", "Rudolph the Red-Nosed Reindeer", "A Charlie Brown Christmas",
       "The Year Without a Santa Claus",
-"Rise of the Guardians", "Disney's A Christmas Carol", "The Star", "Olaf's Frozen Adventure", "Mickey's Christmas Carol", "Shrek the Halls", "Mickey's Once Upon a Christmas", "That Christmas", "Elliot the Littlest Reindeer", "Robbie the Reindeer", "The Snowman"],
+"Rise of the Guardians", "Disney's A Christmas Carol", "The Star", "Olaf's Frozen Adventure", "Mickey's Christmas Carol", "Shrek the Halls", "Mickey's Once Upon a Christmas", "That Christmas", "Elliot the Littlest Reindeer", "Robbie the Reindeer", "The Snowman", "Dr. Seuss' The Grinch", "Niko and the Way to the Stars|The Flight Before Christmas", "Santa Buddies", "Eight Crazy Nights", "The Simpsons Christmas", "The Muppet Christmas Carol"],
     t25: ["Klaus", "Arthur Christmas", "The Nightmare Before Christmas|Nightmare Before Christmas"],
     t10: ["The Polar Express|Polar Express", "The Grinch|How the Grinch Stole Christmas"],
   },
@@ -37,7 +37,7 @@
     t50: [
       "The Bells of St. Mary's", "Christmas Holiday", "Bachelor Mother", "The Holly and the Ivy",
       "Three Godfathers", "Come to the Stable", "Little Women",
-"Holiday Inn", "The Bishop's Wife", "Christmas in Connecticut", "Meet Me in St. Louis", "The Shop Around the Corner", "Scrooge", "A Christmas Carol"],
+"Holiday Inn", "The Bishop's Wife", "Christmas in Connecticut", "Meet Me in St. Louis", "The Shop Around the Corner", "Scrooge", "A Christmas Carol", "A Christmas Carol (1938)", "Scrooge (1951)|A Christmas Carol (1951)", "Going My Way", "The Apartment"],
     t25: ["Miracle on 34th Street", "White Christmas"],
     t10: ["It's a Wonderful Life"],
   },
@@ -49,7 +49,7 @@
 "The Ice Harvest", "Trapped in Paradise", "In Bruges", "Silent Night"],
     t50: [
       "The Last Boy Scout", "Rocky IV", "Hawkeye",
-"Red One", "The Long Kiss Goodnight", "Kiss Kiss Bang Bang", "Batman Returns", "Iron Man 3", "Reindeer Games", "Fatman", "Carry-On|Carry On", "Ronin", "Enemy of the State"],
+"Red One", "The Long Kiss Goodnight", "Kiss Kiss Bang Bang", "Batman Returns", "Iron Man 3", "Reindeer Games", "Fatman", "Carry-On|Carry On", "Ronin", "Enemy of the State", "Die Harder", "Gremlins", "Rise of the Guardians"],
     t25: ["Die Hard 2", "Lethal Weapon", "Violent Night"],
     t10: ["Die Hard"],
   },
@@ -78,7 +78,7 @@
     id: "xmas-horror", text: "Name a Christmas horror movie",
     miracle: "Christmas Evil", miracleNote: "A 1980 slasher about a toy-factory worker obsessed with being Santa.",
     trap: "The Nightmare Before Christmas|Nightmare Before Christmas", trapNote: "Spooky, but it's a family musical.",
-    t75: ["Inside", "Tales from the Crypt", "To All a Goodnight", "Silent Night, Bloody Night", "Don't Open Till Christmas", "Saint|Sint", "A Christmas Horror Story", "It's a Wonderful Knife", "The Lodge", "P2"],
+    t75: ["Inside", "Tales from the Crypt", "To All a Goodnight", "Silent Night, Bloody Night", "Don't Open Till Christmas", "Saint|Sint", "A Christmas Horror Story", "It's a Wonderful Knife", "The Lodge", "P2", "Black Christmas 1974|Black Christmas (2006)|Black Christmas (2019)", "Krampus (2015)", "Better Watch Out (2016)", "Rare Exports: A Christmas Tale", "You Better Watch Out", "Jack Frost (1997)", "Deadly Games", "Rampage Santa", "Anna and the Apocalypse (2017)", "Saint (2010)", "Tales from the Crypt And All Through the House|And All Through the House", "The Gingerdead Man", "Treevenge", "Slay Belles", "Christmas Bloody Christmas (2022)", "The Children", "Elves (1989)", "Bloody Christmas"],
     t50: [
       "Silent Night, Deadly Night Part 2|Silent Night Deadly Night 2", "Silent Night, Deadly Night 3: Better Watch Out!|Silent Night Deadly Night 3", "Silent Night, Deadly Night 4: Initiation|Silent Night Deadly Night 4", "Silent Night, Deadly Night 5: The Toy Maker|Silent Night Deadly Night 5",
       "Elves", "Dead End", "Krampus: The Reckoning", "Krampus: The Christmas Devil",
@@ -92,7 +92,7 @@
     id: "netflix-xmas", text: "Name a Netflix original Christmas movie",
     miracle: "Christmas Inheritance", miracleNote: "A 2017 rom-com where an heiress must deliver a letter in a snowy small town.",
     trap: "Noelle", trapNote: "That one's Disney+.",
-    t75: ["Christmas as Usual", "Christmas with You", "The Noel Diary", "Holiday in the Wild", "A Boy Called Christmas", "Christmas on the Square", "The Princess Switch: Switched Again", "A Christmas Prince: The Royal Wedding", "The Christmas Chronicles: Part Two"],
+    t75: ["Christmas as Usual", "Christmas with You", "The Noel Diary", "Holiday in the Wild", "A Boy Called Christmas", "Christmas on the Square", "The Princess Switch: Switched Again", "A Christmas Prince: The Royal Wedding", "The Christmas Chronicles: Part Two", "The Princess Switch 3: Romancing the Star", "The Christmas Chronicles 2", "Dolly Parton's Christmas on the Square", "Christmas with a View", "The Christmas Pact", "Spirited", "Your Christmas or Mine?", "Dashing Through the Snow", "A Family Business Christmas", "The Claus Family 2"],
     t50: [
       "A Christmas Prince: The Royal Baby", "Holiday Rush", "Family Switch", "The Claus Family",
       "My Dad's Christmas Date", "A Naija Christmas", "Christmas Eve in Miller's Point", "Jingle Bell Heist",
@@ -145,7 +145,7 @@
     t75: [
       "Fredric March", "Orson Welles", "Lionel Barrymore",
 "Michael Hordern", "Henry Winkler"],
-    t50: ["Albert Finney", "Bill Murray", "Kelsey Grammer", "Guy Pearce", "Tim Curry", "Reginald Owen", "Mr. Magoo|Jim Backus", "Luke Evans", "Scrooge McDuck"],
+    t50: ["Albert Finney", "Bill Murray", "Kelsey Grammer", "Guy Pearce", "Tim Curry", "Reginald Owen", "Mr. Magoo|Jim Backus", "Luke Evans", "Scrooge McDuck", "Alan Young"],
     t25: ["Patrick Stewart", "Alastair Sim", "George C. Scott"],
     t10: ["Jim Carrey", "Michael Caine"],
   },
@@ -155,7 +155,7 @@
     t75: ["Lead pipe|Pipe", "Glue", "Rope|Zip line"],
     t50: [
       "Stairs|Icy stairs|Steps", "Electric wires|Wires",
-"Tar and nails|Tar|Nails", "Feathers", "Hot doorknob|Doorknob", "Ice|Icy steps", "Fan", "Bricks", "Staple gun", "Toolbox|Tools", "Mannequins", "Electricity|Electrocution"],
+"Tar and nails|Tar|Nails", "Feathers", "Hot doorknob|Doorknob", "Ice|Icy steps", "Fan", "Bricks", "Staple gun", "Toolbox|Tools", "Mannequins", "Electricity|Electrocution", "Paint can swinging|Paint cans on the stairs|Swinging paint cans", "Tarantula on face", "Nails on the stairs|Nails on the floor", "Hot iron|Steam iron", "Heated doorknob", "Ice on the steps|Ice on stairs", "Tar on the stairs|Tar steps", "Marbles|Roller skates", "Fake mannequin|Cardboard cutout|Cardboard Michael Jordan", "Fake gangster movie|Angels with Filthy Souls|Mobster movie|Gangster movie", "Basement furnace|Furnace", "Pellet gun|Air rifle|Nail gun", "Hanging paint cans|Paint cans swing", "Fireworks"],
     t25: ["Blowtorch", "Tarantula|Spider", "Micro Machines|Toy cars", "Ornaments|Christmas ornaments|Glass ornaments", "BB gun"],
     t10: ["Paint cans|Paint can", "Iron"],
   },

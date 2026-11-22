@@ -277,7 +277,7 @@
     try {
       const { token } = await api("/api/unlock?session_id=" + encodeURIComponent(sid));
       store.set("unlockToken", token);
-      unlockedNow("🎁 You're a supporter. Thank you!");
+      unlockedNow("You're a supporter. Thank you!");
     } catch (e) {
       toast("Couldn't confirm the payment yet. Try “Restore purchase”.");
     }
@@ -319,7 +319,7 @@
       });
       store.set("unlockToken", token);
       $("#dlg-paywall").close();
-      unlockedNow("Purchase restored 🎁");
+      unlockedNow("Purchase restored");
     } catch (err) {
       toast(err.status === 404 ? "No purchase found for that email." : "Couldn't restore right now.");
     } finally {
@@ -407,6 +407,21 @@
     return "Naughty List";
   }
 
+  // Run titles: the score rating, unless how you played earned a funnier one.
+  function runTitle(results, score) {
+    const c = (t) => results.filter((r) => r.tier === t).length;
+    if (c("miracle") >= 2) return "Rare Drop Machine";
+    if (c("trap") >= 3) return "Regift Royalty";
+    if (c("t10") >= 5) return "Basic Bundle";
+    if (c("timeout") >= 3) return "Asleep at the Sleigh";
+    if (c("miracle") === 1 && score < MAX_SCORE * 0.5) return "One-Hit Wonder";
+    return rating(score);
+  }
+  const STREAK_MARKS = [[3, "Stocking Stuffer"], [7, "Sleigh Hand"], [14, "Reindeer Whisperer"], [25, "Santa's Right Hand"]];
+  const streakTitle = (n) => { let t = ""; STREAK_MARKS.forEach(([d, name]) => { if (n >= d) t = name; }); return t; };
+  // A friend's challenge link (?beat=score&d=day) is read once and kept for the results screen.
+  let challenge = null;
+
   function renderMenu() {
     const day = dayNumber();
     const saved = store.get(dayKey(day), null);
@@ -415,7 +430,7 @@
     const streak = currentStreak();
     const pastDays = Math.max(0, day - 1);
 
-    $("#hero-eyebrow").textContent = day >= 1 ? `Sleigh Run #${day} · Streak ${streak}` : "Preview sleigh run";
+    $("#hero-eyebrow").textContent = day >= 1 ? `Sleigh Run #${day} · ${streak > 2 ? streakTitle(streak) : "Streak " + streak}` : "Preview sleigh run";
     $("#hero-sub").textContent = played
       ? `You scored ${total(saved.results)} of ${MAX_SCORE}: ${rating(total(saved.results))}.`
       : "7 Christmas prompts · 25 seconds each";
@@ -445,7 +460,7 @@
     const day = dayNumber();
     const card = $("#sheet-supporter");
     card.classList.toggle("is-supporter", unlocked);
-    $("#sup-title").textContent = unlocked ? "You're a supporter 🎁" : "Become a supporter";
+    $("#sup-title").textContent = unlocked ? "You're a supporter" : "Become a supporter";
     $("#sup-sub").textContent = unlocked
       ? "Unlimited Runs and the full archive are unlocked. Thank you!"
       : `Every past run + endless fresh runs · ${CONFIG.price} once`;
@@ -544,7 +559,7 @@
     if (!isUnlocked()) {
       if (!freeRunLeft()) { openPaywall(); return; }
       store.set("freeUnl", true);
-      toast("Your free Unlimited Run, on the house 🎁");
+      toast("Your free Unlimited Run, on the house");
     }
     track("run_start", { mode: "unlimited" });
     state = { mode: "unlimited", prompts: randomPrompts(), i: 0, results: [] };
@@ -685,7 +700,7 @@
     const streak = currentStreak();
     $("#next-card").hidden = !window.AdventTree && !daily;
     renderTree($("#next-tree"), false, state.fresh ? state.newOrn : null);
-    $("#next-streak").textContent = streak ? `🔥 ${streak}-day streak` : "";
+    $("#next-streak").textContent = streak ? `${streak}-day streak` : "";
     $("#next-msg").textContent = daily
       ? (state.newOrn ? "New ornament hung! Come back tomorrow for another one" : "Come back tomorrow for a new ornament") + (streak ? ` and make your streak ${streak + 1}.` : ".")
       : "Daily Sleigh Runs hang ornaments on your tree. Don't miss tomorrow's!";
@@ -693,7 +708,7 @@
     const b = $("#btn-next-unl");
     const free = freeRunLeft();
     b.hidden = !(isUnlocked() || free);
-    b.textContent = free ? "Play your FREE Unlimited run 🎁" : "Play another run";
+    b.textContent = free ? "Play your FREE Unlimited run" : "Play another run";
   }
 
   // Jingle chats while you think.
@@ -718,7 +733,7 @@
     t75: ["Big brain pick!", "Ooh, deep cut. Respect.", "That's actually so good.", "Locked in!", "W answer."],
     t50: ["Nice, not everyone gets that!", "Solid pick.", "Clutch!", "Chat, we're so back.", "Chilly pick, I like it."],
     t25: ["Classic. Can't go wrong.", "Respect the classics.", "A crowd favourite!", "Safe and sound."],
-    trap: ["Everyone said that one.", "Too clever… everyone tried it.", "Bruh. Regifted.", "Oof, the trap got you!"],
+    trap: ["Everyone said that one. EVERYONE.", "The clever one. Sadly, so did everybody else.", "Everyone said that one.", "Too clever… everyone tried it.", "Bruh. Regifted.", "Oof, the trap got you!"],
     t10: ["Mid… but it counts!", "Too basic! Go deeper next time.", "Everyone's first answer.", "Valid. Very, very basic."],
     timeout: ["The sleigh left without you!", "Frozen solid?", "Oof. Time's up!", "Not even close… to answering!"],
     miss: ["Hmm, that's not on the list."],
@@ -734,6 +749,15 @@
     box.classList.add("talk");
   }
 
+  function miracleBanner() {
+    const b = document.createElement("div");
+    b.className = "miracle-banner";
+    b.setAttribute("aria-hidden", "true");
+    b.innerHTML = "<span>ONE IN A</span><b>MERRILLION</b>";
+    document.body.appendChild(b);
+    setTimeout(() => b.remove(), 2000);
+  }
+
   function renderFeedback(p, res) {
     const t = TIERS[res.tier];
     const fb = $("#feedback");
@@ -742,6 +766,7 @@
     fb.dataset.tier = res.tier;
     $("#fb-emoji").innerHTML = tierSprite(res.tier, 56);
     react(res.tier);
+    if (res.tier === "miracle") miracleBanner();
     $("#fb-label").textContent = t.label;
     $("#fb-points").textContent = `+${t.pts}`;
 
@@ -783,6 +808,7 @@
       if (!already.done) {
         saveProgress({ started: state.prompts.length, done: true });
         const s = loadStats();
+        const prevBest = s.best, prevStreak = s.streak, prevPlayed = s.played;
         s.played++;
         s.totalPts += score;
         s.best = Math.max(s.best, score);
@@ -791,6 +817,15 @@
         s.lastDay = state.day;
         s.miracles += miracles;
         store.set("stats", s);
+        state.callouts = [];
+        if (prevPlayed > 0 && score > prevBest) state.callouts.push(`New personal best! Up ${score - prevBest} on your old ${prevBest}.`);
+        else if (prevPlayed > 0 && score === prevBest) state.callouts.push("You tied your personal best.");
+        const hit = STREAK_MARKS.find(([d]) => d === s.streak);
+        if (hit) state.callouts.push(`${s.streak}-day streak! New title: ${hit[1]}.`);
+        else if (s.streak > 1 && s.streak > prevStreak) {
+          const nx = STREAK_MARKS.find(([d]) => d > s.streak);
+          if (nx) state.callouts.push(`${s.streak}-day streak. ${nx[0] - s.streak} more for ${nx[1]}.`);
+        }
         const orn = store.get("ornaments", []);
         if (!orn.some((o) => o.day === state.day)) { orn.push({ day: state.day, kind: window.AdventTree ? window.AdventTree.kindFor(score) : "plain" }); store.set("ornaments", orn); state.newOrn = state.day; }
       }
@@ -798,11 +833,13 @@
       saveProgress({ started: state.prompts.length, done: true });
     } else {
       const s = loadStats();
-      s.unlimitedPlayed++;
+      const pb = s.unlimitedBest, pn = s.unlimitedPlayed; s.unlimitedPlayed++; state.unlBest = pn > 0 && score > pb;
       s.unlimitedBest = Math.max(s.unlimitedBest, score);
       s.miracles += miracles;
       store.set("stats", s);
     }
+    if (state.mode !== "daily") state.callouts = [];
+    if (state.mode === "unlimited" && state.unlBest) state.callouts.push("Best Unlimited run yet!");
     state.fresh = true;   // play the count-up + fanfare
     showSummary();
     if (window.Account) window.Account.push();
@@ -819,7 +856,15 @@
     const score = total(state.results);
     $("#sum-mode").textContent = modeLabel();
     $("#sum-max").textContent = `/ ${MAX_SCORE}`;
-    $("#sum-rating").textContent = rating(score);
+    $("#sum-rating").textContent = runTitle(state.results, score);
+    const calls = (state.callouts || []).slice();
+    const mir = state.results.filter((r) => r.tier === "miracle").length;
+    if (mir) calls.unshift(mir > 1 ? `${mir} One in a Merrillions in one run. Tell everyone.` : "You found a One in a Merrillion. Almost nobody does.");
+    if (challenge && (state.mode === "daily" || state.mode === "archive") && challenge.d === state.day) {
+      const diff = score - challenge.beat;
+      calls.unshift(diff > 0 ? `You beat your friend's ${challenge.beat} by ${diff}.` : diff < 0 ? `Your friend's ${challenge.beat} beat you by ${-diff}. Rematch tomorrow.` : `Dead tie with your friend's ${challenge.beat}.`);
+    }
+    $("#sum-callouts").innerHTML = calls.map((c) => `<li>${esc(c)}</li>`).join("");
     $("#sum-miles").textContent = `${(score * 10).toLocaleString()} sleigh miles`;
     $("#recap-score").textContent = `${score} pts`;
     $("#dist-score").textContent = `You: ${score} pts`;
@@ -869,6 +914,7 @@
 
     const fresh = state.fresh;
     state.fresh = false;
+    state.callouts = [];
     countUp(score, fresh);
   }
 
@@ -1058,7 +1104,7 @@
   }
 
   // ---------- share ----------
-  const shareUrl = () => (ONLINE ? location.origin + location.pathname : "");
+  const shareUrl = () => (ONLINE ? location.origin + location.pathname + (state.mode === "daily" && state.day >= 1 && state.results.length ? `?beat=${total(state.results)}&d=${state.day}` : "") : "");
   function shareTitle() {
     return state.mode === "daily" ? `${CONFIG.name} ${dayLabel(state.day)}`
       : state.mode === "archive" ? `${CONFIG.name} #${state.day} (archive)` : `${CONFIG.name} Unlimited`;
@@ -1066,7 +1112,9 @@
   function shareText(withUrl = true) {
     const url = withUrl && ONLINE ? "\n" + shareUrl() : "";
     const score = total(state.results);
-    return `${shareTitle()} 🎄 ${score}/${MAX_SCORE} · ${(score * 10).toLocaleString()} sleigh miles\n${grid(state.results)}\nCan you beat me?${url}`;
+    const mir = state.results.filter((r) => r.tier === "miracle").length;
+    const brag = mir ? `\n${mir > 1 ? mir + " One in a Merrillions" : "I found a One in a Merrillion"}. Find yours.` : "";
+    return `${shareTitle()} 🎄 ${score}/${MAX_SCORE} · ${runTitle(state.results, score)}\n${grid(state.results)}${brag}\nCan you beat my ${score}?${url}`;
   }
 
   async function copyText(text, msg) {
@@ -1155,7 +1203,7 @@
     ctx.fillText(`/ ${MAX_SCORE} · ${(score * 10).toLocaleString()} SLEIGH MILES`, W / 2, py + 420);
     ctx.fillStyle = "#c8323a";
     ctx.font = '84px "Jersey 15", Impact, sans-serif';
-    ctx.fillText(rating(score).toUpperCase(), W / 2, py + 520);
+    ctx.fillText(runTitle(state.results, score).toUpperCase(), W / 2, py + 520);
     const n = state.results.length, cell = 8, size = 12 * cell, gap = 22;
     const startX = (W - (n * size + (n - 1) * gap)) / 2;
     state.results.forEach((r, i) => drawSprite(ctx, (Spr && Spr.TIER_SPRITE[r.tier]) || "x", startX + i * (size + gap), py + 580, cell));
@@ -1245,7 +1293,20 @@
   function track(event, params) { try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
   function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
   function openMoreGames() {
-    openInfo("More games", `<div class="more-games"><a class="mg-card mg-mog" href="/mogillion/"><b>Mogillion →</b><p>The daily looksmaxxing word game. Name the rarest glow-up answers, collect Aura Cards and mog your friends.</p></a><a class="mg-card mg-tri" href="/trillion/"><b>Trillion →</b><p>The daily finance word game. Name the rarest money answers, build a portfolio and beat the market.</p></a><div class="mg-card mg-soon"><b>More coming soon</b><p>More daily rare-answer games are being wrapped up in Santa's workshop. 🎁</p></div><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
+    const mgIco = {
+      mer: '<svg class="mgp-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 8L13 22h6L9 34h8L6 44h36L31 34h8L29 22h6z" fill="#1f8a4c" stroke="#0f5a2e" stroke-width="1.5" stroke-linejoin="round"/><circle cx="19" cy="30" r="2" fill="#e8312f"/><circle cx="28" cy="38" r="2" fill="#ffd34e"/><circle cx="25" cy="21" r="2" fill="#e8312f"/><path d="M24 2l1.6 3.4 3.7.4-2.8 2.5.8 3.7-3.3-1.9-3.3 1.9.8-3.7-2.8-2.5 3.7-.4z" fill="#ffd34e"/></svg>',
+      mog: '<svg class="mgp-ico" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 4l16 10-4 24-12 8-12-8-4-24z" fill="#1b2330" stroke="#4fd8ff" stroke-width="2.5" stroke-linejoin="round"/><path d="M24 4v42M8 14l16 10 16-10M12 38l12-14 12 14" fill="none" stroke="#4fd8ff" stroke-width="1.6" stroke-linejoin="round" opacity=".8"/><path d="M24 4l-5 20 5 22 5-22z" fill="#4fd8ff" opacity=".25"/></svg>',
+      tri: '<svg class="mgp-ico" viewBox="0 0 48 48" aria-hidden="true"><rect x="4" y="9" width="40" height="30" rx="3" fill="#f6efdc" stroke="#d9a93c" stroke-width="2.5"/><rect x="8" y="13" width="32" height="22" rx="1.5" fill="none" stroke="#1d5240" stroke-width="1" stroke-dasharray="2 2"/><path d="M11 30l7-7 5 4 9-10" fill="none" stroke="#1d5240" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M28 17h5v5" fill="none" stroke="#1d5240" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="37" cy="34" r="4.5" fill="#d9a93c" stroke="#a97d1f" stroke-width="1.2"/></svg>'
+    };
+    const mgCard = (k, i, href, attrs, title, pitch, tag) => {
+      const st = ` style="--i:${i}"`;
+      const body = `<span class="mgp-sky"></span>${tag}${mgIco[k]}<span class="mgp-txt"><b>${title}</b><span class="mgp-pitch">${pitch}</span></span>`;
+      return href
+        ? `<a class="mgp mgp-${k}" href="${href}"${attrs}${st}>${body}<span class="mgp-go">Play &rarr;</span></a>`
+        : `<div class="mgp mgp-${k} mgp-here"${st}>${body}<span class="mgp-go">You're here</span></div>`;
+    };
+    const mgTicker = '<span class="mgp-tick" aria-hidden="true">TRIL &#9650;2.4 &nbsp; GOLD &#9650;0.8 &nbsp; BOND &#9660;0.3 &nbsp; TRIL &#9650;2.4 &nbsp; GOLD &#9650;0.8</span>';
+    openInfo("More games", `<div class="more-games">${mgCard("mer", 0, "", "", "Merrillion", "The Christmas daily word game. 7 festive prompts a day.", "")}${mgCard("tri", 1, "/trillion/", "", "Trillion", "The daily finance word game. Build a portfolio of rare money answers.", mgTicker)}<div class="mgp-soon" style="--i:2">More daily rare-answer games coming soon.</div><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
   }
   function openPrivacy() {
     openInfo("Privacy", `<p>Merrillion keeps your stats and streak in your browser. If you sign in, we store your email and stats in your account so they sync between devices.</p><p>We use Google Analytics (via Google Tag Manager) to count visits and see which features people use. Payments are handled by Stripe; we never see your card.</p><p>Feedback you send is stored so we can read it. We don't sell your data.</p><p>Questions or delete requests: <a href="mailto:${CONTACT}">${CONTACT}</a></p>`);
@@ -1408,6 +1469,12 @@
 
     // Dev helpers (local only): ?unlock=dev unlocks supporter features, ?reset replays today's run.
     const params = new URLSearchParams(location.search);
+    const beat = parseInt(params.get("beat"), 10), bd = parseInt(params.get("d"), 10);
+    if (beat >= 0 && beat <= MAX_SCORE && bd >= 1) {
+      challenge = { beat, d: bd };
+      cleanUrl();
+      setTimeout(() => toast(`A friend scored ${beat}. Can you beat it?`), 600);
+    }
     if (LOCAL && params.get("unlock") === "dev") {
       store.set("unlockToken", "dev");
       setTimeout(() => toast("Supporter features unlocked (dev mode)"), 300);

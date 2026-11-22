@@ -11,7 +11,7 @@
     epoch: "2026-11-21",      // the day the site opened = Daily Market Open No. 1 (YYYY-MM-DD)
     price: "$3.99",           // display only; the real price is set in Stripe
     apiBase: "",              // where the /api functions live ("" = same site)
-    paymentLink: "",          // Stripe Payment Link for the Trillion Pass (empty = "opens soon")
+    paymentLink: "https://buy.stripe.com/bJe28t5PF6jodOTaTxg7e02",        // Stripe Payment Link for the Trillion Pass (empty = "opens soon")
     minPlayersForCurve: 5,    // players needed before the "better than X%" curve appears
   };
   const DAY_OFFSET = 200000;  // Trillion's days live at day + 200000 in the shared daily_scores table
@@ -384,6 +384,39 @@
     return "Paper Hands";
   }
 
+  // ---------- career ladder (lifetime, by Daily Market Opens finished) + streak seals ----------
+  const CAREER = [[0, "Mailroom Intern"], [1, "Intern"], [3, "Analyst"], [7, "Associate"], [14, "Vice President"], [30, "Partner"], [60, "Managing Director"], [100, "CEO"]];
+  const SEALS = [[3, "Bronze Seal"], [7, "Silver Seal"], [14, "Gold Seal"], [30, "Platinum Seal"], [60, "Diamond Seal"], [100, "Trillion Seal"]];
+  function careerInfo() {
+    const n = loadStats().played;
+    let i = 0;
+    CAREER.forEach((c, k) => { if (n >= c[0]) i = k; });
+    const next = CAREER[i + 1];
+    return { title: CAREER[i][1], next: next ? { title: next[1], left: next[0] - n } : null, seals: store.get("seals", []) };
+  }
+  // A different flavour every weekday. Pure copy: scoring never changes.
+  const TWISTS = [
+    ["Sunday Dividend", "Slow Sunday. Dig deeper than the first thing in your head."],
+    ["Merger Monday", "Two ideas collide. Answer with the one nobody else would merge."],
+    ["Contrarian Tuesday", "Do the opposite of the crowd today."],
+    ["Wild-Card Wednesday", "Midweek volatility. Weird answers welcome."],
+    ["Throwback Thursday", "Old money, old ideas. Go vintage."],
+    ["Fire-Sale Friday", "Everything must go. Spend your best answers early."],
+    ["Short-Squeeze Saturday", "Weekend whales are out. Think rarer than rare."],
+  ];
+  const twist = () => TWISTS[new Date().getDay()];
+  // Memorable run titles: the first one that fits replaces the plain rating.
+  function runTitle(results, score) {
+    const c = (t) => results.filter((r) => r.tier === t).length;
+    if (c("miracle") >= 3) return "Market Whisperer";
+    if (c("miracle") >= 2) return "Unicorn Hunter";
+    if (c("trap") >= 3) return "Chief Bag Officer";
+    if (results.length && results.every((r) => r.tier === "t10" || r.tier === "timeout" || r.tier === "miss")) return "Index Fund Intern";
+    if (c("timeout") >= 3) return "Asleep at the Bell";
+    if (c("miracle") === 1 && score < 300) return "One Lucky Trade";
+    return rating(score);
+  }
+
   function renderMenu() {
     const day = dayNumber();
     const saved = store.get(dayKey(day), null);
@@ -395,8 +428,11 @@
     $("#hero-eyebrow").textContent = day >= 1 ? `Daily Market Open ${certNo(day)}` : "Pre-market preview";
     $("#hero-sub").textContent = played
       ? `You scored ${total(saved.results)} of ${MAX_SCORE}: ${rating(total(saved.results))}.`
-      : "7 prompts · 25 seconds each · the rarer the answer, the bigger the return";
-    $("#daily-sub").textContent = played ? "Done ✓ · see your results" : streak > 0 ? `Keep your ${streak}-day streak alive!` : "Same 7 for everyone";
+      : `${twist()[0]}: ${twist()[1]}`;
+    const ci = careerInfo();
+    $("#career").innerHTML = `<b>${esc(ci.title)}</b>` + (ci.next ? ` · ${ci.next.left} more Market Open${ci.next.left === 1 ? "" : "s"} to ${esc(ci.next.title)}` : " · top of the ladder") +
+      (ci.seals.length ? `<span class="seals">${ci.seals.map((n) => `<i title="${esc(n)}">${Spr ? Spr.svg("seal", 18) : ""}</i>`).join("")}</span>` : "");
+    $("#daily-sub").textContent = played ? "Stamped paid · see your results" : streak > 0 ? `Keep your ${streak}-day streak alive!` : "Same 7 for everyone";
     renderTree($("#home-tree"), true);
     const badge = $("#streak-badge");
     badge.hidden = streak < 1;
@@ -542,7 +578,7 @@
       if (idx === state.i && !state.answered) li.classList.add("current");
       ol.appendChild(li);
     });
-    $("#score").textContent = total(state.results);
+    { const sc = $("#score"), v = total(state.results); if (sc.textContent !== String(v) && v > 0) { sc.parentNode.classList.remove("bump"); void sc.parentNode.offsetWidth; sc.parentNode.classList.add("bump"); } sc.textContent = v; }
   }
 
   function startPrompt() {
@@ -679,7 +715,7 @@
     start: ["Buy low, answer rare.", "Think rare. The obvious stuff barely pays!", "Skip the first thing in your head!", "Deep cuts yield the best returns.", "Diversify your answers!", "Rare answers = bigger returns!"],
     mid: ["Tick tock, the market's moving!", "Still thinking? Go contrarian!", "Halfway to the bell!", "Volume's drying up…"],
     late: ["Market's closing!", "Any answer beats no answer!", "Hurry, hurry, hurry!"],
-    nope: ["Not on the exchange! Try again.", "Hmm, that's not listed. Another!", "Close… but not quite!"],
+    nope: ["That ticker doesn't exist. Nice try.", "Bold. Also not a real answer.", "Not on the exchange! Try again.", "Hmm, that's not listed. Another!", "Close… but not quite!"],
   };
   const pickLine = (a) => a[Math.floor(Math.random() * a.length)];
   function say(text) {
@@ -701,8 +737,12 @@
     timeout: ["The bell rang without you!", "Market closed!", "Oof. Time's up!", "Not even a bid…"],
     miss: ["Hmm, that's not listed."],
   };
-  function react(tier) {
-    const lines = REACTIONS[tier] || REACTIONS.miss;
+  function react(tier, res) {
+    let lines = REACTIONS[tier] || REACTIONS.miss;
+    const a = res && res.matched;
+    if (tier === "trap" && a) lines = lines.concat([`"${a}"? Half the market bought that one.`, `You bought "${a}" at the top. Classic.`, `"${a}" looked smart. It was bait.`]);
+    if (tier === "t10" && a) lines = lines.concat([`"${a}". Bold. Brave. Extremely common.`, `Somebody in your class said "${a}" too.`]);
+    if (tier === "miracle" && a) lines = [`"${a}"?! Ring the bell. Nobody else found it.`, `"${a}" is the one. You just read the whole market.`, "ONE IN A TRILLION! Tell your friends. Slowly."];
     const bubble = $("#fb-bubble"), elf = $("#fb-elf");
     elf.innerHTML = Spr ? Spr.svg("broker", 48) : "";
     bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
@@ -719,7 +759,7 @@
     fb.hidden = false;
     fb.dataset.tier = res.tier;
     $("#fb-emoji").innerHTML = tierSprite(res.tier, 56);
-    react(res.tier);
+    react(res.tier, res);
     $("#fb-label").textContent = t.label;
     $("#fb-points").textContent = `+${t.pts}`;
 
@@ -761,11 +801,13 @@
       if (!already.done) {
         saveProgress({ started: state.prompts.length, done: true });
         const s = loadStats();
+        state.prevBest = s.best; state.prevTitle = careerInfo().title;
         s.played++;
         s.totalPts += score;
         s.best = Math.max(s.best, score);
         s.streak = s.lastDay === state.day - 1 ? s.streak + 1 : 1;
         s.maxStreak = Math.max(s.maxStreak, s.streak);
+        { const seals = store.get("seals", []); const m = SEALS.find((x) => x[0] === s.streak); if (m && !seals.includes(m[1])) { seals.push(m[1]); store.set("seals", seals); state.seal = m[1]; } }
         s.lastDay = state.day;
         s.miracles += miracles;
         store.set("stats", s);
@@ -776,6 +818,7 @@
       saveProgress({ started: state.prompts.length, done: true });
     } else {
       const s = loadStats();
+      state.prevBest = s.unlimitedBest;
       s.unlimitedPlayed++;
       s.unlimitedBest = Math.max(s.unlimitedBest, score);
       s.miracles += miracles;
@@ -797,7 +840,20 @@
     const score = total(state.results);
     $("#sum-mode").textContent = modeLabel();
     $("#sum-max").textContent = `/ ${MAX_SCORE}`;
-    $("#sum-rating").textContent = rating(score);
+    $("#sum-rating").textContent = runTitle(state.results, score);
+    {
+      const bits = [], pb = state.prevBest, ci = careerInfo();
+      if (state.prevTitle && state.prevTitle !== ci.title) bits.push("Promoted to " + ci.title + "!");
+      if (state.seal) bits.push(state.seal + " earned for your " + currentStreak() + "-day streak.");
+      if (pb !== undefined && state.mode !== "archive") {
+        if (!pb) bits.push("First run on the books. Welcome to the floor.");
+        else if (score > pb) bits.push("New personal best! +" + (score - pb) + " over your old " + pb + ".");
+        else if (score === pb) bits.push("You tied your personal best of " + pb + ".");
+        else if (pb - score <= 40) bits.push("Just " + (pb - score) + " short of your best (" + pb + ").");
+      }
+      const co = $("#sum-callout");
+      co.hidden = !bits.length; co.textContent = bits.join(" ");
+    }
     $("#sum-miles").textContent = "$" + (score * 1250).toLocaleString() + " net worth";
     $("#recap-score").textContent = `${score} pts`;
     $("#dist-score").textContent = `You: ${score} pts`;
@@ -836,7 +892,7 @@
       return `<li data-tier="${esc(r.tier)}"><details class="bd">
         <summary><span class="bd-emoji">${tierSprite(r.tier, 24)}</span>
           <span class="bd-mid"><span class="bd-prompt">${esc(p.text)}</span><span class="bd-answer">${yours}</span></span>
-          <span class="bd-pts">${r.pts}</span><span class="bd-caret" aria-hidden="true">▾</span></summary>
+          <span class="bd-pts">${r.pts}</span><span class="bd-caret" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span></summary>
         <div class="ans-groups">${groups}</div>
       </details></li>`;
     }).join("");
@@ -1060,7 +1116,9 @@
   function shareText(withUrl = true) {
     const url = withUrl && ONLINE ? "\n" + shareUrl() : "";
     const score = total(state.results);
-    return `${shareTitle()} 📈 ${score}/${MAX_SCORE} · $${(score * 1250).toLocaleString()} net worth\n${grid(state.results)}\nCan you beat the market?${url}`;
+    const n = (t) => state.results.filter((r) => r.tier === t).length;
+    const brag = [n("miracle") ? "💎 x" + n("miracle") + " One in a Trillion" : "", n("trap") ? "💼 x" + n("trap") + " bags held" : "", n("timeout") ? "🔔 x" + n("timeout") + " missed the bell" : ""].filter(Boolean).join(" · ");
+    return `${shareTitle()} 📈 ${score}/${MAX_SCORE} · "${runTitle(state.results, score)}"\n${grid(state.results)}${brag ? "\n" + brag : ""}\nThink you can beat ${score}? Same 7 prompts for everyone.${url}`;
   }
 
   async function copyText(text, msg) {
@@ -1157,7 +1215,7 @@
     ctx.fillStyle = "#1b2a24"; ctx.font = `900 300px ${serif}`; ctx.fillText(String(score), W / 2, py + 620);
     ctx.fillStyle = "#6b6a55"; ctx.font = `600 40px ${sans}`;
     ctx.fillText(`/ ${MAX_SCORE} PTS · $${(score * 1250).toLocaleString()} NET WORTH`, W / 2, py + 685);
-    ctx.fillStyle = "#a3262e"; ctx.font = `italic 700 66px ${serif}`; ctx.fillText(rating(score), W / 2, py + 775);
+    ctx.fillStyle = "#a3262e"; ctx.font = `italic 700 66px ${serif}`; ctx.fillText(runTitle(state.results, score), W / 2, py + 775);
     const n = state.results.length, size = 96, gap = 18;
     const startX = (W - (n * size + (n - 1) * gap)) / 2;
     icons.forEach((img, i) => { if (img) ctx.drawImage(img, startX + i * (size + gap), py + 820, size, size); });
@@ -1249,7 +1307,7 @@
   function track(event, params) { try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
   function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
   function openMoreGames() {
-    openInfo("More games", `<div class="more-games"><a class="mg-card mg-mer" href="https://www.merrillion.site"><b>Merrillion →</b><p>The Christmas daily word game. Seven festive prompts, rare answers and a new advent ornament every day.</p></a><a class="mg-card mg-mog" href="https://www.merrillion.site/mogillion/"><b>Mogillion →</b><p>The daily looksmaxxing word game. Name the rarest glow-up answers, collect Aura Cards and mog your friends.</p></a><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
+    openInfo("More games", `<div class="more-games"><a class="mg-card mg-mer" href="https://www.merrillion.site"><span class="mg-art" aria-hidden="true">🎄</span><b>Merrillion</b><p>The Christmas daily word game. Seven festive prompts, rare answers and a new advent ornament every day.</p><span class="mg-play"><span>Play →</span></span></a><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
   }
   function openPrivacy() {
     openInfo("Privacy", `<p>Trillion keeps your stats and streak in your browser. If you sign in, we store your email and stats in your account so they sync between devices.</p><p>We use Google Analytics (via Google Tag Manager) to count visits and see which features people use. Payments are handled by Stripe; we never see your card.</p><p>Feedback you send is stored so we can read it. We don't sell your data.</p><p>Questions or delete requests: <a href="mailto:${CONTACT}">${CONTACT}</a></p>`);

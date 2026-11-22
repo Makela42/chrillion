@@ -5,7 +5,7 @@
 (() => {
   "use strict";
   const MONO = '"IBM Plex Mono", ui-monospace, Menlo, monospace';
-  const UP = "#3fcf8e", DOWN = "#ee6a73", GOLD = "#f6d578";
+  const UP = "#7fc8a0", DOWN = "#c9776a", GOLD = "#f6d578";
   const rnd = (a, b) => a + Math.random() * (b - a);
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
