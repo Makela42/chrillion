@@ -194,7 +194,7 @@
     light: 1, lightT: 1, camLow: 0, camLowT: 0, rimCol: "#4de2f7", rimAmt: 0, rimAmtT: 0, flashLvl: 0,
     bw: 0, strobeUntil: 0, strobeCol: "#fff", zoom: 1, zoomT: 1, zfx: 0.5, zfy: 0.4, shakeAmp: 0, shakeT0: 0, shakeDur: 0, buzzUntil: 0,
     ts: 1, tsT: 1, bars: 0, barsT: 0, wash: null, washA: 0, washT: 0, sweepT0: -9, sweepCol: "#ff4d8d", beamCol: ["#9fdcff", "#fff1d6", "#ffc4a0"], beamColT: null,
-    nodT0: -9, nodAmp: 1, yaw: 0, yawUntil: 0, mood: "cool", modelX: 0, modelXT: 0, tone: null, vig: null,
+    expr: "smirk", nodT0: -9, nodAmp: 1, yaw: 0, yawUntil: 0, mood: "cool", modelX: 0, modelXT: 0, tone: null, vig: null,
     rival: { vis: false, x: 0, y: 0, sc: 1, xT: 0, yT: 0, scT: 1, mood: "cool", shades: true, fall: null },
     take: "", idleFlash: 2,
   };
@@ -515,7 +515,9 @@
       placeFig(rfig, { yaw: 0, mood: rv.mood, nod: 0, bob, bright, amt: 0.8 + S.rimAmt * 0.3, rimL: "#a8e8ff", rimR: "#ff9d6e", shades: sh, tint: null }, Math.round(rv.x), Math.round(feet + rv.y), rv.sc * 0.97, 1);
       if (rv.fall) { pctx.save(); pctx.translate(Math.round(rv.fall.x), Math.round(rv.fall.y)); pctx.rotate(rv.fall.r); pctx.drawImage(shadesSpr, -12, -4); pctx.restore(); }
     }
-    placeFig(fig, { yaw, mood: S.mood, nod, bob, bright, amt: rimAmt, rimL: yaw === 0 && S.rimAmt < 0.1 ? "#a8e8ff" : rc, rimR: S.rimAmt > 0.1 ? rc : warm, shades: false, tint: null }, cx, feet, 1, 1);
+    // The vector model guy (model.js) stands in for the pixel figure; it is drawn after the blit below.
+    const guyBust = window.ModelGuy && window.ModelGuy.bust(S.expr);
+    if (!guyBust) placeFig(fig, { yaw, mood: S.mood, nod, bob, bright, amt: rimAmt, rimL: yaw === 0 && S.rimAmt < 0.1 ? "#a8e8ff" : rc, rimR: S.rimAmt > 0.1 ? rc : warm, shades: false, tint: null }, cx, feet, 1, 1);
     pctx.drawImage(ropeC, 0, 0);
     // crowd (two parallax rows), cameras drawn between
     crowdRows.forEach((r, ri) => {
@@ -556,6 +558,14 @@
     ctx.setTransform(kd * z, 0, 0, kd * z, ox * dpr - sx0 * kd * z + shx * kd, -sy0 * kd * z + shy * kd);
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(pc, 0, 0);
+    if (guyBust) {
+      ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+      const bw = 62, bh = 74, bobY = Math.sin(t * 1.5) * 0.7, tilt = Math.sin(t * 0.9) * 0.012;
+      ctx.save(); ctx.translate(Math.round(cx), feet - bh * 0.56); ctx.rotate(tilt);
+      ctx.globalAlpha = Math.min(1, 0.55 + lightLvl * 0.45);
+      ctx.drawImage(guyBust, -bw / 2, -bh / 2 + bobY, bw, bh);
+      ctx.restore(); ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = false;
+    }
     // lighting darkness (timeout dims the room)
     if (dim) { ctx.fillStyle = `rgba(2,3,8,${(1 - lightLvl) * 0.78})`; ctx.fillRect(0, 0, W, H); }
     ctx.imageSmoothingEnabled = true;
@@ -739,13 +749,13 @@
   const Scene = {
     runStart() {
       if (!ready) return;
-      resetRun(); S.take = "1/7"; S.idleFlash = 0.4;
+      resetRun(); S.expr = "smirk"; S.take = "1/7"; S.idleFlash = 0.4;
       burst(4, 0.6, "#fff"); nod(0.8);
       render1Soft();
     },
     prompt(index, total) {
       if (!ready) return;
-      S.take = (index + 1) + "/" + total;
+      S.take = (index + 1) + "/" + total; S.expr = "smirk";
       // soft reset: everything eases back
       sched.length = 0; flashQ.length = 0;
       S.lightT = 1; S.camLowT = 0; S.rimAmtT = 0; S.zoomT = 1; S.barsT = 0; S.tsT = 1; S.washT = 0; S.bw = 0; S.strobeUntil = 0; S.mood = "cool";
@@ -761,17 +771,21 @@
       const tier = TIER[o.tier] ? o.tier : "t10";
       const text = "“" + String(o.display || o.input || "").toUpperCase() + "”";
       showPlaque(tier, text, o.note, o.pts || 0);
+      S.expr = { miracle: "shocked", t75: "impressed", t50: "smirk", t25: "neutral" }[tier] || "disappointed";
+      if (tier === "miracle") later(1100, () => { S.expr = "impressed"; });
       if (reduce()) { S.rimCol = TIER[tier].col; S.rimAmtT = S.rimAmt = tier === "t10" ? 0 : 0.8; render1(); return; }
       if (tier === "miracle") goldenEdit(); else reactTier(tier);
     },
     miss(input) {
       if (!ready) return;
+      S.expr = "disappointed";
       showPlaque("miss", "“" + String(input || "").toUpperCase() + "”", "", 0);
       if (reduce()) { render1(); return; }
       reactMiss();
     },
     timeout() {
       if (!ready) return;
+      S.expr = "shocked";
       showPlaque("timeout", "TIME’S UP", "", 0);
       if (reduce()) { S.light = S.lightT = 0.3; render1(); return; }
       S.lightT = 0.22; S.camLowT = 0.55; S.tsT = 0.6; S.vig = "0,0,10"; S.beamCol = ["#5a6a8a", "#8a8f9a", "#5a6a8a"];

@@ -57,7 +57,7 @@
     g.fillStyle = rg; g.fillRect(0, 0, W, fh);
     g.lineWidth = 1;
     const vc = Math.round(clamp(W / 70, 10, 26));
-    for (let i = -vc; i <= vc; i++) {
+    for (let i = 0; i < 0; i++) {
       const bx = W * 0.5 + i * (W * 2.2 / (vc * 2));
       const lg = g.createLinearGradient(0, 0, 0, fh);
       lg.addColorStop(0, "rgba(77,226,247,0)"); lg.addColorStop(0.3, "rgba(77,226,247,0.16)"); lg.addColorStop(1, "rgba(160,225,255,0.22)");
@@ -201,7 +201,7 @@
     // floor
     ctx.drawImage(floor, 0, hy, W, H - hy + 2);
     // moving horizontal grid lines (perspective)
-    const fh = H - hy, nl = 12, ph = (T * 0.12) % 1;
+    const fh = H - hy, nl = 0, ph = 0;
     ctx.strokeStyle = "#7fe9fa"; ctx.lineWidth = 1;
     ctx.beginPath();
     for (let i = 0; i < nl; i++) {
@@ -219,15 +219,15 @@
     const cyc = 11 / 1, ph2 = (T % cyc) / cyc, tri = ph2 < 0.5 ? ph2 * 2 : 2 - ph2 * 2, e = tri * tri * (3 - 2 * tri);
     scanY = H * (0.06 + 0.88 * e);
     const bh = 70 * S + 20;
-    ctx.globalAlpha = 0.34 * acc; ctx.drawImage(scanSpr, 0, scanY - bh / 2, W, bh);
+    ctx.globalAlpha = 0.2 * acc; ctx.drawImage(scanSpr, 0, scanY - bh / 2, W, bh);
     // faint trailing fill behind sweep
-    ctx.globalAlpha = 0.035 * acc; ctx.fillStyle = "#4de2f7";
+    ctx.globalAlpha = 0; ctx.fillStyle = "#4de2f7";
     ctx.fillRect(0, ph2 < 0.5 ? scanY - H * 0.12 : scanY, W, H * 0.12);
     ctx.globalAlpha = 1;
 
     // landmarks
-    if (!reduce) { nextDots -= dt * sp; if (nextDots <= 0) { spawnDots(); nextDots = rnd(3.5, 6.5); } }
-    drawDots(dt, sp, acc);
+    /* landmark mesh removed: cleaner scene */
+    /* drawDots removed */
 
     // chrome streak
     if (!reduce) {
@@ -306,7 +306,7 @@
 
   function start() {
     ensure();
-    if (reduce) { T = 2.5; spawnDots(); dots[0].t = dots[0].life * 0.4; frame(0); return; }
+    if (reduce) { T = 2.5; frame(0); return; }
     if (running) return;
     running = true; last = performance.now();
     if (!document.hidden) raf = requestAnimationFrame(tick);

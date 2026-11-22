@@ -136,3 +136,5 @@ body:not(.in-run) .sc-plaque, body:not(.in-run) .sc-slam { display: none; }
   .sc-slam.go { animation: none; opacity: 1; transform: translate(-50%, -50%) rotate(-5deg) scale(1); }
 }
 .next-msg { color: #eef3f7 !important; } .next-count { color: #9aa6b2 !important; }
+#fx-scan { display: none !important; }
+.radar-card[hidden]{display:none!important} .dist-score{font:400 18px var(--font-display,Anton);color:#4fd8ff;letter-spacing:.04em}

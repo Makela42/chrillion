@@ -22,6 +22,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Anton&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="art.css">
+  <link rel="stylesheet" href="motion.css">
 </head>
 <body>
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PRMRMDT6" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -95,7 +96,7 @@
       </div>
 
       <div id="journey" class="journey-wrap"></div>
-      <div class="scene-say" id="scene-say"><span class="say-elf" data-sprite="chad" data-size="30"></span><span class="say-bubble" id="say-text"></span></div>
+      <div class="scene-say" id="scene-say"><span class="say-elf" id="say-elf" aria-hidden="true"></span><span class="say-bubble" id="say-text"></span></div>
 
       <article class="prompt-card">
         <p class="prompt-num" id="prompt-num"></p>
@@ -148,7 +149,7 @@
         <span class="scan-line" aria-hidden="true"></span>
       </div>
 
-      <div class="card radar-card">
+      <div class="card radar-card" hidden>
         <div class="card-head"><h3>Aura profile</h3><span>1–7 · prompts</span></div>
         <svg id="radar" viewBox="0 0 340 300" role="img" aria-label="Radar chart of your points on each of the 7 prompts"></svg>
       </div>
@@ -165,7 +166,7 @@
       </div>
 
       <div class="card dist-card" id="dist-card">
-        <div class="card-head"><h3>Where you landed</h3><span>0 → 700</span></div>
+        <div class="card-head"><h3>Where you landed</h3><span class="dist-score" id="dist-score"></span></div>
         <svg id="dist-chart" viewBox="0 0 340 172" role="img" aria-label="How your score compares with today's players"></svg>
         <p class="dist-text" id="dist-text"></p>
         <p class="dist-note" id="dist-note"></p>
@@ -340,6 +341,7 @@
   <script src="account.js"></script>
   <script src="sounds.js"></script>
   <script src="sprites.js"></script>
+  <script src="model.js"></script>
   <script src="journey.js"></script>
   <script src="collection.js"></script>
   <script src="fx.js"></script>
@@ -355,6 +357,8 @@
 <script src="prompts-09.js"></script>
 <script src="prompts-10.js"></script>
 <script src="prompts-11.js"></script>
+<script src="prompts-12.js"></script>
+<script src="prompts-13.js"></script>
 <script src="retier-A.js"></script>
 <script src="retier-B.js"></script>
 <script src="retier-C.js"></script>

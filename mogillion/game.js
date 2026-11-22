@@ -347,11 +347,22 @@
   function total(results) { return results.reduce((s, r) => s + r.pts, 0); }
   function grid(results) { return results.map((r) => TIERS[r.tier].emoji).join(""); }
 
+  // Screen transition + staggered entrance of the children (opacity/transform only).
+  function enterScreen(id) {
+    const sc = document.getElementById(id);
+    if (!sc || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    sc.classList.remove("screen-in"); void sc.offsetWidth; sc.classList.add("screen-in");
+    const kids = [...sc.children].flatMap((c) => (c.classList.contains("tiles-main") || c.classList.contains("tiles-grid")) ? [...c.children] : [c]).filter((c) => !c.hidden);
+    kids.forEach((c, i) => { c.style.setProperty("--i", Math.min(i, 9)); c.classList.remove("stg"); void c.offsetWidth; c.classList.add("stg"); });
+    setTimeout(() => kids.forEach((c) => c.classList.remove("stg")), 1400);
+  }
+
   function showScreen(id) {
     $$(".screen").forEach((s) => { s.hidden = s.id !== id; });
     $("#appbar").hidden = id === "game";
     document.body.classList.toggle("in-run", id === "game");
     window.scrollTo(0, 0);
+    enterScreen(id);
     if (id === "menu") { renderMenu(); drawHero(); }
     if (window.Fx && id !== "game" && id !== "summary") window.Fx.clear();
     if (window.BgScene) window.BgScene.setMood(id === "game" ? "game" : id === "summary" ? "summary" : "menu");
@@ -579,7 +590,26 @@
       if (idx === state.i && !state.answered) li.classList.add("current");
       ol.appendChild(li);
     });
-    $("#score").textContent = total(state.results);
+    tween($("#score"), total(state.results), "");
+  }
+
+  // Number count-up (rAF, eased); jumps straight to the end with reduced motion.
+  function tween(el, to, prefix) {
+    if (!el) return;
+    const from = el.id === "fb-points" ? 0 : Number(el.dataset.v || 0);
+    el.dataset.v = to;
+    if (from === to || matchMedia("(prefers-reduced-motion: reduce)").matches) { el.textContent = prefix + to; return; }
+    const t0 = performance.now(), dur = 700;
+    const host = el.closest(".score-pill") || el;
+    host.classList.remove("bump"); void host.offsetWidth; host.classList.add("bump");
+    el.textContent = prefix + from;
+    const step = (t) => {
+      const p = Math.min(1, (t - t0) / dur);
+      el.textContent = prefix + Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+    setTimeout(() => { if (el.dataset.v == to) el.textContent = prefix + to; }, dur + 250);
   }
 
   function startPrompt() {
@@ -594,7 +624,7 @@
     $("#feedback").hidden = true;
     $("#answer-form").classList.remove("shake");   // only shake on an invalid answer
     $("#answer-form").hidden = false;
-    say(pickLine(SAY.start));
+    say(pickLine(SAY.start), "smirk");
     if (window.Journey) window.Journey.set(total(state.results), false);
     $("#answer-msg").textContent = "";
     state.pending = null;
@@ -629,8 +659,8 @@
     ring.classList.toggle("pulse", left <= 5000);
     if (sec !== state.lastSec) {
       if (sec <= 5 && sec >= 1 && state.lastSec !== null) Sfx.play("tick", sec);
-      if (sec === 15) say(pickLine(SAY.mid));
-      if (sec === 6) say(pickLine(SAY.late));
+      if (sec === 15) say(pickLine(SAY.mid), "neutral");
+      if (sec === 6) say(pickLine(SAY.late), "shocked");
       state.lastSec = sec;
     }
     if (left <= 0) finishPrompt(null, true);
@@ -644,7 +674,7 @@
     void f.offsetWidth;            // restart the animation
     f.classList.add("shake");
     setTimeout(() => f.classList.remove("shake"), 420);
-    say(pickLine(SAY.nope));
+    say(pickLine(SAY.nope), "disappointed");
     Sfx.play("nope");
     hook("miss", text);
     $("#answer").select();
@@ -698,9 +728,15 @@
     $("#answer-form").hidden = true;
     fb.hidden = false;
     fb.dataset.tier = res.tier;
-    $("#fb-emoji").innerHTML = tierSprite(res.tier, 56);
+    if (window.ModelGuy) {
+      const ex = { miracle: "shocked", t75: "impressed", t50: "smirk", t25: "neutral", trap: "disappointed", t10: "disappointed", miss: "disappointed", timeout: "shocked" }[res.tier] || "neutral";
+      $("#fb-emoji").innerHTML = `<div class="fb-guy">${window.ModelGuy.svg(150, "neutral", { idle: false })}</div>`;
+      const g = $("#fb-emoji .mg");
+      requestAnimationFrame(() => requestAnimationFrame(() => window.ModelGuy.set(g, ex)));
+      if (res.tier === "miracle" || res.tier === "t75") window.ModelGuy.flash(fb, res.tier === "miracle" ? 6 : 3);
+    } else $("#fb-emoji").innerHTML = tierSprite(res.tier, 56);
     $("#fb-label").textContent = t.label;
-    $("#fb-points").textContent = `+${t.pts}`;
+    tween($("#fb-points"), t.pts, "+");
 
     let said;
     if (res.tier === "timeout") said = res.input ? `“${res.input}”` : "No answer this time.";
@@ -733,9 +769,11 @@
     nope: ["Not on the list, bro. Again!", "Nope. Try another one.", "Close, but not quite. Run it back!"],
   };
   const pickLine = (a) => a[Math.floor(Math.random() * a.length)];
-  function say(text) {
+  function say(text, expr) {
     const b = $("#say-text");
     if (!b) return;
+    const elf = $("#say-elf");
+    if (elf && window.ModelGuy) { if (!elf.firstChild) elf.innerHTML = window.ModelGuy.svg(62, expr || "neutral"); else window.ModelGuy.set(elf, expr || "neutral"); }
     b.textContent = text;
     const w = b.parentElement;
     w.classList.remove("say-pop"); void w.offsetWidth; w.classList.add("say-pop");
@@ -860,6 +898,7 @@
 
   function showSummary() {
     const score = total(state.results);
+    const ds = document.getElementById("dist-score"); if (ds) ds.textContent = `You: ${score} pts`;
     const rate = rating(score);
     const fresh = state.fresh;
     state.fresh = false;
@@ -1423,6 +1462,7 @@
   // =====================================================================
   function drawHero() {
     const c = $("#hero-knit");
+    if (c && window.ModelGuy) { window.ModelGuy.hero(c); return; }
     if (c && Spr && c.clientWidth) Spr.drawKnit(c);
   }
 
