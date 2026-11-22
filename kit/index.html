@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Merrillion Content Kit</title>
+<link href="https://fonts.googleapis.com/css2?family=Jersey+15&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #0b1030; --card: #151b45; --ink: #f6ecd6; --gold: #f2c14e; --red: #c8323a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 "Atkinson Hyperlegible", system-ui, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 20px 16px 60px; }
+  h1 { font: 400 44px "Jersey 15", sans-serif; margin: 0 0 4px; color: var(--gold); }
+  .bar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0 20px; }
+  button, select { font: 700 15px inherit; padding: 9px 14px; border-radius: 10px; border: 2px solid var(--gold); background: var(--card); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--gold); color: #2b1d18; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+  .item { background: var(--card); border-radius: 14px; padding: 14px; }
+  .item h2 { font: 400 26px "Jersey 15", sans-serif; margin: 0 0 8px; color: var(--gold); }
+  canvas { width: 100%; height: auto; border-radius: 10px; display: block; margin-bottom: 10px; }
+  textarea { width: 100%; min-height: 150px; background: #0b1030; color: var(--ink); border: 1px solid #39407a; border-radius: 10px; padding: 10px; font: 14px/1.45 inherit; }
+  .muted { color: #a9b0d6; font-size: 14px; }
+  iframe { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; border: 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Merrillion content kit</h1>
+  <p class="muted">Pick a day, download the images, copy a caption, post. Prompts are fine to share; only <b>yesterday's</b> answers are revealed.</p>
+  <div class="bar">
+    <label>Game <select id="game"><option value="/">Merrillion</option><option value="/mogillion/">Mogillion</option></select></label>
+    <label>Run <select id="day"></select></label>
+    <button class="primary" id="go">Make today's kit</button>
+    <span class="muted" id="status">Loading the game…</span>
+  </div>
+  <div class="grid">
+    <div class="item"><h2>1 · Post (4:5)</h2><canvas id="c-post" width="1080" height="1350"></canvas><button data-dl="c-post">Download</button></div>
+    <div class="item"><h2>2 · Story / TikTok (9:16)</h2><canvas id="c-story" width="1080" height="1920"></canvas><button data-dl="c-story">Download</button></div>
+    <div class="item"><h2>3 · Yesterday's rarest answers</h2><canvas id="c-reveal" width="1080" height="1350"></canvas><button data-dl="c-reveal">Download</button></div>
+    <div class="item"><h2>Captions</h2>
+      <p class="muted">TikTok / Reels</p><textarea id="cap-tt"></textarea><button data-copy="cap-tt">Copy</button>
+      <p class="muted">X / Threads</p><textarea id="cap-x"></textarea><button data-copy="cap-x">Copy</button>
+      <p class="muted">Video idea</p><textarea id="cap-vid"></textarea>
+    </div>
+  </div>
+</main>
+<iframe id="g" title="game" src="/"></iframe>
+<script>
+(() => {
+  const $ = (s) => document.querySelector(s);
+  const frame = $("#g");
+  let G = null, D = null, game = "/";
+
+  const THEMES = {
+    "/": { name: "Merrillion", run: "Sleigh Run", url: "merrillion.site", sky: ["#0b1030", "#3a1f4f", "#7a2f3d"], accent: "#f2c14e", ink: "#f6ecd6", tags: "#christmas #wordgame #dailygame #trivia #christmastrivia #merrillion" },
+    "/mogillion/": { name: "Mogillion", run: "Mog Check", url: "merrillion.site/mogillion", sky: ["#0c0f14", "#162030", "#1d3a4a"], accent: "#4fd8ff", ink: "#eef3f7", tags: "#looksmaxxing #glowup #wordgame #dailygame #mogging #mogillion" },
+  };
+
+  function load(path) {
+    game = path; G = D = null;
+    $("#status").textContent = "Loading the game…";
+    frame.src = path;
+  }
+  frame.addEventListener("load", () => {
+    const w = frame.contentWindow;
+    let tries = 0;
+    const wait = setInterval(() => {
+      G = w.Merrillion || w.Mogillion; D = w.CHRILLION_DEBUG || w.MOGILLION_DEBUG;
+      if ((G && D) || ++tries > 40) {
+        clearInterval(wait);
+        if (!D) { $("#status").textContent = "Couldn't read the game. Refresh the page."; return; }
+        const today = Math.max(1, D.dayNumber());
+        $("#day").innerHTML = Array.from({ length: today + 3 }, (_, i) => i + 1).map((d) => `<option value="${d}" ${d === today ? "selected" : ""}>#${d}${d === today ? " (today)" : d > today ? " (upcoming)" : ""}</option>`).join("");
+        $("#status").textContent = "Ready.";
+        make();
+      }
+    }, 150);
+  });
+
+  // ---------- drawing helpers ----------
+  function sky(ctx, W, H, t) {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, t.sky[0]); g.addColorStop(0.6, t.sky[1]); g.addColorStop(1, t.sky[2]);
+    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    let s = 7; const rnd = () => (s = (s * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 140; i++) { ctx.globalAlpha = 0.25 + rnd() * 0.6; ctx.fillStyle = "#fff"; ctx.beginPath(); ctx.arc(rnd() * W, rnd() * H, 1 + rnd() * 3.5, 0, 6.3); ctx.fill(); }
+    ctx.globalAlpha = 1;
+    if (t.name === "Merrillion") {   // moon + snowy hills
+      const m = ctx.createRadialGradient(W * 0.8, H * 0.12, 10, W * 0.8, H * 0.12, 160);
+      m.addColorStop(0, "rgba(255,244,214,.9)"); m.addColorStop(0.35, "rgba(255,244,214,.35)"); m.addColorStop(1, "rgba(255,244,214,0)");
+      ctx.fillStyle = m; ctx.fillRect(0, 0, W, H * 0.4);
+      ctx.fillStyle = "#e9eef8";
+      ctx.beginPath(); ctx.moveTo(0, H); ctx.lineTo(0, H * 0.9); ctx.quadraticCurveTo(W * 0.3, H * 0.84, W * 0.6, H * 0.9); ctx.quadraticCurveTo(W * 0.85, H * 0.95, W, H * 0.88); ctx.lineTo(W, H); ctx.fill();
+    } else {   // cyan scan line
+      ctx.strokeStyle = "rgba(79,216,255,.35)"; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(0, H * 0.82); ctx.lineTo(W, H * 0.82); ctx.stroke();
+    }
+  }
+  function wrap(ctx, text, x, y, maxW, lh) {
+    const words = String(text).split(" "); let line = "", lines = [];
+    for (const w of words) { const test = line ? line + " " + w : w; if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = w; } else line = test; }
+    if (line) lines.push(line);
+    lines.forEach((l, i) => ctx.fillText(l, x, y + i * lh));
+    return lines.length * lh;
+  }
+  function panel(ctx, x, y, w, h, t) {
+    ctx.fillStyle = "rgba(255,255,255,.08)"; ctx.strokeStyle = t.accent; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.roundRect(x, y, w, h, 28); ctx.fill(); ctx.stroke();
+  }
+  const clean = (s) => String(s || "").split("|")[0];
+
+  // ---------- the kit ----------
+  function make() {
+    if (!D) return;
+    const t = THEMES[game], day = +$("#day").value;
+    const ps = D.dailyPrompts(day);
+    const hook = ps.find((p) => /movie|home alone|song|reindeer|santa|maxx|haircut|jawline/i.test(p.text)) || ps[0];
+
+    // 1. Post
+    let c = $("#c-post"), x = c.getContext("2d"), W = c.width, H = c.height;
+    sky(x, W, H, t);
+    x.textAlign = "center"; x.fillStyle = t.accent; x.font = '400 120px "Jersey 15"'; x.fillText(t.name, W / 2, 190);
+    x.fillStyle = t.ink; x.font = '400 64px "Jersey 15"'; x.fillText(`${t.run} #${day}`, W / 2, 270);
+    panel(x, 90, 360, W - 180, 520, t);
+    x.font = "700 70px 'Atkinson Hyperlegible'"; x.fillStyle = t.ink; wrap(x, hook.text, W / 2, 480, W - 260, 86);
+    x.font = '400 64px "Jersey 15"'; x.fillStyle = t.accent; x.fillText("Can you find the 100-point answer?", W / 2, 1000);
+    x.font = "700 40px 'Atkinson Hyperlegible'"; x.fillStyle = t.ink; x.fillText("The rarer your answer, the more it scores", W / 2, 1070);
+    x.font = '400 64px "Jersey 15"'; x.fillStyle = t.name === "Merrillion" ? "#2b1d18" : t.accent; x.fillText(t.url, W / 2, 1270);
+
+    // 2. Story with all 7 prompts
+    c = $("#c-story"); x = c.getContext("2d"); W = c.width; H = c.height;
+    sky(x, W, H, t);
+    x.textAlign = "center"; x.fillStyle = t.accent; x.font = '400 130px "Jersey 15"'; x.fillText(t.name, W / 2, 210);
+    x.fillStyle = t.ink; x.font = '400 70px "Jersey 15"'; x.fillText(`Today's ${t.run} #${day}`, W / 2, 300);
+    let yy = 400;
+    ps.forEach((p, i) => {
+      panel(x, 70, yy, W - 140, 160, t);
+      x.textAlign = "left"; x.fillStyle = t.accent; x.font = '400 70px "Jersey 15"'; x.fillText(String(i + 1), 110, yy + 100);
+      x.fillStyle = t.ink; x.font = "700 38px 'Atkinson Hyperlegible'"; wrap(x, p.text, 190, yy + 70, W - 330, 46);
+      yy += 185;
+    });
+    x.textAlign = "center"; x.fillStyle = t.accent; x.font = '400 70px "Jersey 15"'; x.fillText("25 seconds each. Rare answers win.", W / 2, yy + 80);
+    x.fillStyle = t.name === "Merrillion" ? "#2b1d18" : t.accent; x.fillText(t.url, W / 2, H - 90);
+
+    // 3. Yesterday's rarest answers (the One in a Merrillion / golden answer for each prompt)
+    c = $("#c-reveal"); x = c.getContext("2d"); W = c.width; H = c.height;
+    sky(x, W, H, t);
+    x.textAlign = "center";
+    if (day > 1) {
+      const yp = D.dailyPrompts(day - 1);
+      x.fillStyle = t.accent; x.font = '400 92px "Jersey 15"'; x.fillText(`${t.run} #${day - 1}: the rarest answers`, W / 2, 140);
+      let y2 = 220;
+      yp.forEach((p) => {
+        x.fillStyle = t.ink; x.font = "700 30px 'Atkinson Hyperlegible'"; const h = wrap(x, p.text, W / 2, y2, W - 160, 36);
+        x.fillStyle = t.accent; x.font = '400 50px "Jersey 15"'; x.fillText(`★ ${clean(p.miracle)}`, W / 2, y2 + h + 34);
+        y2 += h + 100;
+      });
+      x.fillStyle = t.ink; x.font = "700 36px 'Atkinson Hyperlegible'"; x.fillText(`Did you get any? Today's run is live at ${t.url}`, W / 2, H - 60);
+    } else {
+      x.fillStyle = t.ink; x.font = '400 70px "Jersey 15"'; x.fillText("Run #1 has no yesterday yet.", W / 2, H / 2);
+    }
+
+    // Captions
+    const site = "https://www." + t.url;
+    $("#cap-tt").value = `${hook.text} 👀\nThe obvious answer gets 10 points. The rarest gets 100. What's yours?\n\n${t.run} #${day} is live, free, no sign-up: ${t.url}\n\n${t.tags}`;
+    $("#cap-x").value = `${t.name} ${t.run} #${day} 🎯\n"${hook.text}"\nObvious answers score 10. Deep cuts score 100.\nPlay free: ${site}`;
+    $("#cap-vid").value = `Hook (0-2s): "Only real ${t.name === "Merrillion" ? "Christmas" : "looksmax"} fans get 100 on this."\nShow the prompt: "${hook.text}"\nType an obvious answer first (10 pts, groan), then a deep cut (100 pts, celebrate).\nEnd card: "${t.run} #${day} – ${t.url}". Comment bait: "What would you have said?"`;
+  }
+
+  $("#go").addEventListener("click", make);
+  $("#day").addEventListener("change", make);
+  $("#game").addEventListener("change", (e) => load(e.target.value));
+  document.querySelectorAll("[data-dl]").forEach((b) => b.addEventListener("click", () => {
+    const c = document.getElementById(b.dataset.dl);
+    const a = document.createElement("a");
+    a.download = `${THEMES[game].name.toLowerCase()}-run${$("#day").value}-${b.dataset.dl.slice(2)}.png`;
+    a.href = c.toDataURL("image/png"); a.click();
+  }));
+  document.querySelectorAll("[data-copy]").forEach((b) => b.addEventListener("click", () => {
+    const tx = document.getElementById(b.dataset.copy); tx.select();
+    (navigator.clipboard ? navigator.clipboard.writeText(tx.value) : Promise.reject()).then(() => (b.textContent = "Copied!"), () => document.execCommand("copy"));
+    setTimeout(() => (b.textContent = "Copy"), 1500);
+  }));
+  document.fonts && document.fonts.ready.then(() => D && make());
+})();
+</script>
+</body>
+</html>
