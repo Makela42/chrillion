@@ -441,6 +441,7 @@
       store.get("stats", {})
     );
   }
+  function hasRun() { const s = loadStats(); return !!(s.played || s.unlimitedPlayed || store.get("everRun", false) || (store.get("ornaments", []) || []).length); }
   function currentStreak() { const s = loadStats(); return s.lastDay >= dayNumber() - 1 ? s.streak : 0; }
 
   function rating(score) {
@@ -495,7 +496,11 @@
     $("#btn-account").lastChild.textContent = acct ? " Signed in · streak saved" : " Sign in to save your streak";
     $("#sl-acct").textContent = acct ? "Signed in" : "Save your streak";
     const top = $("#btn-unlock-top");
-    top.hidden = unlocked;
+    const first = !hasRun();
+    top.hidden = unlocked || first;
+    document.body.classList.toggle("first-visit", first);
+    $("#hero-hint").hidden = !first;
+    $("#daily-title").textContent = first ? "Play today's 7" : "Today's Sleigh Run";
     renderSheet();
   }
 
@@ -596,6 +601,7 @@
       showSummary();
       return;
     }
+    track("run_start", { mode: "archive" });
     startStored("archive", day);
   }
 
@@ -685,6 +691,7 @@
     void f.offsetWidth;            // restart the animation
     f.classList.add("shake");
     setTimeout(() => f.classList.remove("shake"), 420);
+    if (window.Scene) window.Scene.react("miss");
     say(pickLine(SAY.nope));
     Sfx.play("nope");
     $("#answer").select();
@@ -844,6 +851,7 @@
 
   // ---------- completion ----------
   function completeDive() {
+    store.set("everRun", true);
     clearInterval(state.timer);
     Sfx.duck(false);
     const score = total(state.results);
@@ -915,7 +923,13 @@
     $("#dist-score").textContent = `You: ${score} pts`;
     const ms = window.Journey && window.Journey.reached(score);
     $("#sum-journey").textContent = ms ? `You reached the ${ms.name}!` : "Score 50 to reach the Candy Cane!";
-    track("run_complete", { mode: state.mode, score });
+    if (state.fresh) {
+      track("run_finish", { mode: state.mode, score });
+      if (mir) track("miracle_hit", { mode: state.mode, count: mir });
+    }
+    const tom = $("#sum-tomorrow"), stk = currentStreak();
+    tom.textContent = state.mode === "unlimited" ? "" : stk > 0 ? `Come back tomorrow to make it a ${stk + 1}-day streak. Streak: ${stk}` : "Come back tomorrow for a fresh seven. Streak: 0";
+    tom.hidden = !tom.textContent;
     renderNext();
     $("#sum-grid").innerHTML = state.results.map((r) => tierSprite(r.tier, 30)).join("");
     $("#btn-again").hidden = state.mode !== "unlimited";
@@ -1261,6 +1275,7 @@
   }
 
   async function openShare() {
+    track("share_click", { mode: state && state.mode });
     Sfx.play("open");
     $("#dlg-share").showModal();
     await drawShareCard();
@@ -1335,7 +1350,12 @@
   }
 
   const CONTACT = "merrillion.help@gmail.com";
-  function track(event, params) { try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
+  function track(event, params) {
+    try {
+      if (typeof window.gtag === "function") window.gtag("event", event, params || {});
+      else (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params));
+    } catch (e) { /* analytics must never break the game */ }
+  }
   function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
   function openMoreGames() {
     const mgIco = {
@@ -1622,10 +1642,11 @@
     if (window.Journey) window.Journey.mount($("#journey"));
     if (window.Account) window.Account.init({ getStats: loadStats, setStats: (s) => { store.set("stats", s); renderMenu(); }, onChange: () => renderMenu() });
 
-    if (!store.get("seenHow", false)) { store.set("seenHow", true); openHow(); }
+    // How to play no longer auto-opens; first-timers get an inline hint on the home hero instead.
+    $("#btn-how-link").addEventListener("click", openHow);
 
     // Shared with online-ui.js, and a hook for automated tests.
-    window.Merrillion = { isCore, judge, key, TIERS, PROMPTS, store, toast, showScreen, esc, CONFIG, tierSprite };
+    window.Merrillion = { isCore, judge, key, TIERS, PROMPTS, store, toast, showScreen, esc, CONFIG, tierSprite, track };
     window.CHRILLION_DEBUG = { judge, key, dailyPrompts, dayNumber, PROMPTS, drawDistribution, renderRecap };
   }
 

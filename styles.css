@@ -675,7 +675,7 @@ body.fx-front #fx { z-index: 15; }
 /* ---------- live prompt scene ---------- */
 .scene {
   display: block; width: 100%; height: 96px; margin: 10px 0 0; border-radius: 10px;
-  border: 2px solid var(--ink); box-shadow: 0 3px 0 rgba(30, 6, 9, 0.45); image-rendering: pixelated; background: #14253f;
+  border: 2px solid var(--ink); box-shadow: 0 3px 0 rgba(30, 6, 9, 0.45); background: #14253f;
 }
 #game.revealing .scene { display: none; }
 
@@ -902,3 +902,17 @@ a.mgp:active { transform: translateY(0) scale(.985); }
 @media (prefers-reduced-motion: reduce) {
   .prompt-card.card-in, .pw, .feedback, .feedback *, .fb-mascot *, .shake, #summary > * { animation: none !important; opacity: 1; transform: none; }
 }
+
+/* ---------- first-visit flow ---------- */
+.hero-hint { margin: 8px 0 0; font-size: 15px; font-weight: 700; color: var(--ink); }
+.hint-link { appearance: none; background: none; border: 0; padding: 0; margin-left: 4px; font: inherit; font-weight: 400; color: var(--muted); text-decoration: underline; cursor: pointer; }
+body.first-visit .tile-online, body.first-visit .tiles-grid, body.first-visit .tree-card, body.first-visit .save-pill, body.first-visit .xmas-count { display: none !important; }
+body.first-visit .tiles-main { grid-template-columns: 1fr; margin-top: 20px; }
+body.first-visit .tile-daily { min-height: 112px; justify-content: center; }
+body.first-visit .tile-daily .tile-text b { font-size: 36px; }
+body.first-visit .tile-daily .tile-ico { width: 52px; height: 52px; }
+.sum-actions-top { margin: 0 0 10px; }
+.sum-tomorrow { margin: 0 0 14px; text-align: center; color: var(--page-muted); font-weight: 700; font-size: 15px; }
+#dlg-how { box-sizing: border-box; overflow-x: hidden; max-width: calc(100vw - 32px); }
+#dlg-how .tier-list li > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
+body.first-visit .tile-daily { flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; }

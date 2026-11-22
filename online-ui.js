@@ -310,7 +310,10 @@
     // Phase changes.
     if (v.phase !== lastPhase) {
       if (v.phase === "over") Sfx.play("fanfare", v.winner === myId ? 1 : 0.3);
-      if (v.phase === "countdown") Sfx.play("start");
+      if (v.phase === "countdown") {
+        Sfx.play("start");
+        try { if (window.Merrillion && window.Merrillion.track) window.Merrillion.track("run_start", { mode: "online" }); } catch (e) { /* ignore */ }
+      }
       lastPhase = v.phase;
     }
     // New events in the log (sounds for other players' moves).

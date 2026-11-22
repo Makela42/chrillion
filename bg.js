@@ -202,25 +202,11 @@
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
   }
 
-  function drawSleigh(x, y, s, f) {
-    ctx.save(); ctx.translate(x, y); ctx.scale(s, s);
-    ctx.fillStyle = "#0b0716"; ctx.strokeStyle = "#0b0716"; ctx.lineWidth = 0.8;
-    // sleigh
-    ctx.beginPath(); ctx.moveTo(-6, -2); ctx.lineTo(8, -2); ctx.lineTo(7, 4); ctx.quadraticCurveTo(0, 6, -9, 4); ctx.quadraticCurveTo(-10, 0, -6, -2); ctx.fill();
-    ctx.beginPath(); ctx.arc(-1, -4, 2.6, 0, TAU); ctx.fill();   // santa
-    ctx.beginPath(); ctx.arc(-1, -7, 1.4, 0, TAU); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(-9, 6.5); ctx.quadraticCurveTo(0, 8, 9, 5.5); ctx.stroke();
-    // reindeer, 3 pairs
-    for (let i = 0; i < 3; i++) {
-      const rx = 14 + i * 12, bob = Math.sin(f * 7 + i) * 0.9;
-      ctx.beginPath(); ctx.moveTo(rx - 14 + 14, -1); ctx.lineTo(rx, -1 + bob * 0.3); ctx.lineWidth = 0.4; ctx.stroke(); ctx.lineWidth = 0.8;
-      ctx.beginPath(); ctx.ellipse(rx + 3, bob, 3.2, 1.7, 0, 0, TAU); ctx.fill();
-      ctx.beginPath(); ctx.arc(rx + 6.4, bob - 1.6, 1.1, 0, TAU); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(rx + 6.8, bob - 2.4); ctx.lineTo(rx + 7.6, bob - 4.4); ctx.moveTo(rx + 7.2, bob - 3.4); ctx.lineTo(rx + 5.8, bob - 4.2); ctx.lineWidth = 0.5; ctx.stroke(); ctx.lineWidth = 0.8;
-      const lg = Math.sin(f * 7 + i * 1.3) * 1.5;
-      ctx.beginPath(); ctx.moveTo(rx + 1, bob + 1); ctx.lineTo(rx - 1 + lg, bob + 4); ctx.moveTo(rx + 5, bob + 1); ctx.lineTo(rx + 7 - lg, bob + 3.6); ctx.lineWidth = 0.6; ctx.stroke(); ctx.lineWidth = 0.8;
-    }
-    ctx.fillStyle = "#ff5a4a"; ctx.beginPath(); ctx.arc(14 + 24 + 8.2, -1.6, 0.8, 0, TAU); ctx.fill(); // rudolph nose
+  // Distant, softly lit sleigh: same art as the title scene, faded so it reads as far away.
+  function drawSleigh(x, y, s, f, alpha) {
+    if (!window.SleighArt) return;
+    ctx.save(); ctx.globalAlpha = alpha;
+    window.SleighArt.draw(ctx, x, y, s, f * 2.2);
     ctx.restore();
   }
 
@@ -257,15 +243,20 @@
       }
       // sleigh
       nextSleigh -= dt;
-      if (sleighT < 0 && nextSleigh <= 0) { sleighT = 0; nextSleigh = 25; }
+      if (sleighT < 0 && nextSleigh <= 0) { sleighT = 0; nextSleigh = 32; }
     }
     if (sleighT >= 0) {
       sleighT += dt * (0.6 + 0.4 * sp);
-      const u = sleighT / 16;
+      const u = sleighT / 24;
       if (u > 1) sleighT = -1;
       else {
-        const x = -90 + (W + 180) * u, y = moon.y + moon.r * 0.15 + Math.sin(u * TAU * 1.5) * 4 - (u - 0.5) * H * 0.04;
-        drawSleigh(x, y, clamp(S * 1.1, 0.7, 1.4), sleighT);
+        const e = u * u * (3 - 2 * u), p = 0.25 * u + 0.75 * e;   // gentle ease in/out, mostly steady
+        const sc = clamp(S * 0.75, 0.5, 1);
+        const sw = (window.SleighArt ? window.SleighArt.width : 112) * sc;
+        const x = W + sw * 0.2 - (W + sw * 1.4) * p;               // right to left, like the title scene
+        const y = moon.y + moon.r * 0.4 + Math.sin(u * TAU * 1.2) * 5 - (u - 0.5) * H * 0.05;
+        const fade = Math.min(1, u / 0.12, (1 - u) / 0.12);
+        drawSleigh(x, y, sc, sleighT, 0.5 * fade * fade);
       }
     }
 

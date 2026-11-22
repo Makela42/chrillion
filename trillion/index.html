@@ -71,19 +71,23 @@
           <p class="eyebrow" id="hero-eyebrow">Daily Market Open</p>
           <h1 class="hero-title">Beat the market.</h1>
           <p class="hero-sub" id="hero-sub">7 prompts · 25 seconds each</p>
+          <p class="fv-hint" id="fv-hint" hidden>Name the answer nobody else will. Rarer = bigger return. <button type="button" class="fv-link" id="btn-how-hint">How to play</button></p>
           <div class="stamp" aria-hidden="true"><span>Unredeemed</span></div>
         </div>
         <div class="hero-stage"><canvas class="hero-scene" id="hero-scene" aria-hidden="true"></canvas></div>
       </div>
 
+      <button class="btn btn-primary fv-play" id="btn-play-fv" hidden>Play today's 7</button>
+      <button class="fv-more" id="btn-fv-more" hidden>More ways to play &#9662;</button>
+
       <div class="tiles-main">
         <button class="tile tile-daily" id="btn-daily">
-          <span class="tile-ico tile-person" data-person="ceo"></span>
+          <span class="tile-ico"><span data-sprite="coin" data-size="28"></span></span>
           <span class="tile-text"><b>Daily Market Open</b><small id="daily-sub"></small></span>
           <span class="badge badge-streak" id="streak-badge" hidden></span>
         </button>
         <button class="tile tile-online" id="btn-online">
-          <span class="tile-ico tile-person" data-person="trader"></span>
+          <span class="tile-ico"><span data-sprite="bull" data-size="28"></span></span>
           <span class="tile-text"><b>Trading Floor</b><small>Live rooms · play together</small></span>
           <span class="badge badge-new">NEW</span>
         </button>
@@ -151,7 +155,6 @@
 
     <!-- ============ RESULTS ============ -->
     <section class="screen" id="summary" hidden>
-      <div class="cast cast-sum" aria-hidden="true"><span data-person="founder"></span><span data-person="ceo"></span><span data-person="boss"></span></div>
       <div class="sum-head">
         <span class="sum-brand" data-name>Trillion</span>
         <span class="eyebrow" id="sum-mode"></span>
@@ -160,6 +163,12 @@
       <div class="sum-score-row">
         <span class="sum-total" id="sum-score">0</span>
         <span class="sum-side"><span class="sum-max" id="sum-max">/ 700</span><span class="sum-rating" id="sum-rating"></span><span class="sum-miles" id="sum-miles"></span><span class="sum-journey" id="sum-journey"></span></span>
+      </div>
+
+      <p class="sum-tomorrow" id="sum-tomorrow"></p>
+      <div class="sum-actions">
+        <button class="btn btn-primary" id="btn-share">Share result</button>
+        <button class="btn btn-secondary" id="btn-again" hidden>Play another run</button>
       </div>
 
       <div class="stat-tiles">
@@ -181,10 +190,6 @@
       </div>
 
       <div class="sum-grid" id="sum-grid"></div>
-      <div class="sum-actions">
-        <button class="btn btn-primary" id="btn-share">Share result</button>
-        <button class="btn btn-secondary" id="btn-again" hidden>Play another run</button>
-      </div>
       <button class="upsell" id="upsell" hidden>
         <span class="upsell-ico" data-sprite="infinity" data-size="28"></span>
         <span class="upsell-text"><b>Want another go?</b><small>The Trillion Pass gives endless fresh runs and every past session.</small></span>
@@ -342,7 +347,6 @@
   <script src="account.js"></script>
   <script src="sounds.js"></script>
   <script src="sprites.js"></script>
-  <script src="people.js"></script>
   <script src="icons.js"></script>
   <script src="journey.js"></script>
   <script src="tree.js"></script>

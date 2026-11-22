@@ -462,7 +462,16 @@
     return rating(score);
   }
 
+  let fvExpanded = false;
+  function hasCompletedRun() { const s = loadStats(); return (s.played || 0) > 0 || (s.unlimitedPlayed || 0) > 0; }
   function renderMenu() {
+    const firstTime = !hasCompletedRun();
+    const collapse = firstTime && !fvExpanded;
+    $("#menu").classList.toggle("fv", collapse);
+    $("#fv-hint").hidden = !firstTime;
+    $("#btn-play-fv").hidden = !collapse;
+    $("#btn-fv-more").hidden = !collapse;
+    $("#btn-account").hidden = firstTime;
     const day = dayNumber();
     const saved = store.get(dayKey(day), null);
     const played = saved && saved.done;
@@ -494,7 +503,7 @@
     $("#btn-account").lastChild.textContent = acct ? " Signed in · streak saved" : " Sign in to save your streak";
     $("#sl-acct").textContent = acct ? "Signed in" : "Save your streak";
     const top = $("#btn-unlock-top");
-    top.hidden = unlocked;
+    top.hidden = unlocked || firstTime;
     renderSheet();
   }
 
@@ -816,7 +825,7 @@
     $("#fb-said").textContent = said;
 
     let blurb = "";
-    if (res.tier === "miracle") blurb = p.miracleNote || "You found the handpicked best answer!";
+    if (res.tier === "miracle") { track("miracle_hit", { mode: state.mode }); blurb = p.miracleNote || "You found the handpicked best answer!"; }
     else if (res.tier === "trap") blurb = p.trapNote || "Too clever. Everybody tries that one.";
     else if (res.tier === "timeout") blurb = "The bell rang without you.";
     $("#fb-blurb").textContent = blurb;
@@ -905,6 +914,8 @@
     const ms = window.Journey && window.Journey.reached(score);
     $("#sum-journey").textContent = ms ? `Career level: ${ms.name}` : "Score 50 to make Intern!";
     track("run_complete", { mode: state.mode, score });
+    track("run_finish", { mode: state.mode, score });
+    $("#sum-tomorrow").textContent = `Come back tomorrow${state.mode === "daily" ? "" : " for a fresh 7"} Â· streak ${currentStreak()}`;
     renderNext();
     $("#sum-grid").innerHTML = state.results.map((r) => tierSprite(r.tier, 30)).join("");
     $("#btn-again").hidden = state.mode !== "unlimited";
@@ -1275,6 +1286,7 @@
 
 
   async function openShare() {
+    track("share_click", { mode: state && state.mode });
     Sfx.play("open");
     $("#dlg-share").showModal();
     await drawShareCard();
@@ -1349,7 +1361,7 @@
   }
 
   const CONTACT = "merrillion.help@gmail.com";
-  function track(event, params) { try { (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
+  function track(event, params) { try { if (typeof window.gtag === "function") window.gtag("event", event, params || {}); else (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
   function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
   function openMoreGames() {
     openInfo("More games", `<div class="more-games"><a class="mg-card mg-mer" href="https://www.merrillion.site"><span class="mg-art" aria-hidden="true">🎄</span><b>Merrillion</b><p>The Christmas daily word game. Seven festive prompts, rare answers and a new advent ornament every day.</p><span class="mg-play"><span>Play →</span></span></a><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
@@ -1527,7 +1539,7 @@
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
     $$(".sheet-list [data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
     $("#sheet-supporter").addEventListener("click", () => { if (!isUnlocked()) { closeSheet(); openPaywall(); } });
-    $("#btn-unlock-top").addEventListener("click", openPaywall);
+    $("#btn-unlock-top").addEventListener("click", () => { track("pass_click"); openPaywall(); });
     $("#btn-sfx").addEventListener("click", toggleSfx);
     $("#btn-music").addEventListener("click", toggleMusic);
     $("#tg-sfx").addEventListener("click", toggleSfx);
@@ -1595,7 +1607,9 @@
     if (window.Journey) window.Journey.mount($("#journey"));
     if (window.Account) window.Account.init({ getStats: loadStats, setStats: (s) => { store.set("stats", s); renderMenu(); }, onChange: () => renderMenu() });
 
-    if (!store.get("seenHow", false)) { store.set("seenHow", true); openHow(); }
+    $("#btn-play-fv").addEventListener("click", startDaily);
+    $("#btn-how-hint").addEventListener("click", openHow);
+    $("#btn-fv-more").addEventListener("click", () => { fvExpanded = true; renderMenu(); });
 
     // Shared with online-ui.js, and a hook for automated tests.
     window.Trillion = { isCore, judge, key, TIERS, PROMPTS, store, toast, showScreen, esc, CONFIG, tierSprite };
