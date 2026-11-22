@@ -13,14 +13,17 @@
   const ell = (ctx, x, y, rx, ry, rot, fill) => { ctx.fillStyle = fill; ctx.beginPath(); ctx.ellipse(x, y, rx, ry, rot || 0, 0, 6.283); ctx.fill(); };
 
   function reindeer(ctx, x, y, s, ph, lead) {
-    const legs = [[-6, Math.sin(ph) * 0.65], [-3, -Math.sin(ph) * 0.5], [6, -Math.sin(ph) * 0.65], [9, Math.sin(ph) * 0.5]];
-    ctx.lineCap = "round";
-    legs.forEach(([lx, a], i) => {                       // back legs drawn darker for depth
+    // Gallop: fore pair and hind pair move together, offset in phase; feet lift on the forward swing.
+    const legs = [[-6, ph], [-3, ph + 0.5], [6, ph + 2.6], [9, ph + 3.1]];
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    legs.forEach(([lx, p0], i) => {                      // back legs drawn darker for depth
+      const a = Math.sin(p0) * 0.62, lift = Math.max(0, Math.cos(p0)) * 2.2 * s;
       ctx.strokeStyle = i % 2 ? C.furDark : "#6b4429";
       ctx.lineWidth = 2.1 * s;
-      const kx = x + lx * s + Math.sin(a) * 3.5 * s, ky = y + 5 * s;
-      ctx.beginPath(); ctx.moveTo(x + lx * s, y + 2 * s); ctx.lineTo(kx, ky); ctx.lineTo(kx + Math.sin(a * 1.6) * 3 * s, ky + 4.5 * s); ctx.stroke();
-      ell(ctx, kx + Math.sin(a * 1.6) * 3 * s, ky + 4.8 * s, 1.3 * s, 0.9 * s, 0, C.hoof);
+      const kx = x + lx * s + Math.sin(a) * 3.5 * s, ky = y + 5 * s - lift * 0.5;
+      const fx = kx + Math.sin(a * 1.6 - 0.25) * 3 * s, fy = ky + 4.5 * s - lift;
+      ctx.beginPath(); ctx.moveTo(x + lx * s, y + 2 * s); ctx.lineTo(kx, ky); ctx.lineTo(fx, fy); ctx.stroke();
+      ell(ctx, fx, fy + 0.3 * s, 1.3 * s, 0.9 * s, 0, C.hoof);
     });
     const g = ctx.createLinearGradient(x, y - 4 * s, x, y + 4 * s);
     g.addColorStop(0, "#a06a40"); g.addColorStop(1, C.furDark);
@@ -92,13 +95,19 @@
 
   // Whole team: three reindeer and Rudolph out front, reins, and the sleigh.
   function draw(ctx, x, y, s, t) {
-    const gal = t * 11;
+    const gal = t * 8;
     ctx.save();
     ctx.translate(x, y);
     ctx.strokeStyle = "rgba(242,193,78,0.8)"; ctx.lineWidth = 0.8 * s;
     ctx.beginPath(); ctx.moveTo(1 * s, -10 * s); ctx.quadraticCurveTo(-40 * s, 0, -84 * s, -9 * s); ctx.stroke();
-    [[-86, -7, 4.2, true], [-66, -5, 2.8, false], [-46, -3, 1.4, false], [-26, 0, 0, false]]
-      .forEach(([dx, dy, ph, lead]) => reindeer(ctx, dx * s, dy * s + Math.sin(gal + ph) * 0.8 * s, s * 0.9, gal + ph, lead));
+    [[-86, -7, 1.8, true], [-66, -5, 1.2, false], [-46, -3, 0.6, false], [-26, 0, 0, false]]
+      .forEach(([dx, dy, ph, lead]) => {
+        // Each deer is a beat behind the one ahead, so the bob ripples down the team like a wave.
+        const bob = Math.sin(gal * 2 + ph * 2) * 0.9 * s, pitch = Math.sin(gal * 2 + ph * 2 + 0.8) * 0.035;
+        ctx.save(); ctx.translate(dx * s, dy * s + bob); ctx.rotate(pitch);
+        reindeer(ctx, 0, 0, s * 0.9, gal + ph, lead);
+        ctx.restore();
+      });
     sleigh(ctx, 0, 0, s);
     ctx.restore();
   }

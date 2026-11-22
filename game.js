@@ -80,31 +80,46 @@
   // =====================================================================
   // Answer matching
   // =====================================================================
+  const NUMW = { zero: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10", eleven: "11", twelve: "12", thirteen: "13", fourteen: "14", fifteen: "15", sixteen: "16", seventeen: "17", eighteen: "18", nineteen: "19", twenty: "20", thirty: "30", forty: "40", fifty: "50", sixty: "60", seventy: "70", eighty: "80", ninety: "90", hundred: "100", thousand: "1000" };
   function norm(s) {
     return String(s).toLowerCase()
-      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/&/g, " and ")
-      .replace(/['’`]/g, "")
+      .replace(/['\u2019`]/g, "")
       .replace(/[^\p{L}\p{N}]+/gu, " ")   // keep letters from any alphabet (Cyrillic, Greek, etc.)
       .trim()
       .replace(/^(the|a|an) /, "")
       .replace(/^(st|saint) /, "saint ")
-      .replace(/ (st|saint) /g, " saint ");
+      .replace(/ (st|saint) /g, " saint ")
+      .split(" ").map((w) => NUMW[w] || w).join(" ");   // twelve -> 12
   }
   function key(s) {
     const n = norm(s);
     return n.length > 3 && n.endsWith("s") && !n.endsWith("ss") ? n.slice(0, -1) : n;
   }
+  // Damerau-style edit distance (a swapped pair of letters counts as one edit).
   function lev(a, b) {
-    const n = b.length;
-    let prev = new Array(n + 1);
-    for (let j = 0; j <= n; j++) prev[j] = j;
-    for (let i = 1; i <= a.length; i++) {
-      const cur = [i];
-      for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
-      prev = cur;
+    const m = a.length, n = b.length;
+    const d = [];
+    for (let i = 0; i <= m; i++) { d[i] = [i]; }
+    for (let j = 0; j <= n; j++) d[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const c = a[i - 1] === b[j - 1] ? 0 : 1;
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
     }
-    return prev[n];
+    return d[m][n];
+  }
+  // Spelling variants of a normalised string: singular/plural (-s, -es, -ies) and with spaces removed.
+  function vars(k) {
+    const s = new Set([k]);
+    if (k.length > 3 && k.endsWith("s") && !k.endsWith("ss")) s.add(k.slice(0, -1));
+    if (k.length > 4 && k.endsWith("es")) s.add(k.slice(0, -2));
+    if (k.length > 4 && k.endsWith("ies")) s.add(k.slice(0, -3) + "y");
+    [...s].forEach((x) => s.add(x.replace(/ /g, "")));
+    return s;
   }
 
   const indexCache = new Map();
@@ -114,7 +129,7 @@
     const add = (entry, tier) => {
       if (!entry) return;
       const aliases = entry.split("|").map((x) => x.trim()).filter(Boolean);
-      aliases.forEach((a) => list.push({ key: key(a), display: aliases[0], tier }));
+      aliases.forEach((a) => { const n = norm(a); list.push({ key: key(a), n, vars: vars(n), words: n.split(" "), display: aliases[0], tier }); });
     };
     add(p.miracle, "miracle");
     add(p.trap, "trap");
@@ -134,23 +149,53 @@
       if (s && s !== n) cands.push(s);
     }
     const list = answerIndex(p);
-    for (const c of cands) {
-      const ck = key(c);
-      const exact = list.find((x) => x.key === ck);
-      if (exact) return { tier: exact.tier, display: exact.display };
+    const hit = (x, fuzzy) => (fuzzy ? { tier: x.tier, display: x.display, fuzzy: true } : { tier: x.tier, display: x.display });
+    const cvs = cands.map((c) => vars(c));
+    // 1. Exact (literal first, then singular/plural/spacing variants).
+    for (const c of cands) { const x = list.find((e) => e.n === c); if (x) return hit(x); }
+    for (const v of cvs) { const x = list.find((e) => [...v].some((t) => e.vars.has(t))); if (x) return hit(x); }
+    // 2. Surname only: "Carey" -> listed "Mariah Carey", but only when no other answer uses that word.
+    for (let i = 0; i < cands.length; i++) {
+      if (cands[i].includes(" ") || cands[i].length < 4) continue;
+      const v = cvs[i];
+      const owners = new Set(list.filter((e) => e.words.some((w) => v.has(w))).map((e) => e.display));
+      if (owners.size !== 1) continue;
+      const x = list.find((e) => e.words.length >= 2 && e.words.length <= 3 && v.has(e.words[e.words.length - 1]));
+      if (x) return hit(x);
     }
-    // Small typo tolerance: 1 edit for 5+ letters, 2 edits for 9+ letters.
-    const k = key(cands[cands.length - 1]);
-    let best = null, bestD = Infinity;
-    for (const x of list) {
-      const L = Math.min(x.key.length, k.length);
-      const allow = L >= 9 ? 2 : L >= 5 ? 1 : 0;
-      if (!allow || Math.abs(x.key.length - k.length) > allow) continue;
-      const d = lev(x.key, k);
-      if (d <= allow && d < bestD) { best = x; bestD = d; }
+    // 3. Longer input containing a listed answer as whole words: "the movie Elf", "Mariah Carey" -> Mariah.
+    let best = null;
+    for (const c of cands) {
+      const cw = c.split(" ");
+      if (cw.length < 2 || cw.length > 9 || /\b(not|never|no|isnt|dont|without)\b/.test(c)) continue;
+      const padded = " " + c + " ";
+      for (const x of list) {
+        if (cw.length - x.words.length > 6) continue;
+        const t = [...x.vars].filter((s) => s.length >= 3 && padded.includes(" " + s + " ")).sort((a, b) => b.length - a.length)[0];
+        if (!t) continue;
+        if (!best || t.length > best.len) best = { x, len: t.length };
+      }
+    }
+    if (best) return hit(best.x);
+    // 4. Typos: 1 edit for 4-6 chars, 2 for 7-11, 3 for 12+; never for answers under 4 chars. Swaps count as one edit.
+    let fz = null, fzD = Infinity;
+    for (const v of cvs) {
+      for (const x of list) {
+        for (const t of x.vars) {
+          const allow = t.length >= 12 ? 3 : t.length >= 7 ? 2 : t.length >= 4 ? 1 : 0;
+          if (!allow) continue;
+          for (const s of v) {
+            if (Math.abs(s.length - t.length) > allow) continue;
+            if (t.length <= 6 && s[0] !== t[0]) continue;
+            const d = lev(s, t);
+            if (d > allow) continue;
+            if (d < fzD || (d === fzD && fz && fz.tier === "trap" && x.tier !== "trap")) { fz = x; fzD = d; }
+          }
+        }
+      }
     }
     // A close-but-not-exact match is returned as "fuzzy" so the game can ask "Did you mean…?"
-    return best ? { tier: best.tier, display: best.display, fuzzy: true } : { tier: "miss", display: null };
+    return fz ? hit(fz, true) : { tier: "miss", display: null };
   }
 
   // =====================================================================

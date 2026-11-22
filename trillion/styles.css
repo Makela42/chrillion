@@ -828,3 +828,20 @@ button, a, summary, input { -webkit-tap-highlight-color: transparent; touch-acti
 @keyframes stampIn { from { transform: rotate(-9deg) scale(2.6); opacity: 0; } to { transform: rotate(-9deg) scale(1); opacity: 0.88; } }
 .feedback[data-tier="miracle"] .fb-label { font-size: 1.15em; letter-spacing: 0.01em; }
 @media (prefers-reduced-motion: reduce) { .fb-stamp, .sum-callout { animation: none !important; } }
+
+/* ---- Motion polish: one easing family, compositor-only (transform/opacity), reduced-motion safe ---- */
+:root { --ease-out: cubic-bezier(.22, 1, .36, 1); --ease-spring: cubic-bezier(.3, 1.5, .5, 1); --dur-fast: .18s; --dur-med: .4s; }
+.sheet-card, .sheet > * { animation-timing-function: var(--ease-out); }
+.feedback { animation: pop .32s var(--ease-out) both; }
+.feedback .fb-label, .feedback .fb-points { animation-timing-function: var(--ease-out); }
+.btn, .tile, .tile-sm, .pill-gold, .mg-card { transition-timing-function: var(--ease-out); backface-visibility: hidden; -webkit-tap-highlight-color: transparent; }
+.prompt-card, .feedback, .screen, .tiles-main .tile, .stile, .card, .breakdown > li, .score-pill, .pw { backface-visibility: hidden; }
+.prompt-card.card-in, .screen:not([hidden]), .feedback, .score-pill.bump, .pw { will-change: transform, opacity; }
+.timer-fill { transform-origin: left center; }
+@media (hover: none) { .btn:hover, .tile:hover, .tile-sm:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-delay: 0s !important; animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; scroll-behavior: auto !important; }
+  .screen:not([hidden]), .feedback, .tiles-main .tile, .tiles-grid > *, .stile, .card, .breakdown > li, .fb-points, .fb-label, .score-pill.bump, .sheet > * { animation: none !important; opacity: 1; transform: none; }
+  .timer-fill { transition: none; }
+  .will-animate, .prompt-card, .feedback, .screen { will-change: auto; }
+}

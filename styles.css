@@ -870,3 +870,35 @@ a.mgp:active { transform: translateY(0) scale(.985); }
 .miracle-banner b { font-weight: 400; font-size: clamp(52px, 17vw, 110px); line-height: .95; }
 @keyframes mb-in { 0% { opacity: 0; transform: scale(.7) rotate(-3deg); } 15% { opacity: 1; transform: scale(1.08) rotate(1deg); } 25% { transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .miracle-banner { animation: mb-fade 1.6s ease both; } @keyframes mb-fade { 0%, 80% { opacity: 1; } 100% { opacity: 0; } } }
+
+/* ---- motion language: one ease, short travel, transform + opacity only ---- */
+:root { --ease: cubic-bezier(.22, 1, .36, 1); --ease-soft: cubic-bezier(.4, 0, .2, 1); }
+.btn, .save-pill { transition: transform .18s var(--ease), box-shadow .18s var(--ease), filter .18s var(--ease-soft); }
+.prompt-card.card-in { animation: cardIn .5s var(--ease) both; }
+@keyframes cardIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+.pw { filter: none; transform: translateY(8px); animation: pwIn .46s var(--ease) forwards; animation-delay: calc(.1s + min(var(--i), 12) * .04s); }
+@keyframes pwIn { to { opacity: 1; transform: none; } }
+.feedback { animation: fbIn .36s var(--ease) both; }
+@keyframes fbIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.feedback .fb-emoji .spr { animation: tierIn .55s var(--ease) both; }
+@keyframes tierIn { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+.feedback .fb-label { animation: rise .42s var(--ease) .08s both; }
+.feedback .fb-points { animation: rise .42s var(--ease) .16s both; }
+.fb-mascot.talk .fb-elf { animation: elfHop2 .5s var(--ease); }
+.fb-mascot.talk .fb-bubble { animation: bubbleIn2 .34s var(--ease) .08s both; }
+@keyframes elfHop2 { 0% { transform: translateY(6px); } 45% { transform: translateY(-6px); } 100% { transform: none; } }
+@keyframes bubbleIn2 { from { transform: translateY(4px) scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+.scene-say.say-pop .say-bubble { animation: bubbleIn2 .34s var(--ease); }
+.shake { animation: shake2 .4s var(--ease-soft); }
+@keyframes shake2 { 15% { transform: translateX(-6px); } 35% { transform: translateX(5px); } 55% { transform: translateX(-3px); } 75% { transform: translateX(2px); } 100% { transform: none; } }
+.mgp { animation-timing-function: var(--ease); }
+/* results reveal: sections rise in sequence */
+#summary:not([hidden]) > * { animation: rise .5s var(--ease) both; }
+#summary:not([hidden]) > *:nth-child(2) { animation-delay: .06s; }
+#summary:not([hidden]) > *:nth-child(3) { animation-delay: .12s; }
+#summary:not([hidden]) > *:nth-child(4) { animation-delay: .2s; }
+#summary:not([hidden]) > *:nth-child(5) { animation-delay: .28s; }
+#summary:not([hidden]) > *:nth-child(n+6) { animation-delay: .36s; }
+@media (prefers-reduced-motion: reduce) {
+  .prompt-card.card-in, .pw, .feedback, .feedback *, .fb-mascot *, .shake, #summary > * { animation: none !important; opacity: 1; transform: none; }
+}
