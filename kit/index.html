@@ -140,7 +140,7 @@
       x.fillStyle = t.ink; x.font = "700 38px 'Atkinson Hyperlegible'"; wrap(x, p.text, 190, yy + 70, W - 330, 46);
       yy += 185;
     });
-    x.textAlign = "center"; x.fillStyle = t.accent; x.font = '400 70px "Jersey 15"'; x.fillText("25 seconds each. Rare answers win.", W / 2, yy + 80);
+    x.textAlign = "center"; x.fillStyle = t.name === "Merrillion" ? "#a8323a" : t.accent; x.font = '400 70px "Jersey 15"'; x.fillText("25 seconds each. Rare answers win.", W / 2, yy + 80);
     x.fillStyle = t.name === "Merrillion" ? "#2b1d18" : t.accent; x.fillText(t.url, W / 2, H - 90);
 
     // 3. Yesterday's rarest answers (the One in a Merrillion / golden answer for each prompt)
