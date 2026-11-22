@@ -7,6 +7,7 @@
   "use strict";
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   const MOODS = { menu: { dim: 0, speed: 1, warm: 0 }, game: { dim: 0.28, speed: 0.45, warm: 0 }, summary: { dim: 0, speed: 1.1, warm: 1 } };
+  let kick = 0, kickDir = 0, flash = 0;
   let cur = { ...MOODS.menu }, from = { ...cur }, to = { ...cur }, mt = 1;
 
   let canvas = null, ctx = null, raf = 0, running = false, last = 0;
@@ -63,7 +64,9 @@
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.drawImage(base, 0, 0);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const sp = cur.speed;
+    const sp = cur.speed * (1 + Math.abs(kick) * 2.2);
+    kick += (0 - kick) * Math.min(1, dt * 1.8); flash = Math.max(0, flash - dt * 1.4);
+    const shiftY = -kick * 26;
     for (const L of lines) {
       L.off += L.speed * sp * dt;
       while (L.off >= DX) {
@@ -74,6 +77,7 @@
       }
       const [r, g, b] = L.color;
       const a = L.alpha * (1 + cur.warm * 0.4);
+      ctx.save(); ctx.translate(0, shiftY * (0.6 + L.w * 0.4));
       ctx.beginPath();
       L.pts.forEach((y, i) => { const x = i * DX - L.off; if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
       ctx.strokeStyle = `rgba(${r},${g},${b},${a})`; ctx.lineWidth = L.w; ctx.lineJoin = "round"; ctx.stroke();
@@ -81,8 +85,9 @@
       ctx.lineTo(L.pts.length * DX - L.off, H); ctx.lineTo(-L.off, H); ctx.closePath();
       const fg = ctx.createLinearGradient(0, L.baseY - 40, 0, H);
       fg.addColorStop(0, `rgba(${r},${g},${b},${a * 0.22})`); fg.addColorStop(1, `rgba(${r},${g},${b},0)`);
-      ctx.fillStyle = fg; ctx.fill();
+      ctx.fillStyle = fg; ctx.fill(); ctx.restore();
     }
+    if (flash > 0.01) { const c = kickDir > 0 ? "63,207,142" : "238,106,115"; const gg = ctx.createLinearGradient(0, kickDir > 0 ? H : 0, 0, kickDir > 0 ? H * 0.3 : H * 0.7); gg.addColorStop(0, `rgba(${c},${flash * 0.16})`); gg.addColorStop(1, `rgba(${c},0)`); ctx.fillStyle = gg; ctx.fillRect(0, 0, W, H); }
     if (cur.dim > 0.005) { ctx.fillStyle = `rgba(2,14,10,${cur.dim})`; ctx.fillRect(0, 0, W, H); }
   }
 
@@ -121,6 +126,11 @@
   }
   function stop() { running = false; cancelAnimationFrame(raf); }
 
+  function react(good) {
+    if (reduce) return;
+    kickDir = good ? 1 : -1; kick = kickDir; flash = 1;
+  }
+
   function setMood(name) {
     const t = MOODS[name] || MOODS.menu;
     ensure();
@@ -129,5 +139,5 @@
   }
 
   if (document.body) start(); else document.addEventListener("DOMContentLoaded", start);
-  window.BgScene = { start, stop, setMood };
+  window.BgScene = { start, stop, setMood, react };
 })();

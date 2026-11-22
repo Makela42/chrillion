@@ -77,6 +77,7 @@
         <div class="hero-stage"><canvas class="hero-scene" id="hero-scene" aria-hidden="true"></canvas></div>
       </div>
 
+      <p class="challenge" id="challenge" hidden></p>
       <button class="btn btn-primary fv-play" id="btn-play-fv" hidden>Play today's 7</button>
       <button class="fv-more" id="btn-fv-more" hidden>More ways to play &#9662;</button>
 
@@ -160,6 +161,7 @@
         <span class="eyebrow" id="sum-mode"></span>
       </div>
       <p class="sum-callout" id="sum-callout" hidden></p>
+      <p class="sum-callout" id="sum-vs" hidden></p>
       <div class="sum-score-row">
         <span class="sum-total" id="sum-score">0</span>
         <span class="sum-side"><span class="sum-max" id="sum-max">/ 700</span><span class="sum-rating" id="sum-rating"></span><span class="sum-miles" id="sum-miles"></span><span class="sum-journey" id="sum-journey"></span></span>
@@ -275,6 +277,7 @@
     <p>You get <b>7 prompts</b> and <b>25 seconds</b> for each. Type <b>one answer</b> per prompt.</p>
     <p>Every valid answer has a <b>fixed</b> point value set in advance. Common answers score low and rare answers score high, so you see your score as soon as you submit.</p>
     <ul class="tier-list" id="tier-list"></ul>
+    <p class="muted">No AI judges you: every answer has a fixed score from a list we wrote ahead of time, with typo forgiveness. Same score for everyone.</p>
     <p class="muted">The Daily Market Open is the same for everyone and resets at midnight. Unlimited Runs shuffle new prompts every time.</p>
     <form method="dialog"><button class="btn btn-primary btn-block">Let's trade</button></form>
   </dialog>
@@ -358,6 +361,7 @@
   <script src="prompts-3.js"></script>
   <script src="prompts-4.js"></script>
   <script src="prompts-5.js"></script>
+  <script src="prompts-6.js"></script>
   <script src="vote.js"></script>
   <script src="game.js"></script>
   <script src="online-core.js"></script>

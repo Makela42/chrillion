@@ -734,6 +734,7 @@
     $("#game").classList.add("revealing");      // hide the prompt so the coins have the screen to themselves
     if (window.Scene) window.Scene.stop();
     if (window.Fx) window.Fx.celebrate(r.tier);
+    if (window.BgScene && BgScene.react) BgScene.react(r.tier === "miracle" || r.tier === "t75" || r.tier === "t50");
     renderDots();
     if (window.Journey) window.Journey.set(total(state.results));
     renderFeedback(p, res);
@@ -828,6 +829,8 @@
     if (res.tier === "miracle") { track("miracle_hit", { mode: state.mode }); blurb = p.miracleNote || "You found the handpicked best answer!"; }
     else if (res.tier === "trap") blurb = p.trapNote || "Too clever. Everybody tries that one.";
     else if (res.tier === "timeout") blurb = "The bell rang without you.";
+    else if (res.tier === "miss") blurb = "Not on our list. Try a simpler, more common word next time.";
+    else if (t.desc) blurb = t.desc + ". Rarer answers pay more.";
     $("#fb-blurb").textContent = blurb;
 
     // The other answers stay secret until the end of the run.
@@ -915,7 +918,7 @@
     $("#sum-journey").textContent = ms ? `Career level: ${ms.name}` : "Score 50 to make Intern!";
     track("run_complete", { mode: state.mode, score });
     track("run_finish", { mode: state.mode, score });
-    $("#sum-tomorrow").textContent = `Come back tomorrow${state.mode === "daily" ? "" : " for a fresh 7"} Â· streak ${currentStreak()}`;
+    $("#sum-tomorrow").textContent = `Come back tomorrow${state.mode === "daily" ? "" : " for a fresh 7"} · streak ${currentStreak()}`;
     renderNext();
     $("#sum-grid").innerHTML = state.results.map((r) => tierSprite(r.tier, 30)).join("");
     $("#btn-again").hidden = state.mode !== "unlimited";
@@ -950,12 +953,15 @@
           <span class="bd-mid"><span class="bd-prompt">${esc(p.text)}</span><span class="bd-answer">${yours}</span></span>
           <span class="bd-pts">${r.pts}</span><span class="bd-caret" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span></summary>
         <div class="ans-groups">${groups}</div>
+        ${p.miracleNote ? `<p class="bd-note"><b>Why ${esc(String(p.miracle).split("|")[0])} wins:</b> ${esc(p.miracleNote)}</p>` : ""}
+        ${p.trapNote ? `<p class="bd-note"><b>Why ${esc(String(p.trap).split("|")[0])} is a trap:</b> ${esc(p.trapNote)}</p>` : ""}
       </details></li>`;
     }).join("");
 
     showScreen("summary");
     renderRecap(state.results);
     renderComparison(score);
+    renderVs(score);
     if (window.Vote) {
       try {
         window.Vote.mount(document.getElementById("vote-card"), {
@@ -1135,7 +1141,8 @@
     if (card.hidden) return;
     // Start with the estimated curve; swap in real player data when it's available.
     drawDistribution(score, null);
-    const est = `Better than ~${percentile(simulatedHist(), score)}% of players`;
+    const estPct = percentile(simulatedHist(), score);
+    const est = `Better than ~${estPct}% of players. ` + (estPct >= 85 ? "Screenshot this and send it to your friends." : estPct >= 50 ? "Not bad. Can your best friend beat you?" : "Your friends will say the obvious thing. Send them the link.");
     const day = state.day;
     if (day < 1) { setDistText(est, "Estimated curve. Live player comparison starts with the first Market Open."); $("#st-rank").textContent = "soon"; return; }
     if (!cloud()) { setDistText(est, "Estimated curve. Live player comparison turns on once the site is online."); $("#st-rank").textContent = "once online"; return; }
@@ -1164,7 +1171,38 @@
   }
 
   // ---------- share ----------
-  const shareUrl = () => (ONLINE ? location.origin + location.pathname : "");
+  const TIER_LETTER = { miracle: "m", t75: "a", t50: "b", t25: "c", trap: "t", t10: "p", miss: "x", timeout: "z" };
+  const LETTER_TIER = Object.fromEntries(Object.entries(TIER_LETTER).map(([k, v]) => [v, k]));
+  // Head-to-head: the link carries your score, the day, and your tier letters; a friend sees "beat N" and a win/lose/tie after their run.
+  const shareUrl = () => {
+    if (!ONLINE) return "";
+    const base = location.origin + location.pathname;
+    if (!state || state.mode === "unlimited" || !(state.day >= 1) || !state.results.length) return base;
+    return `${base}?beat=${total(state.results)}&d=${state.day}&t=${state.results.map((r) => TIER_LETTER[r.tier] || "x").join("")}`;
+  };
+  let challenge = null;
+  function readChallenge() {
+    const q = new URLSearchParams(location.search), beat = parseInt(q.get("beat"), 10), day = parseInt(q.get("d"), 10);
+    if (!(beat >= 0 && beat <= MAX_SCORE) || !(day >= 1)) return;
+    const t = (q.get("t") || "").slice(0, 12).split("").map((c) => LETTER_TIER[c]).filter(Boolean);
+    challenge = { beat, day, tiers: t };
+    const el = $("#challenge");
+    if (el) {
+      const strip = t.length ? `<span class="ch-strip">${t.map((x) => tierSprite(x, 16)).join("")}</span>` : "";
+      el.innerHTML = `<b>A friend scored ${beat}. Can you beat it?</b>${strip}<small>${day === dayNumber() ? "Same 7 prompts today, so play the Daily." : "That was Market Open " + dayLabel(day) + ". Find it in the Archive."}</small>`;
+      el.hidden = false;
+    }
+    try { history.replaceState(null, "", location.pathname); } catch (e) { /* ignore */ }
+  }
+  function renderVs(score) {
+    const el = $("#sum-vs");
+    if (!el) return;
+    const ok = challenge && state.day === challenge.day && state.mode !== "unlimited";
+    el.hidden = !ok;
+    if (!ok) return;
+    const d = score - challenge.beat;
+    el.textContent = d > 0 ? `You beat your friend! ${score} vs ${challenge.beat} (+${d}).` : d < 0 ? `Your friend wins this one: ${challenge.beat} vs your ${score} (${d}). Rematch tomorrow.` : `A tie at ${score}! Great minds think rare.`;
+  }
   function shareTitle() {
     return state.mode === "daily" ? `${CONFIG.name} ${state.day >= 1 ? certNo(state.day) : "Preview"}`
       : state.mode === "archive" ? `${CONFIG.name} ${certNo(state.day)} (archive)` : `${CONFIG.name} Unlimited`;
@@ -1504,6 +1542,7 @@
     window.addEventListener("resize", () => { clearTimeout(heroTimer); heroTimer = setTimeout(drawHero, 150); });
 
     // Dev helpers (local only): ?unlock=dev unlocks supporter features, ?reset replays today's run.
+    readChallenge();
     const params = new URLSearchParams(location.search);
     if (LOCAL && params.get("unlock") === "dev") {
       store.set("unlockToken", "dev");

@@ -468,6 +468,26 @@
   // A friend's challenge link (?beat=score&d=day) is read once and kept for the results screen.
   let challenge = null;
 
+  // ---------- weekday twist: a bonus ornament upgrade, never extra points ----------
+  const TWISTS = [
+    { name: "Sleigh-In Sunday", rule: "Finish today's run for a bonus ornament", ok: () => true },
+    { name: "Trap-Dodge Monday", rule: "Dodge the trap answer for a bonus ornament", ok: (rs) => !rs.some((r) => r.tier === "trap") },
+    { name: "Rare Tuesday", rule: "Land a Rare Find (75) for a bonus ornament", ok: (rs) => rs.some((r) => r.tier === "t75" || r.tier === "miracle") },
+    { name: "Deep Cut Wednesday", rule: "Any 50+ answer earns a bonus ornament", ok: (rs) => rs.some((r) => r.pts >= 50) },
+    { name: "Triple Thursday", rule: "Three answers worth 50+ earn a bonus ornament", ok: (rs) => rs.filter((r) => r.pts >= 50).length >= 3 },
+    { name: "No-Miss Friday", rule: "Zero misses or timeouts earns a bonus ornament", ok: (rs) => rs.every((r) => r.tier !== "miss" && r.tier !== "timeout") },
+    { name: "Score Saturday", rule: "Score 250+ for a bonus ornament", ok: (rs) => total(rs) >= 250 },
+  ];
+  function twistFor(day) { return TWISTS[new Date(epochUTC() + (day - 1) * 864e5).getUTCDay()]; }
+  function renderTwist(day, played) {
+    const el = $("#twist-banner");
+    if (!el) return;
+    if (day < 1 || !hasRun()) { el.hidden = true; return; }
+    const t = twistFor(day), won = store.get("twist:" + day, null);
+    el.hidden = false;
+    el.classList.toggle("won", won === "win");
+    el.textContent = played ? (won === "win" ? `${t.name}: bonus ornament earned!` : `${t.name}: no bonus this time`) : `${t.name}: ${t.rule}`;
+  }
   function renderMenu() {
     const day = dayNumber();
     const saved = store.get(dayKey(day), null);
@@ -481,6 +501,7 @@
       ? `You scored ${total(saved.results)} of ${MAX_SCORE}: ${rating(total(saved.results))}.`
       : "7 Christmas prompts · 25 seconds each";
     $("#daily-sub").textContent = played ? "Done ✓ · see your results" : streak > 0 ? `Keep your ${streak}-day streak alive!` : "Same 7 for everyone";
+    renderTwist(day, !!played);
     renderTree($("#home-tree"), true);
     const badge = $("#streak-badge");
     badge.hidden = streak < 1;
@@ -765,7 +786,7 @@
 
   // Jingle chats while you think.
   const SAY = {
-    start: ["Think rare. The obvious stuff barely scores!", "Ooh, I know this one… do you?", "Skip the first thing in your head!", "Deep cuts fill the sleigh!", "Dig into that Christmas brain!", "Rare answers = more presents!"],
+    start: ["Think rare. The obvious stuff barely scores!", "Your best friend will say the obvious one. Beat them.", "Skip the first thing in your head!", "Deep cuts fill the sleigh!", "Dig into that Christmas brain!", "Rare answers = more presents!"],
     mid: ["Tick tock, the reindeer are waiting!", "Still thinking? Go weird!", "Halfway there!", "Santa's checking his watch…"],
     late: ["Quick! The sleigh's leaving!", "Any answer beats no answer!", "Hurry, hurry, hurry!"],
     nope: ["Not on Santa's list! Try again.", "Hmm, nope. Another one!", "Close… but not quite!"],
@@ -880,7 +901,17 @@
           if (nx) state.callouts.push(`${s.streak}-day streak. ${nx[0] - s.streak} more for ${nx[1]}.`);
         }
         const orn = store.get("ornaments", []);
-        if (!orn.some((o) => o.day === state.day)) { orn.push({ day: state.day, kind: window.AdventTree ? window.AdventTree.kindFor(score) : "plain" }); store.set("ornaments", orn); state.newOrn = state.day; }
+        if (!orn.some((o) => o.day === state.day)) {
+          let kind = window.AdventTree ? window.AdventTree.kindFor(score) : "plain";
+          const tw = twistFor(state.day);
+          if (tw.ok(state.results)) {
+            const ks = ["plain", "candy", "ginger", "snow", "deer", "santa"], i = ks.indexOf(kind);
+            if (i >= 0 && i < ks.length - 1) kind = ks[i + 1];
+            store.set("twist:" + state.day, "win");
+            state.callouts.push(`${tw.name}: bonus ornament! Yours was upgraded.`);
+          } else store.set("twist:" + state.day, "miss");
+          orn.push({ day: state.day, kind }); store.set("ornaments", orn); state.newOrn = state.day;
+        }
       }
     } else if (state.mode === "archive") {
       saveProgress({ started: state.prompts.length, done: true });

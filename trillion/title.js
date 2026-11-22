@@ -10,6 +10,7 @@
   const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let canvas = null, ctx = null, raf = 0, W = 0, H = 0, last = 0, T = 0, running = false;
+  let far = [], farOff = 0, sweep = 0;
   let candles = [], shown = 0, acc = 0, price = 100, dxc = 13, tickX = 0;
   const TICKERS = [["TRIL", 1204.5], ["BULL", 88.2], ["INDEX", 5120.4], ["GOLD", 2310.1], ["BAGHLD", 4.7], ["ALPHA", 312.9], ["PENNY", 0.42], ["BEAR", 17.3]];
   const tick = TICKERS.map(([s, p]) => ({ s, p, c: rnd(-3, 4) }));
@@ -23,6 +24,7 @@
     candles = []; price = 100;
     for (let i = 0; i < n; i++) { const k = newCandle(price); candles.push(k); price = k.c; }
     shown = reduce ? n : 0; acc = 0;
+    far = []; let fy = 0.5; for (let i = 0; i < Math.ceil(W / 9) + 3; i++) { fy = Math.max(0.15, Math.min(0.85, fy + rnd(-0.07, 0.07))); far.push(fy); }
   }
 
   function resize() {
@@ -57,10 +59,13 @@
     if (!isFinite(lo)) { lo = 90; hi = 110; }
     const padT = 56, padB = 14, Y = (v) => padT + (1 - (v - lo) / (hi - lo || 1)) * (H - padT - padB);
 
+    farOff += dt * 6; while (farOff >= 9) { farOff -= 9; far.shift(); const l = far[far.length - 1]; far.push(Math.max(0.15, Math.min(0.85, l + rnd(-0.07, 0.07)))); }
+    ctx.beginPath(); far.forEach((v, i) => { const x = i * 9 - farOff, y = 40 + v * (H - 60); if (i) ctx.lineTo(x, y); else ctx.moveTo(x, y); });
+    ctx.strokeStyle = "rgba(127,200,160,.18)"; ctx.lineWidth = 1.2; ctx.stroke();
     // candles
     vis.forEach((k, i) => {
       const x = i * dxc - off + dxc / 2 + 4, up = k.c >= k.o, col = up ? UP : DOWN;
-      const grow = i === shown - 1 && !scrolling ? Math.min(1, acc / 0.07) : 1;
+      const grow = i === shown - 1 && !scrolling ? (1 - Math.pow(1 - Math.min(1, acc / 0.07), 3)) : 1;
       const cl = k.o + (k.c - k.o) * grow;
       ctx.strokeStyle = col; ctx.fillStyle = col; ctx.lineWidth = 1.4;
       ctx.beginPath(); ctx.moveTo(x, Y(k.h)); ctx.lineTo(x, Y(k.l)); ctx.stroke();
@@ -86,6 +91,7 @@
       ctx.fillStyle = "#06231a"; ctx.font = `600 10px ${MONO}`; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText(label, W - tw / 2 - 4, y + 0.5);
     }
 
+    if (!reduce) { sweep = (sweep + dt / 7) % 1.6; const sx = (sweep - 0.3) * W * 1.2; const lg = ctx.createLinearGradient(sx - 60, 0, sx + 60, 0); lg.addColorStop(0, "rgba(255,246,214,0)"); lg.addColorStop(0.5, "rgba(255,246,214,.07)"); lg.addColorStop(1, "rgba(255,246,214,0)"); ctx.fillStyle = lg; ctx.fillRect(0, 0, W, H); }
     // ticker board
     ctx.fillStyle = "rgba(0,0,0,.35)"; ctx.fillRect(0, 0, W, 24);
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, W, 24); ctx.clip();
@@ -113,7 +119,8 @@
     if (!running) return;
     const dt = Math.min(0.05, (now - last) / 1000);
     last = now; T += dt;
-    if (!tick._t || T - tick._t > 1.4) { tick._t = T; const t = tick[Math.floor(Math.random() * tick.length)]; t.c = Math.max(-9, Math.min(9, t.c + rnd(-1.6, 1.8))); }
+    if (!tick._t || T - tick._t > 1.4) { tick._t = T; const t = tick[Math.floor(Math.random() * tick.length)]; t.tc = Math.max(-9, Math.min(9, t.c + rnd(-1.6, 1.8))); }
+    tick.forEach((k) => { if (k.tc != null) k.c += (k.tc - k.c) * Math.min(1, dt * 3); });
     draw(dt);
     raf = requestAnimationFrame(frame);
   }
@@ -130,5 +137,6 @@
   }
   function stop() { running = false; cancelAnimationFrame(raf); }
 
+  document.addEventListener("visibilitychange", () => { if (document.hidden) cancelAnimationFrame(raf); else if (running && !reduce) { last = performance.now(); raf = requestAnimationFrame(frame); } });
   window.Title = { start, stop };
 })();

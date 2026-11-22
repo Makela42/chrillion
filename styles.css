@@ -864,7 +864,7 @@ a.mgp:active { transform: translateY(0) scale(.985); }
 /* ---- polish pass: callouts + miracle banner ---- */
 .sum-callouts { list-style: none; margin: 4px 0 14px; padding: 0; display: grid; gap: 6px; }
 .sum-callouts:empty { display: none; }
-.sum-callouts li { padding: 8px 12px; border: 2px dashed var(--stitch); border-radius: 10px; background: rgba(242,193,78,.22); color: var(--ink); font: 400 19px/1.15 var(--font-display); letter-spacing: .03em; }
+.sum-callouts li { padding: 8px 12px; border: 2px dashed var(--stitch); border-radius: 10px; background: #f3e4bd; color: var(--ink); font: 400 19px/1.15 var(--font-display); letter-spacing: .03em; }
 .miracle-banner { position: fixed; inset: 0; z-index: 60; display: grid; place-content: center; text-align: center; pointer-events: none; background: radial-gradient(circle, rgba(242,193,78,.55), rgba(110,22,32,0) 70%); font-family: var(--font-display); color: #f6ecd6; text-shadow: 0 4px 0 #8e1f26; animation: mb-in 2s ease both; }
 .miracle-banner span { font-size: clamp(28px, 8vw, 48px); letter-spacing: .12em; color: var(--gold); }
 .miracle-banner b { font-weight: 400; font-size: clamp(52px, 17vw, 110px); line-height: .95; }
@@ -916,3 +916,7 @@ body.first-visit .tile-daily .tile-ico { width: 52px; height: 52px; }
 #dlg-how { box-sizing: border-box; overflow-x: hidden; max-width: calc(100vw - 32px); }
 #dlg-how .tier-list li > span:nth-child(2) { min-width: 0; overflow-wrap: anywhere; }
 body.first-visit .tile-daily { flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; }
+
+/* weekday twist banner */
+.twist { margin: 8px 0 0; display: inline-block; padding: 5px 10px; border-radius: 10px; font-size: 13px; font-weight: 800; line-height: 1.3; background: rgba(242,193,78,.18); color: var(--ink); border: 1px solid rgba(242,193,78,.55); }
+.twist.won { background: rgba(35,146,74,.16); border-color: rgba(35,146,74,.55); }
