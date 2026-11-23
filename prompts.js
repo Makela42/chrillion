@@ -22,8 +22,8 @@ window.CHRILLION_PROMPTS = [
     miracleNote: "The 1823 poem's original name for Blitzen (paired with “Dunder”).",
     trap: "Olive|Olive the Other Reindeer",
     trapNote: "A misheard lyric, not a real reindeer!",
-    t75: ["Dunder", "Donder"],
-    t50: ["Prancer", "Vixen", "Cupid", "Donner", "Donnor"],
+    t75: ["Dunder", "Donder", "Dunder and Blixem", "Donner and Blitzen|Donder and Blitzen", "Rudolph's dad Donner"],
+    t50: ["Prancer", "Vixen", "Cupid", "Donner", "Donnor", "Prancer and Vixen"],
     t25: ["Dasher", "Dancer", "Comet", "Blitzen", "Dunner"],
     t10: ["Rudolph|Rudolf"],
   },
@@ -60,8 +60,7 @@ window.CHRILLION_PROMPTS = [
       "Remember the Night", "Meet Me in St. Louis", "The Lemon Drop Kid", "Rare Exports", "Happiest Season",
       "Carol", "Better Watch Out", "The Man Who Invented Christmas", "Anna and the Apocalypse",
       "Ernest Saves Christmas", "Santa Claus Conquers the Martians", "Santa Claus: The Movie|Santa Claus the Movie",
-      "Prancer", "One Magic Christmas", "Mixed Nuts", "Batman Returns", "Iron Man 3", "Babes in Toyland",
-    ],
+      "Prancer", "One Magic Christmas", "Mixed Nuts", "Batman Returns", "Iron Man 3", "Babes in Toyland", "Fitzwilly", "The Thin Man", "The Christmas Chronicles 2", "Jingle Bell Rocks", "Nutcracker: The Motion Picture", ],
     t50: [
       "Eight Crazy Nights", "The Ref", "The Family Stone", "Serendipity",
       "While You Were Sleeping", "The Preacher's Wife", "Home for the Holidays", "Almost Christmas",
@@ -93,8 +92,7 @@ window.CHRILLION_PROMPTS = [
       "Krampus", "Gremlins", "White Christmas", "The Night Before", "Last Christmas", "Red One", "Deck the Halls",
       "Surviving Christmas", "Christmas with the Kranks", "Rise of the Guardians", "Noelle", "Spirited",
       "Violent Night", "The Christmas Chronicles", "A Bad Moms Christmas", "Office Christmas Party", "Jack Frost",
-      "The Santa Clause 2|Santa Clause 2", "The Santa Clause 3|Santa Clause 3", "Home Alone 3", "Nativity!|Nativity",
-    ],
+      "The Santa Clause 2|Santa Clause 2", "The Santa Clause 3|Santa Clause 3", "Home Alone 3", "Nativity!|Nativity", "The Grinch (2018)|The Grinch 2018", "The Santa Clause (1994)", "Disney's A Christmas Carol", ],
     t25: [
       "Scrooge", "Frosty the Snowman", "Rudolph the Red-Nosed Reindeer|Rudolph the Red Nosed Reindeer", "A Charlie Brown Christmas|Charlie Brown Christmas",
       "Mickey's Christmas Carol", "Shrek the Halls", "Daddy's Home 2", "Trading Places",
@@ -144,8 +142,7 @@ window.CHRILLION_PROMPTS = [
       "Ding Dong Merrily on High", "The Holly and the Ivy", "I Wish It Could Be Christmas Everyday",
       "Christmas Canon", "Wizards in Winter", "Linus and Lucy", "Pretty Paper", "Run Rudolph Run",
       "We Three Kings", "Angels We Have Heard on High", "Here Comes Santa Claus", "Little Saint Nick",
-      "Please Come Home for Christmas", "Merry Christmas Darling", "Mele Kalikimaka",
-    ],
+      "Please Come Home for Christmas", "Merry Christmas Darling", "Mele Kalikimaka", "Santa Bring My Baby Back", "White Wine in the Sun", ],
     t50: [
       "Walking in the Air", "Santa Claus Is Back in Town", "Lonely This Christmas", "Mistletoe and Wine",
       "I Believe in Father Christmas", "Father Christmas", "Merry Christmas Baby", "Someday at Christmas",
@@ -169,8 +166,7 @@ window.CHRILLION_PROMPTS = [
       "The Twelve Days of Christmas|12 Days of Christmas|Twelve Days of Christmas", "Mary's Boy Child",
       "Baby, It's Cold Outside|Baby Its Cold Outside", "It's the Most Wonderful Time of the Year|Most Wonderful Time of the Year",
       "God Rest Ye Merry Gentlemen", "O Little Town of Bethlehem", "Santa Tell Me",
-      "Christmas Tree Farm", "8 Days of Christmas", "Merry Christmas Everyone",
-    ],
+      "Christmas Tree Farm", "8 Days of Christmas", "Merry Christmas Everyone", "Greensleeves", "Wonderful Dream", "Silent Night, Holy Night", "Jolly Old Saint Nicholas", "Let There Be Peace on Earth", "It Came Upon the Midnight Clear", "Still, Still, Still", "Ukrainian Bell Carol", "Santa Claus Is Coming to Town (Bruce Springsteen)", ],
     t25: [
       "I'll Be Home for Christmas", "The First Noel|The First Nowell", "O Come, O Come, Emmanuel|O Come O Come Emmanuel", "Christmas (Baby Please Come Home)|Baby Please Come Home",
       "Do You Hear What I Hear?|Do You Hear What I Hear", "Mary, Did You Know?|Mary Did You Know", "It Came Upon a Midnight Clear", "What Child Is This?|What Child Is This",
@@ -218,8 +214,7 @@ window.CHRILLION_PROMPTS = [
 
       "Lametta", "Dried orange slices|Orange slices|Dried oranges", "Glass bird|Clip-on bird|Bird",
       "Cranberries|Cranberry garland", "Gingerbread man|Gingerbread", "Candles", "Paper chain|Paper chains",
-      "Walnuts", "Apples", "Straw ornaments|Straw stars", "Feathers",
-    ],
+      "Walnuts", "Apples", "Straw ornaments|Straw stars", "Feathers", "Shiny Brite ornaments|Shiny Brite", "Flowers|Poinsettias", "Hand-painted eggs", "Macrame", "Christmas cards|Cards", "Gift boxes|Mini presents|Presents", ],
     t50: [
       "Pickle ornament", "Glass balls|Glass ball", "Gold balls|Gold ball", "Nutcracker|Nutcracker ornament",
       "Snowman|Snowman ornament", "Reindeer|Reindeer ornament", "Santa ornament", "Stockings|Stocking|Mini stocking",
@@ -236,8 +231,7 @@ window.CHRILLION_PROMPTS = [
       "Salt dough ornaments|Salt dough", "Cinnamon ornaments", "Hearts|Heart", "Beaded ornaments",
 
       "Popcorn|Popcorn garland", "Ribbon", "Bow|Bows", "Icicles", "Pinecone|Pine cone", "Snowflake|Snowflakes",
-      "Bell|Bells", "Beads", "Photo ornament|Photos", "Baby's first Christmas ornament", "Candy", "Tree topper",
-    ],
+      "Bell|Bells", "Beads", "Photo ornament|Photos", "Baby's first Christmas ornament", "Candy", "Tree topper", "Origami|Origami stars", "Tree hooks|Ornament hooks", ],
     t25: [
       "Santa figure|Santa Claus ornament",
 "Tinsel", "Star", "Angel", "Candy cane", "Garland"],
@@ -291,8 +285,7 @@ window.CHRILLION_PROMPTS = [
       "Figgy pudding", "Lebkuchen", "Feast of the Seven Fishes|Seven Fishes", "Goose", "Pavlova", "Tourtière|Tourtiere",
       "Bacalao", "Pernil", "Lechon", "Pfeffernüsse|Pfeffernusse", "Turrón|Turron", "Christmas cake", "Pierogi",
       "Hallaca|Hallacas", "Julskinka", "Lutefisk", "Vánočka|Vanocka", "Carp", "Rice pudding|Risalamande",
-      "Oyster stew|Oysters", "Kransekake", "Cozonac", "Bûche de Noël|Buche de Noel", "Sorrel", "Black cake",
-    ],
+      "Oyster stew|Oysters", "Kransekake", "Cozonac", "Bûche de Noël|Buche de Noel", "Sorrel", "Black cake", "Sauerkraut", "Ponche|Ponche navideño", "Coquito", "Bibingka", "Puto bumbong", "Hot pot", "Cenone", "Oyster stuffing", "Cranberry orange relish", "Candied nuts", "Cream cheese roll", "Custard", ],
     t50: [
       "Bread sauce", "Turkey with stuffing", "Sage and onion stuffing", "Roast parsnips",
       "Red cabbage", "Braised red cabbage", "Honey glazed ham|Glazed ham", "Smoked salmon",
@@ -348,8 +341,7 @@ window.CHRILLION_PROMPTS = [
       "Christmas pudding|Plum pudding", "Mince pie|Mince pies", "Yule log", "Roast beef", "Prime rib",
       "Cranberry sauce", "Brussels sprouts", "Gravy", "Pigs in blankets|Pigs in a blanket", "Roast potatoes",
       "Panettone", "Stollen", "Tamales", "Beef Wellington", "Sweet potato casserole", "Green bean casserole",
-      "Candied yams|Yams", "Deviled eggs", "Lasagna", "Parsnips", "Pecan pie", "Pumpkin pie", "Fudge",
-    ],
+      "Candied yams|Yams", "Deviled eggs", "Lasagna", "Parsnips", "Pecan pie", "Pumpkin pie", "Fudge", "Cranberry relish", "Turkish delight", "Devils on horseback", "Mashed turnips|Mashed swede", "Salad", "Spiced nuts", "Dip|Spinach dip", "Soup", ],
     t25: [
       "Mac and cheese|Macaroni and cheese", "Cheese|Cheese board", "Nuts|Mixed nuts", "Chestnuts|Roast chestnuts",
       "Yorkshire pudding|Yorkshire puddings", "Roast turkey", "Roast chicken|Chicken", "Sausages|Sausage",
@@ -375,16 +367,14 @@ window.CHRILLION_PROMPTS = [
       "Caroline's husband",
 
       "Fezziwig|Mr Fezziwig|Mrs Fezziwig", "Belle", "Fan", "Martha Cratchit|Martha", "Peter Cratchit|Peter",
-      "Old Joe", "Mrs Dilber", "Topper", "Dick Wilkins", "Belinda Cratchit|Belinda", "Old Fezziwig", "Mr. Fred", "Fan Scrooge", "Dilber", "Mr. Jorkins", "Christmas Yet to Come", "Ignorance and Want"
-    ],
+      "Old Joe", "Mrs Dilber", "Topper", "Dick Wilkins", "Belinda Cratchit|Belinda", "Old Fezziwig", "Mr. Fred", "Fan Scrooge", "Dilber", "Mr. Jorkins", "Christmas Yet to Come", "Ignorance and Want", "Scrooge's father", "Mrs. Dilber the laundress", "Old Joe the fence|Fence", "Ghost of Marley", "Caroler"],
     t50: [
       "The Cratchit children|Cratchit children", "Belle's husband", "Fred's wife|Scrooge's niece", "The plump sister|Plump sister",
       "Scrooge's clerk", "The charity gentlemen|Portly gentlemen|Charitable gentlemen", "The undertaker|Undertaker", "The charwoman|Charwoman|Laundress",
       "Caroline", "Fezziwig's apprentices", "The prize turkey|Turkey boy|The boy with the turkey", "Young Scrooge|Boy Scrooge",
 
       "Ghost of Christmas Past", "Ghost of Christmas Present", "Ghost of Christmas Yet to Come|Ghost of Christmas Future",
-      "Fred|Scrooge's nephew", "Mrs Cratchit", "Timothy Cratchit", "Marley's Ghost", "The Spirit of Christmas Past", "Scrooge's sister", "Scrooge's fiancee", "The boy", "Charity collectors"
-    ],
+      "Fred|Scrooge's nephew", "Mrs Cratchit", "Timothy Cratchit", "Marley's Ghost", "The Spirit of Christmas Past", "Scrooge's sister", "Scrooge's fiancee", "The boy", "Charity collectors", "Mrs. Fred", "Spirits|The Spirits"],
     t25: ["Tiny Tim", "Bob Cratchit|Cratchit", "Jacob Marley|Marley"],
     t10: ["Ebenezer Scrooge|Scrooge", "Ebenezer|Mr. Scrooge"],
   },
@@ -412,8 +402,7 @@ window.CHRILLION_PROMPTS = [
 
       "Rubik's cube|Rubiks cube", "Yo-yo|Yoyo", "Silly Putty", "Apple", "Kazoo", "Whoopee cushion",
       "Bouncy ball", "Slinky", "Pocket knife", "Lottery ticket|Scratch card", "Hot sauce", "Nail polish",
-      "Bath bomb", "Fidget spinner",
-    ],
+      "Bath bomb", "Fidget spinner", "Chalk", "Cracker|Christmas cracker", "Party blower", "Water bottle", "Pocket-sized games|Travel game|Mini games", "Lump of charcoal", "Sewing kit", "Rock candy", "Coal candy|Chocolate coal", ],
     t50: [
       "Lip gloss", "Hand cream|Lotion", "Floss|Dental floss", "Razor",
       "Deodorant", "Soap|Bar of soap", "Bubble bath", "Hair clips|Hair clip",
@@ -443,8 +432,7 @@ window.CHRILLION_PROMPTS = [
 
       "Toothbrush", "Nuts|Walnuts", "Chocolate coins|Gelt", "Batteries", "Mints", "Playing cards|Cards",
       "Keychain", "Pen", "Stickers", "Hand warmers", "Lip balm|Chapstick", "Gum", "Gift card",
-      "Jewelry", "Headphones|Earbuds", "Hair ties|Scrunchie",
-    ],
+      "Jewelry", "Headphones|Earbuds", "Hair ties|Scrunchie", "Trinkets", "Makeup|Lipstick", "Cookies", "Shampoo|Toiletries", "Cologne", "Magnets", "Mini screwdriver", "Nuts and raisins", ],
     t25: [
       "Chocolate Santa|Chocolate Santas", "Lollipop|Lollipops", "Money|Cash", "Small toys",
       "Gummy bears|Gummies", "Chocolate bar", "Slippers", "Gloves",
@@ -493,8 +481,7 @@ window.CHRILLION_PROMPTS = [
       "Head Elf|Foreman Elf", "Reindeer fawns|Fawns", "Cowboy|Cowboy on an ostrich", "Ostrich",
 
       "Hermey|Hermie|Herbie", "Yukon Cornelius|Cornelius", "Bumble|Abominable Snow Monster|Abominable Snowman",
-      "Clarice", "Sam the Snowman|Sam", "Comet", "Misfit Toys|Island of Misfit Toys", "Sam the Snowman narrator", "Yukon", "Abominable|Bumble the Abominable", "Mr. Claus", "Rudolph's mom", "Dasher", "Prancer", "Vixen", "Blitzen"
-    ],
+      "Clarice", "Sam the Snowman|Sam", "Comet", "Misfit Toys|Island of Misfit Toys", "Sam the Snowman narrator", "Yukon", "Abominable|Bumble the Abominable", "Mr. Claus", "Rudolph's mom", "Dasher", "Prancer", "Vixen", "Blitzen", "Jack-in-the-Box|Jack in the Box", "Boat that sinks|Boat that can't float", "Jet", "Snowman narrator|Narrator", "Rudolph's dad", "Snowman", "Bird", "Sailboat|Boat"],
     t25: ["Donner", "Mrs Claus|Mrs. Claus", "Elves", "Santa's workshop elves", "Abominable Snow Monster of the North", "Dentist", "Reindeer"],
     t10: ["Rudolph", "Santa|Santa Claus"],
   },
@@ -522,8 +509,7 @@ window.CHRILLION_PROMPTS = [
       "Jultomten", "Samichlaus|Samichlous",
 
       "Sinterklaas", "Ded Moroz", "Christkind|Christkindl|Christkindel", "La Befana|Befana", "Babbo Natale",
-      "Joulupukki", "Weihnachtsmann", "Tomte|Tomten", "Nisse|Julenisse", "Santa Lucia|Saint Lucy", "Mrs. Claus", "The Elves", "Bambino Gesù", "Santa's helpers"
-    ],
+      "Joulupukki", "Weihnachtsmann", "Tomte|Tomten", "Nisse|Julenisse", "Santa Lucia|Saint Lucy", "Mrs. Claus", "The Elves", "Bambino Gesù", "Santa's helpers", "Noel Baba|Noel Baba", "Julenissen", "Knecht Ruprecht|Ruprecht", "Pere Fouettard"],
     t25: [
       "Julemanden|Julemand", "Kerstman", "Papai Noel", "Belsnickel|Pelznickel|Belsnickle",
 "Kris Kringle", "Père Noël|Pere Noel", "Papá Noel|Papa Noel", "Father Frost"],
@@ -539,8 +525,7 @@ window.CHRILLION_PROMPTS = [
     t75: [
       "Springerle", "Lebkuchen", "Kourabiedes", "Melomakarona", "Pepparkakor", "Speculaas|Speculoos",
       "Vanillekipferl|Vanilla crescents", "Polvorones", "Kolaczki|Kolache", "Zimtsterne|Cinnamon stars",
-      "Florentines", "Rosettes", "Sandbakkels", "Anise cookies", "Pfeffernuesse", "Biscoff", "Rosette cookies", "Sandbakelse", "Polvoron", "Snowball cookies|Wedding cookies|Butterballs", "Thumbprint cookies|Jam thumbprints", "Spritz cookies|Butter spritz", "Pecan sandies|Sandies", "Kolacky|Kolache cookies", "Anisplätzchen", "Perníčky|Pernicky", "Pepernoten|Kruidnoten"
-    ],
+      "Florentines", "Rosettes", "Sandbakkels", "Anise cookies", "Pfeffernuesse", "Biscoff", "Rosette cookies", "Sandbakelse", "Polvoron", "Snowball cookies|Wedding cookies|Butterballs", "Thumbprint cookies|Jam thumbprints", "Spritz cookies|Butter spritz", "Pecan sandies|Sandies", "Kolacky|Kolache cookies", "Anisplätzchen", "Perníčky|Pernicky", "Pepernoten|Kruidnoten", "Joe Froggers", "Sandbakelser", "Vanilla horseshoes", "Maamoul", "Struffoli", "Brandy snaps|Brandy snap", "Viennese whirls|Viennese fingers", "Jammie Dodgers|Jammie Dodger", "Custard creams", "Kourabiethes", "Lace cookies"],
     t50: [
       "Wreath cookies|Cornflake wreath|Cornflake wreaths", "Pinwheel cookies|Pinwheels", "Checkerboard cookies", "Icebox cookies|Refrigerator cookies",
       "Amaretti|Amaretti cookies", "Italian wedding cookies|Italian cookies", "Pignoli cookies|Pignoli", "Anginetti",
@@ -565,8 +550,7 @@ window.CHRILLION_PROMPTS = [
       "Spritz", "Thumbprint|Thumbprints", "Linzer|Linzer cookies", "Snowball|Snowballs|Russian tea cake|Mexican wedding cookie",
       "Molasses cookie", "Crinkle|Chocolate crinkle|Crinkles", "Pizzelle", "Biscotti", "Rugelach", "Macaron|Macarons",
       "Pfeffernüsse|Pfeffernusse", "Peppermint bark", "Oatmeal raisin", "Ginger snap|Gingersnap", "Meringue|Meringues",
-      "Butter cookie|Butter cookies", "Shortbread", "Snickerdoodle", "Frosted sugar cookies", "Gingerbread cookies|Gingerbread people", "Peanut butter kiss cookies", "Hershey kiss cookies", "Shortbread cookies|Scottish shortbread", "Crinkle cookies|Chocolate crinkle cookies", "Ginger cookies|Molasses crinkles", "Oatmeal raisin cookies", "Chocolate chip cookies", "Peppermint bark cookies|Chocolate peppermint cookies", "Cranberry white chocolate cookies|Cranberry orange cookies", "Fruitcake cookies", "Meringue cookies|Meringue kisses", "Sprinkle cookies|Funfetti cookies", "Holly cookies", "Candy cane kiss cookies", "Pistachio cookies", "Hazelnut cookies", "Fudge cookies", "Bourbon balls", "Pecan tassies|Pecan tarts"
-    ],
+      "Butter cookie|Butter cookies", "Shortbread", "Snickerdoodle", "Frosted sugar cookies", "Gingerbread cookies|Gingerbread people", "Peanut butter kiss cookies", "Hershey kiss cookies", "Shortbread cookies|Scottish shortbread", "Crinkle cookies|Chocolate crinkle cookies", "Ginger cookies|Molasses crinkles", "Oatmeal raisin cookies", "Chocolate chip cookies", "Peppermint bark cookies|Chocolate peppermint cookies", "Cranberry white chocolate cookies|Cranberry orange cookies", "Fruitcake cookies", "Meringue cookies|Meringue kisses", "Sprinkle cookies|Funfetti cookies", "Holly cookies", "Candy cane kiss cookies", "Pistachio cookies", "Hazelnut cookies", "Fudge cookies", "Bourbon balls", "Pecan tassies|Pecan tarts", "Cherry winks", "Decorated cookies|Frosted cookies|Iced cookies|Iced biscuits", "Double chocolate|Chocolate cookies|Double chocolate chip", "Hot chocolate cookies", "Tollhouse|Toll House cookies"],
     t25: [
       "Oatmeal cookie|Oatmeal cookies|Oatmeal", "Peanut butter cookie|Peanut butter cookies", "Peppermint cookie|Peppermint cookies", "Candy cane cookie|Candy cane cookies",
       "Christmas tree cookie|Christmas tree cookies", "Cutout cookies|Cut-out cookies", "Snowman cookie|Snowman cookies",
@@ -597,8 +581,7 @@ window.CHRILLION_PROMPTS = [
       "Arborvitae|Thuja",
 
       "Amaryllis", "Spruce", "Cedar", "Juniper", "Rosemary", "Paperwhite|Paperwhites|Narcissus",
-      "Norfolk pine|Norfolk Island pine", "Hellebore|Christmas rose", "Cyclamen", "Eucalyptus", "Cranberry",
-    ],
+      "Norfolk pine|Norfolk Island pine", "Hellebore|Christmas rose", "Cyclamen", "Eucalyptus", "Cranberry", "Star of Bethlehem", ],
     t25: [
       "Pine tree", "Fir tree|Fir trees", "Cranberries", "Chestnuts|Chestnut tree",
       "Evergreens|Evergreen", "Holly berries|Holly bush",
@@ -620,8 +603,7 @@ window.CHRILLION_PROMPTS = [
       "Ram", "Hay bale|Hay bales",
 
       "Balthazar", "Caspar|Gaspar|Kaspar", "Melchior", "Innkeeper", "Gabriel|Angel Gabriel", "Lantern",
-      "Swaddling clothes", "Goat", "Bethlehem star", "Casper", "Baltasar", "Gold gift", "Manger scene|Crèche|Creche", "Swaddling", "Cat", "Shepherd's dog", "Bethlehem", "Stable roof", "Inn"
-    ],
+      "Swaddling clothes", "Goat", "Bethlehem star", "Casper", "Baltasar", "Gold gift", "Manger scene|Crèche|Creche", "Swaddling", "Cat", "Shepherd's dog", "Bethlehem", "Stable roof", "Inn", "Mary and Joseph"],
     t50: [
       "Dog|Sheepdog", "Chicken|Hen|Rooster|Cockerel", "Ducks|Duck", "Geese|Goose",
       "Dove|Doves", "Palm tree|Palm trees", "Candle", "Crown|Crowns",
@@ -652,14 +634,13 @@ window.CHRILLION_PROMPTS = [
       "Zingle",
 
       "Alabaster Snowball", "Pepper Minstix", "Bushy Evergreen", "Shinny Upatree", "Sugarplum Mary",
-      "Patch", "Wayne", "Lanny", "Magee", "Evergreen", "Opal Mistyfrost", "Sparky", "Tinsel", "Fred the elf", "Hermey the elf", "Hermey the dentist elf", "Santa's Little Helper", "Ned the elf", "Zippy"
-    ],
+      "Patch", "Wayne", "Lanny", "Magee", "Evergreen", "Opal Mistyfrost", "Sparky", "Tinsel", "Fred the elf", "Hermey the elf", "Hermey the dentist elf", "Santa's Little Helper", "Ned the elf", "Zippy", "Elrond Half-elven", "Glorfindel", "Cirdan|Círdan", "Lúthien|Luthien", "Fëanor|Feanor", "Gil-galad", "Drizzt Do'Urden|Drizzt", "Dobby the House-Elf", "Winky the house-elf", "Kreacher the house elf", "Elfo|Princess Elfo", "Arwen Evenstar|Arwen Undómiel", "Lady Galadriel", "Legolas Greenleaf", "Keebler"],
     t50: [
       "Ming Ming", "Bryony|Bryony Shelfley", "Chippey|Chippy the Elf",
-"Hermey|Hermie", "Bernard", "Curtis", "Judy", "Papa Elf", "Jovie", "Bernard the Elf", "Bernard the head elf", "Snowflake", "Sugarplum", "Noel", "Rainbow", "Santa's elves", "Elves", "Jingle the elf", "Herbie", "Arthur Claus|Arthur"],
+"Hermey|Hermie", "Bernard", "Curtis", "Judy", "Papa Elf", "Jovie", "Bernard the Elf", "Bernard the head elf", "Snowflake", "Sugarplum", "Noel", "Rainbow", "Santa's elves", "Elves", "Jingle the elf", "Herbie", "Arthur Claus|Arthur", "Keebler Elves|Ernie Keebler|Keebler Elf", "Thranduil", "Tauriel", "Haldir", "Celeborn", "Kreacher", "Winky", "Hokey", "House elf|House-elf|House elves"],
     t25: [
       "Jingle|Jingle Bells", "Jangle|Jangle Bells",
-"Elf on the Shelf|Chippy"],
+"Elf on the Shelf|Chippy", "Elrond", "Galadriel", "Arwen"],
     t10: ["Buddy|Buddy the Elf"],
   },
   {
@@ -683,8 +664,7 @@ window.CHRILLION_PROMPTS = [
       "A Muppet Family Christmas|Muppet Family Christmas", "Robbie the Reindeer", "Father Christmas",
       "Pee-wee's Playhouse Christmas Special", "Rudolph's Shiny New Year", "Toy Story That Time Forgot",
       "The Night Before Christmas", "A Garfield Christmas|Garfield Christmas",
-      "Stick Man", "Twas the Night Before Christmas",
-    ],
+      "Stick Man", "Twas the Night Before Christmas", "The Stingiest Man in Town", "Ziggy's Gift", "A Christmas Carol (1984)", "The Story of Santa Claus", "Rankin/Bass specials|Rankin Bass", "Twas the Night", "Christmas Eve", "Arthur Christmas", "Prep and Landing 2: Naughty vs. Nice", "Rugrats Christmas|Rugrats Chanukah", "Dr. Seuss Grinch", "Shaun the Sheep: The Flight Before Christmas|The Flight Before Christmas", "The Gruffalo", "Room on the Broom", ],
     t50: [
       "Mr. Magoo's Christmas Carol", "I Want a Dog for Christmas, Charlie Brown", "Charlie Brown's Christmas Tales", "It's Christmastime Again, Charlie Brown",
       "Peppa Pig Christmas|Peppa's Christmas", "Prep & Landing: Naughty vs. Nice|Naughty vs. Nice", "Prep & Landing: Operation Secret Santa|Operation Secret Santa", "Olaf's Frozen Adventure",
@@ -699,14 +679,12 @@ window.CHRILLION_PROMPTS = [
       "Merry Christmas Mr. Bean|Mr Bean Christmas", "The Snowman", "Shrek the Halls", "Jack Frost",
       "The Little Drummer Boy|Little Drummer Boy", "The Year Without a Santa Claus|Year Without a Santa Claus",
       "Santa Claus Is Comin' to Town|Santa Claus Is Coming to Town", "Mickey's Once Upon a Christmas",
-      "Frosty Returns", "Elf: Buddy's Musical Christmas", "The Bear Who Slept Through Christmas", "Magoo's Christmas Carol", "Mickey Saves Christmas", "Merry Christmas Charlie Brown", "The Muppet Christmas Carol", "Buddy's Musical Christmas"
-    ],
+      "Frosty Returns", "Elf: Buddy's Musical Christmas", "The Bear Who Slept Through Christmas", "Magoo's Christmas Carol", "Mickey Saves Christmas", "Merry Christmas Charlie Brown", "The Muppet Christmas Carol", "Buddy's Musical Christmas", "Frosty's Winterland", "Rudolph and Frosty's Christmas in July", "Pee-wee's Christmas Special|Pee-wee Herman Christmas Special", "A Very Brady Christmas", "A Pinky and the Brain Christmas", "Friends Christmas episode|The One with the Holiday Armadillo|The One with the Holiday Armadillo", "Call the Midwife Christmas Special", "The Vicar of Dibley Christmas", "Only Fools and Horses Christmas Special|Only Fools and Horses Christmas", "The Royle Family Christmas", "The Great British Bake Off Christmas|Bake Off Christmas", "Mrs. Brown's Boys Christmas Special", "Saturday Night Live Christmas|SNL Christmas", "Arthur's Perfect Christmas", "Barney's Christmas Star", "Santa Claus Conquers the Martians", "The Grinch Grinches the Cat in the Hat", "Seinfeld Festivus|The Strike", "The Great Christmas Light Fight", "Mickey's Magical Christmas", "The Grinch Musical Live!", "A Charlie Brown Christmas Special"],
     t25: [
       "Frosty's Winter Wonderland", "A Claymation Christmas Celebration|Claymation Christmas",
 
       "Rudolph the Red-Nosed Reindeer|Rudolph", "How the Grinch Stole Christmas|The Grinch",
-      "Frosty the Snowman|Frosty", "Dr. Seuss' How the Grinch Stole Christmas"
-    ],
+      "Frosty the Snowman|Frosty", "Dr. Seuss' How the Grinch Stole Christmas", "Elf", "Home Alone", "It's a Wonderful Life", "A Christmas Story", "Miracle on 34th Street"],
     t10: ["A Charlie Brown Christmas|Charlie Brown Christmas"],
   },
   {
@@ -727,8 +705,7 @@ window.CHRILLION_PROMPTS = [
 
       "Tom and Jerry", "Snowball|Snowball cocktail", "Glögg|Glogg", "Bombardino", "Advocaat", "Rompope", "Sbiten",
       "Ponche|Ponche navideño", "Sorrel", "Atole", "Champurrado", "Lambswool", "Bisschopswijn",
-      "Krupnik", "Kompot", "Sahlab|Salep", "Wassail bowl", "Gløgg", "Posset", "Ponche navideno", "Sorrel drink", "Tom & Jerry", "Bishop", "Toddy", "Buttered rum", "Mistletoe martini", "Egg flip", "Cranberry punch", "Chai|Chai tea|Chai latte", "Spiced tea", "Kahlua|Kahlúa", "Mulled port", "Bellini"
-    ],
+      "Krupnik", "Kompot", "Sahlab|Salep", "Wassail bowl", "Gløgg", "Posset", "Ponche navideno", "Sorrel drink", "Tom & Jerry", "Bishop", "Toddy", "Buttered rum", "Mistletoe martini", "Egg flip", "Cranberry punch", "Chai|Chai tea|Chai latte", "Spiced tea", "Kahlua|Kahlúa", "Mulled port", "Bellini", "Tom Collins", "Sidecar", "Bourbon eggnog", "Negus", "Vin chaud|Vin Chaud", "Crema de vie", "Ponche de Crema", "Limoncello", "Amaro", "Grappa", "Strega", "Chartreuse", "Drambuie", "Hot Ribena|Ribena", "Babycham", "Cherry B", "Alcohol-free punch|Virgin punch", "Shirley Temple"],
     t50: [
       "Poinsettia cocktail|Poinsettia", "Cranberry mule|Moscow mule|Christmas mule", "Eggnog latte", "White Russian",
       "Cognac", "Amaretto", "Cava", "Sparkling cider|Sparkling apple juice",
@@ -741,8 +718,7 @@ window.CHRILLION_PROMPTS = [
 
       "Coquito", "Gingerbread latte", "Champagne|Prosecco|Sparkling wine", "Irish coffee", "Hot buttered rum",
       "Wassail", "Hot toddy", "Sherry", "Port", "Baileys|Irish cream", "Peppermint hot chocolate",
-      "Brandy", "Whisky|Whiskey", "Spiced cider|Hot apple cider", "Cranberry mimosa", "Christmas ale", "Punch", "Martini"
-    ],
+      "Brandy", "Whisky|Whiskey", "Spiced cider|Hot apple cider", "Cranberry mimosa", "Christmas ale", "Punch", "Martini", "Sangria|Christmas sangria", "Sloe gin", "Cherry brandy", "Old Fashioned", "Margarita", "Hot chocolate with marshmallows|Marshmallow hot chocolate", "Spiked cider|Hard cider", "Rye", "Irish whiskey", "Pomegranate punch", "White wine spritzer|Spritzer", "Apple juice", "Pomegranate juice", "Cranberry gin", "Aperol spritz|Spritz", "Espresso martini"],
     t25: [
       "Coffee", "Tea", "Mimosa", "Beer",
 "Mulled wine|Glühwein|Gluhwein", "Peppermint mocha", "Apple cider|Cider|Hot cider", "Wine", "Hot tea", "Milk and cookies", "Juice|Orange juice", "Lemonade", "Water"],
@@ -764,8 +740,7 @@ window.CHRILLION_PROMPTS = [
       "Axl|Buzz's tarantula|Tarantula",
 
       "Uncle Frank|Frank", "Fuller", "Gus Polinski|Gus", "Megan", "Linnie", "Jeff", "Johnny",
-      "Pigeon Lady", "Old Man Marley|Marley", "Peter|Peter McCallister", "Mrs. McCallister", "Mr. McCallister", "Buzz McCallister", "Fuller McCallister", "Linnie McCallister", "Megan McCallister", "Jeff McCallister", "Marv Merchants|Marv Murchins", "Harry Lime", "Mr. Marley", "Leslie", "Polka King of the Midwest|Polka King", "Bird Lady", "Rod McCallister", "Sondra McCallister", "Brooke McCallister", "Mitch Murphy|Mitch", "Fake Santa", "Concierge", "Bellhop", "Bandits|Burglars", "Pizza delivery guy"
-    ],
+      "Pigeon Lady", "Old Man Marley|Marley", "Peter|Peter McCallister", "Mrs. McCallister", "Mr. McCallister", "Buzz McCallister", "Fuller McCallister", "Linnie McCallister", "Megan McCallister", "Jeff McCallister", "Marv Merchants|Marv Murchins", "Harry Lime", "Mr. Marley", "Leslie", "Polka King of the Midwest|Polka King", "Bird Lady", "Rod McCallister", "Sondra McCallister", "Brooke McCallister", "Mitch Murphy|Mitch", "Fake Santa", "Concierge", "Bellhop", "Bandits|Burglars", "Pizza delivery guy", "Cousins|McCallister family|McCallisters"],
     t25: ["Harry", "Marv", "Buzz", "Kate|Kate McCallister"],
     t10: ["Kevin|Kevin McCallister"],
   },
@@ -784,8 +759,7 @@ window.CHRILLION_PROMPTS = [
 
       "Necco wafers|Necco", "Shredded wheat|Mini wheats", "Life Savers|Lifesavers", "Jolly Ranchers",
       "Cereal", "Almonds", "Sliced almonds", "Fondant", "Sour belts|Sour straps", "Ice cream cones",
-      "Teddy Grahams",
-    ],
+      "Teddy Grahams", "Raisins", "Dried cranberries", "Wafer sheets", "Cream cheese frosting", "Meringue|Meringue frosting", "Piped icing", "Food coloring|Food colouring", "Pearl sugar", "Sugar snow|Sugar snowflakes", "Star sprinkles|Star candy", "Ribbon candy", "Candy wafers", "Taffy", "Toffee", "Brittle", "Caramel candies", "Candy rope", ],
     t50: [
       "Nerds", "Skittles", "Reese's Pieces", "Mike and Ike",
       "Hot Tamales", "Tootsie Rolls", "Twizzlers", "Red Vines",
@@ -806,8 +780,7 @@ window.CHRILLION_PROMPTS = [
 
       "Pretzels", "Licorice", "Marshmallows", "Coconut", "Powdered sugar|Icing sugar", "Graham crackers",
       "Smarties", "Jelly beans", "Chocolate", "Kit Kat|Kit Kats", "Royal icing", "Mini marshmallows",
-      "Starlight mints", "Wafers", "Mints|Peppermint candies", "Liquorice|Licorice strips|Red licorice", "Gummies|Gummy candy", "Shredded coconut|Snow coconut", "Confectioners sugar", "Sugar|Sugar crystals", "Cookies", "Wafer cookies", "Fruit pastilles|Fruit gums|Wine gums", "Cachous", "Chocolate buttons|Buttons", "Peanut butter cups|Reese's"
-    ],
+      "Starlight mints", "Wafers", "Mints|Peppermint candies", "Liquorice|Licorice strips|Red licorice", "Gummies|Gummy candy", "Shredded coconut|Snow coconut", "Confectioners sugar", "Sugar|Sugar crystals", "Cookies", "Wafer cookies", "Fruit pastilles|Fruit gums|Wine gums", "Cachous", "Chocolate buttons|Buttons", "Peanut butter cups|Reese's", "Fruit Roll-Ups|Fruit roll up", "Spice drops", "Jelly Babies", "Liquorice Allsorts|Licorice Allsorts", "Sugar sprinkles", "Crushed candy cane"],
     t25: [
       "Chocolate chips", "Gummy bears", "Candy eyes",
 "Candy cane|Candy canes", "Sprinkles", "M&Ms|M and Ms", "Peppermints|Peppermint"],
@@ -827,8 +800,7 @@ window.CHRILLION_PROMPTS = [
     t50: [
       "The Whos|Whos|Who", "Young Grinch|Little Grinch", "Teacher|Miss Tizzy", "Mayor McGerkle",
 
-      "Martha May Whovier|Martha May", "Mayor Maywho|Augustus Maywho|The Mayor", "Max the dog", "Mayor Augustus Maywho", "Whobris", "Narrator", "Dr. Seuss", "Mrs. Bricklebaum", "Rosie", "Groopert", "Fred the reindeer", "Cindy Lou Who's dad|Cindy Lou's dad"
-    ],
+      "Martha May Whovier|Martha May", "Mayor Maywho|Augustus Maywho|The Mayor", "Max the dog", "Mayor Augustus Maywho", "Whobris", "Narrator", "Dr. Seuss", "Mrs. Bricklebaum", "Rosie", "Groopert", "Fred the reindeer", "Cindy Lou Who's dad|Cindy Lou's dad", "Boo Who", "Mr. Metcalf|Metcalf", "Santa|Santa Claus", "Clarnella Who|Clarnella"],
     t25: ["Max", "Cindy Lou Who|Cindy Lou|Cindy", "Mayor of Whoville"],
     t10: ["The Grinch|Grinch"],
   },
@@ -848,8 +820,7 @@ window.CHRILLION_PROMPTS = [
       "The Jolly Postman|Jolly Christmas Postman", "Letters from Father Christmas", "A Christmas Memory",
       "Hercule Poirot's Christmas", "The Box of Delights", "A Child's Christmas in Wales",
       "The Tailor of Gloucester", "The Story of Holly and Ivy", "Hogfather", "The Life and Adventures of Santa Claus",
-      "The Christmas Pig", "Mr. Willowby's Christmas Tree", "Christmas Day in the Morning",
-    ],
+      "The Christmas Pig", "Mr. Willowby's Christmas Tree", "Christmas Day in the Morning", "Mog's Christmas", "The Lump of Coal", "Max's Christmas", "Biscuit's Christmas", "Christmas Trolls", "The Christmas Story", "The Story of the First Christmas", ],
     t50: [
       "The Christmas Shoes", "The Christmas Train", "A Redbird Christmas", "The Adventure of the Blue Carbuncle|The Blue Carbuncle",
       "A Boy Called Christmas", "The Christmasaurus", "Santa Mouse", "Corduroy's Christmas",
@@ -864,8 +835,7 @@ window.CHRILLION_PROMPTS = [
 
       "The Gift of the Magi|Gift of the Magi", "The Nutcracker and the Mouse King|The Nutcracker|Nutcracker",
       "Skipping Christmas", "The Best Christmas Pageant Ever", "The Snowman", "The Little Match Girl",
-      "Olive the Other Reindeer", "Father Christmas", "Christmas Jars", "Bear Stays Up for Christmas", "The Santa Trap", "Dream Snow", "The Snow Queen", "The Little Fir Tree", "Frosty the Snowman", "The Lion the Witch and the Wardrobe|Lion Witch and Wardrobe", "Christmas Every Day"
-    ],
+      "Olive the Other Reindeer", "Father Christmas", "Christmas Jars", "Bear Stays Up for Christmas", "The Santa Trap", "Dream Snow", "The Snow Queen", "The Little Fir Tree", "Frosty the Snowman", "The Lion the Witch and the Wardrobe|Lion Witch and Wardrobe", "Christmas Every Day", "Dear Santa", "The Christmas Chronicles", "Santa Claus: The Life and Times", "Jingle the Christmas Clown", "A Charlie Brown Christmas", "Auntie Claus", "The Legend of the Christmas Tree", "The Legend of the Candy Cane", "The Little Drummer Boy", "Shepherds Abiding", "Dashing Through the Snow"],
     t25: [
       "Rudolph the Red-Nosed Reindeer", "The Elves and the Shoemaker", "The Christmas Box", "The Twelve Days of Christmas",
 "How the Grinch Stole Christmas|The Grinch", "The Polar Express|Polar Express"],
@@ -884,15 +854,14 @@ window.CHRILLION_PROMPTS = [
     t75: [
       "Mother Ginger", "Dew Drop Fairy|Dewdrop", "Cavalier", "Stahlbaum|Dr. Stahlbaum|Mrs. Stahlbaum",
       "Snow King", "Mouse Queen|Madam Mouserinks", "Arabian Coffee", "Spanish Chocolate", "Chinese Tea",
-      "Russian Trepak|Trepak", "Reed Flutes|Marzipan", "Louise", "Harlequin", "Columbine",
-    ],
+      "Russian Trepak|Trepak", "Reed Flutes|Marzipan", "Louise", "Harlequin", "Columbine", "King", "Queen", "Maid|Servants", "Butler", "Dancing flowers", "Rose Fairy", "Queen of the Mice", "Seven-headed mouse", ],
     t50: [
       "Flowers|Waltz of the Flowers", "Dolls|Doll", "Party guests|Guests", "Polichinelles|Polichinelle|Mother Ginger's children",
       "Candy Canes", "Angels", "Bonbons|Bonbonnière", "Marzipan shepherdesses|Shepherdesses",
       "Snow Fairies|Snow Fairy", "Grandfather", "Grandmother", "Grandparents",
       "Nephew|Nephew Drosselmeyer|Young Drosselmeyer", "Seven-headed Mouse King", "Queen Mouserinks", "Phillip|Captain Philip Hoffman|Captain Hoffman",
       "Shiver", "Hawthorne", "Mr. Stahlbaum", "Mouse Prince",
-"Drosselmeyer|Herr Drosselmeyer|Uncle Drosselmeyer|Godfather Drosselmeyer", "Fritz", "Snow Queen", "Marie Stahlbaum|Maria", "Sugar Plum", "Prince", "Mere Gigogne", "Arabian dancers|Arabian", "Chinese dancers|Tea", "Russian dancers|Russian", "Spanish dancers|Chocolate", "Reed pipes|Mirlitons|Dance of the Reed Flutes", "Sugar Plum Cavalier", "Snowflake dancers", "Bonbonniere", "Mice soldiers"],
+"Drosselmeyer|Herr Drosselmeyer|Uncle Drosselmeyer|Godfather Drosselmeyer", "Fritz", "Snow Queen", "Marie Stahlbaum|Maria", "Sugar Plum", "Prince", "Mere Gigogne", "Arabian dancers|Arabian", "Chinese dancers|Tea", "Russian dancers|Russian", "Spanish dancers|Chocolate", "Reed pipes|Mirlitons|Dance of the Reed Flutes", "Sugar Plum Cavalier", "Snowflake dancers", "Bonbonniere", "Mice soldiers", "Kingdom of Sweets|Land of Sweets|Land of the Sweets", "Gingerbread", "Christmas tree|Tree", "Cavalier prince", "Hans-Peter", "Jack-in-the-box|Jack in the box", "Ballerina|Ballerina doll", "Sheep"],
     t25: [
       "Mice|Mouse|Rats", "Toy soldiers|Soldiers|Tin soldiers", "Snowflakes|Snowflake",
 "Sugar Plum Fairy|Sugarplum Fairy", "Mouse King|Rat King"],
@@ -913,19 +882,17 @@ window.CHRILLION_PROMPTS = [
 
       "Bodhi Day", "Omisoka|Ōmisoka", "Yalda|Shab-e Yalda|Yalda Night", "Holy Innocents' Day|Day of the Holy Innocents",
       "Feast of the Immaculate Conception|Immaculate Conception", "Soyal", "Pancha Ganapati",
-      "Night of the Radishes|Noche de Rábanos", "Toji", "Junkanoo", "Day of the Virgin of Guadalupe|Our Lady of Guadalupe",
-    ],
+      "Night of the Radishes|Noche de Rábanos", "Toji", "Junkanoo", "Day of the Virgin of Guadalupe|Our Lady of Guadalupe", "Mawlid|Mawlid an-Nabi", "Chanukkah", "Giuoco del Ceppo|Ceppo", ],
     t50: [
       "Sinterklaas|Sinterklaasavond|Pakjesavond", "Simbang Gabi|Misa de Gallo", "Fête des Lumières|Fete des Lumieres", "Chalica",
       "HumanLight", "Newtonmas", "Sol Invictus|Dies Natalis Solis Invicti", "Brumalia",
       "Karthigai Deepam|Karthikai Deepam", "Alban Arthan", "Pastorela", "Thorlaksmessa|Þorláksmessa",
 
       "Saturnalia", "Saint Lucia Day|St Lucia Day|St Lucy's Day|Santa Lucia|Lucia", "Saint Nicholas Day|St Nicholas Day",
-      "Las Posadas|Posadas", "Hogmanay", "Krampusnacht", "Saint Stephen's Day|St Stephen's Day", "Hannukah|Channukah|Chanuka", "Kwanza", "Diwali", "Yuletide", "Saint Nicholas Eve", "Lucia Day|Saint Lucy's Day", "Winter Solstice Festival", "Soyalangwul", "Three Kings Day|Epiphany|Dia de Reyes|Día de Reyes", "Krampus Night", "Guadalupe Day", "Juul|Jul|Jól|Julafton", "Hanukkah Festival of Lights|Festival of Lights"
-    ],
+      "Las Posadas|Posadas", "Hogmanay", "Krampusnacht", "Saint Stephen's Day|St Stephen's Day", "Hannukah|Channukah|Chanuka", "Kwanza", "Diwali", "Yuletide", "Saint Nicholas Eve", "Lucia Day|Saint Lucy's Day", "Winter Solstice Festival", "Soyalangwul", "Three Kings Day|Epiphany|Dia de Reyes|Día de Reyes", "Krampus Night", "Guadalupe Day", "Juul|Jul|Jól|Julafton", "Hanukkah Festival of Lights|Festival of Lights", "Nochebuena", "Rohatsu", "Day of the Innocents|Dia de los Santos Inocentes", "Chinese Winter Solstice"],
     t25: [
       "Advent", "Silvester|Sylvester|Saint Sylvester's Day|St. Sylvester's Day|Silvesterabend", "Midwinter|Midwinter festival",
-"Winter Solstice|Solstice", "Boxing Day", "Yule"],
+"Winter Solstice|Solstice", "Boxing Day", "Yule", "New Year's Day|New Years Day"],
     t10: ["Hanukkah|Chanukah|Hanukah", "Kwanzaa", "New Year's Eve|New Years Eve|New Year's"],
   },
   {
@@ -942,7 +909,7 @@ window.CHRILLION_PROMPTS = [
     t50: [
       "Bill Goldberg|Goldberg", "Sebastian Cabot", "Jeff Gillen", "Ed Ivory",
       "Stan Francis", "Douglas Seale", "John Call",
-"Edmund Gwenn", "Paul Giamatti", "David Harbour", "Tom Hanks"],
+"Edmund Gwenn", "Paul Giamatti", "David Harbour", "Tom Hanks", "Leonard Hicks", "Paul Frees"],
     t25: [
       "Alec Baldwin", "Bill Hader",
 "Kurt Russell", "Billy Bob Thornton"],
@@ -962,8 +929,7 @@ window.CHRILLION_PROMPTS = [
       "Pandoro", "Mixed nuts", "Chips|Crisps", "Sausage rolls",
 
       "Hay", "Shoes|Shoe", "Sugar cubes", "Straw", "Glitter|Reindeer dust", "Water", "Sandwich",
-      "Apple", "Coffee",
-    ],
+      "Apple", "Coffee", "Unlocked door|Open door|Door open|Window open", "Straw for the donkey", "Fresh water", "Reindeer treats", "Lichen|Reindeer moss", "Chocolate oranges|Terry's Chocolate Orange", ],
     t50: [
       "Stout|Guinness", "Mulled wine", "Port", "Cider",
       "Christmas pudding|Fruitcake", "Cinnamon rolls|Cinnamon roll", "Gingerbread|Gingerbread man", "Shortbread",
@@ -972,8 +938,7 @@ window.CHRILLION_PROMPTS = [
       "Present for Santa|Gift for Santa",
 
       "Mince pie|Mince pies", "Sherry", "Beer", "Whisky|Whiskey", "Brandy", "Oats|Reindeer food",
-      "Letter|Note|Letter to Santa", "Wine", "Eggnog", "Candy cane", "A glass of milk", "Christmas cookies", "Carrots for the reindeer", "Mincemeat pie", "Glass of sherry", "Scotch|Bourbon", "Magic reindeer food", "Slice of cake|Christmas cake", "Slice of pie|Pumpkin pie", "Cheese", "Bowl of water", "Cheese and crackers"
-    ],
+      "Letter|Note|Letter to Santa", "Wine", "Eggnog", "Candy cane", "A glass of milk", "Christmas cookies", "Carrots for the reindeer", "Mincemeat pie", "Glass of sherry", "Scotch|Bourbon", "Magic reindeer food", "Slice of cake|Christmas cake", "Slice of pie|Pumpkin pie", "Cheese", "Bowl of water", "Cheese and crackers", "Celery", "Tea and biscuits|Tea and cookies", "Coke|Cola|Soda", "Irish whiskey|Irish whisky", "Rum", "Pears", "Chocolate milk"],
     t25: [
       "Cake", "Pie", "Sweets|Candy", "Brownies",
       "Cupcakes", "Cocoa|Hot chocolate|Hot cocoa", "Tea|Cup of tea", "Chocolate",
@@ -992,7 +957,7 @@ window.CHRILLION_PROMPTS = [
       "Beret", "Flowers", "Pine needles|Holly leaves", "Umbrella",
       "Wool|Yarn", "Orange slice", "Spectacles|Glasses", "Monocle",
       "Cane", "Walking stick",
-"Old silk hat|Silk hat", "Bow tie", "Bottle caps", "Charcoal", "Earmuffs", "Sunglasses", "Pinecones", "Ice"],
+"Old silk hat|Silk hat", "Bow tie", "Bottle caps", "Charcoal", "Earmuffs", "Sunglasses", "Pinecones", "Ice", "Walking cane", "Pom-pom|Pom pom", "Pipe cleaners", "Licorice", "Teapot", "Cooking pot hat", "Mop", "Muffler", "Sweater|Jumper", "Straw hat"],
     t50: [
       "Tie|Necktie", "Baseball cap|Cap", "Cowboy hat", "Hard hat",
       "Mouth|Smile", "Raisins|Olives|Grapes", "Bucket|Pail|Pot|Colander|Flowerpot|Bowl|Funnel", "Food coloring|Spray paint|Spray bottle",
@@ -1000,7 +965,7 @@ window.CHRILLION_PROMPTS = [
       "Candy cane", "Knitted hat|Knit hat", "Pom-pom hat|Bobble hat|Toque", "Stick arms",
       "Carrot nose", "Belt", "Apron", "Snowman maker",
       "Snow shovel|Spade",
-"Pipe", "Rocks|Pebbles|Stones", "Mittens|Gloves", "Broom", "Shovel", "Water", "Button nose", "Beanie", "Carrot for a nose", "Lumps of coal|Pieces of coal", "Coal buttons", "Old hat", "Twig arms", "Hat and scarf", "Coal eyes", "Broomstick", "Stocking cap", "Corn kernels", "Old coat", "Wooden spoon", "Ribbon", "Cranberries|Berries"],
+"Pipe", "Rocks|Pebbles|Stones", "Mittens|Gloves", "Broom", "Shovel", "Water", "Button nose", "Beanie", "Carrot for a nose", "Lumps of coal|Pieces of coal", "Coal buttons", "Old hat", "Twig arms", "Hat and scarf", "Coal eyes", "Broomstick", "Stocking cap", "Corn kernels", "Old coat", "Wooden spoon", "Ribbon", "Cranberries|Berries", "Face", "Charcoal briquettes", "Ski goggles|Goggles", "Magic hat", "Oranges|Orange", "Pumpkin", "Christmas lights|Lights", "Tinsel"],
     t25: [
       "Eyes|Googly eyes", "Boots|Snow boots", "Bowler hat", "Fedora",
       "Winter hat|Woolly hat|Wool hat", "Santa hat", "Three balls of snow|Snowballs", "Candy|Candy buttons",
@@ -1016,13 +981,11 @@ window.CHRILLION_PROMPTS = [
     trapNote: "Iconic insult. Not a character.",
     t75: [
       "Leon|Leon the Snowman", "Mr. Narwhal|Narwhal", "Fulton Greenway|Greenway", "Baby Walrus",
-      "Gimbels manager", "Deb", "Arctic Puffin|Puffin", "Morris", "Eugene",
-    ],
+      "Gimbels manager", "Deb", "Arctic Puffin|Puffin", "Morris", "Eugene", "Buddy's mother|Susan Wells|Buddy's mom|Susan", "Buddy's father|Buddy's dad", ],
     t50: [
       "Fake Santa|Gimbels Santa|Gimbel's Santa", "Raccoon|The Raccoon", "Santa's elves|Elves",
 
-      "Papa Elf", "Michael|Michael Hobbs", "Emily|Emily Hobbs", "Miles Finch", "Buddy Hobbs", "Miles", "Mr. Greenway", "Fulton", "Charlie the Elf", "Store manager", "Santa's Workshop elves", "The Polar Bear", "Creepy Santa", "Jeannie"
-    ],
+      "Papa Elf", "Michael|Michael Hobbs", "Emily|Emily Hobbs", "Miles Finch", "Buddy Hobbs", "Miles", "Mr. Greenway", "Fulton", "Charlie the Elf", "Store manager", "Santa's Workshop elves", "The Polar Bear", "Creepy Santa", "Jeannie", "Charlotte Dennon|Charlotte", "Park Rangers|Central Park Rangers|Ranger", "Mr. Hobbs", "Head Elf|Elf foreman|Foreman elf"],
     t25: ["Jovie", "Walter|Walter Hobbs", "Santa|Santa Claus"],
     t10: ["Buddy|Buddy the Elf"],
   },
