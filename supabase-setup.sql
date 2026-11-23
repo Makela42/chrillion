@@ -4,7 +4,7 @@
 
 create table if not exists public.daily_scores (
   id         bigint generated always as identity primary key,
-  day        int  not null check (day between 1 and 100000),
+  day        int  not null check (day between 1 and 1000000),   -- Trillion stores days at +200000
   score      int  not null check (score between 0 and 700),
   player     text not null check (char_length(player) between 6 and 40),
   created_at timestamptz not null default now(),
