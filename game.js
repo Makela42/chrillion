@@ -518,10 +518,10 @@
     $("#sl-acct").textContent = acct ? "Signed in" : "Save your streak";
     const top = $("#btn-unlock-top");
     const first = !hasRun();
-    top.hidden = unlocked || first;
-    document.body.classList.toggle("first-visit", first);
+    top.hidden = unlocked;
+    document.body.classList.remove("first-visit");
     $("#hero-hint").hidden = !first;
-    $("#daily-title").textContent = first ? "Play today's 7" : "Today's Sleigh Run";
+    $("#daily-title").textContent = "Today's Sleigh Run";
     renderSheet();
   }
 

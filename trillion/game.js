@@ -466,12 +466,12 @@
   function hasCompletedRun() { const s = loadStats(); return (s.played || 0) > 0 || (s.unlimitedPlayed || 0) > 0; }
   function renderMenu() {
     const firstTime = !hasCompletedRun();
-    const collapse = firstTime && !fvExpanded;
+    const collapse = false;
     $("#menu").classList.toggle("fv", collapse);
     $("#fv-hint").hidden = !firstTime;
     $("#btn-play-fv").hidden = !collapse;
     $("#btn-fv-more").hidden = !collapse;
-    $("#btn-account").hidden = firstTime;
+    $("#btn-account").hidden = false;
     const day = dayNumber();
     const saved = store.get(dayKey(day), null);
     const played = saved && saved.done;
@@ -503,7 +503,7 @@
     $("#btn-account").lastChild.textContent = acct ? " Signed in · streak saved" : " Sign in to save your streak";
     $("#sl-acct").textContent = acct ? "Signed in" : "Save your streak";
     const top = $("#btn-unlock-top");
-    top.hidden = unlocked || firstTime;
+    top.hidden = unlocked;
     renderSheet();
   }
 
