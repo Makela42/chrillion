@@ -915,3 +915,8 @@ dialog { max-width: calc(100vw - 24px); }
 .feedback[data-tier="miracle"] { position: relative; }
 .feedback[data-tier="miracle"]::after { content: ""; position: absolute; left: 8px; top: 8px; width: 56px; height: 56px; background: url(gfx/seal.png) center / contain no-repeat; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.35)); pointer-events: none; z-index: 3; }
 .feedback[data-tier="miracle"] .fb-stamp { right: 10px; font-size: 10.5px; padding: 4px 8px; }
+
+/* More games: "on the way" card */
+.mg-soon { display: block; margin: 0 0 12px; padding: 14px 16px; border: 2px dashed rgba(31,77,58,.45); border-radius: 12px; color: #2a2a22; background: rgba(31,77,58,.05); }
+.mg-soon b { display: block; font-family: var(--font-display, Georgia, serif); font-size: 20px; color: var(--green-deep, #1f4d3a); margin-bottom: 4px; }
+.mg-soon span { display: block; font-size: 14px; line-height: 1.4; opacity: .9; }

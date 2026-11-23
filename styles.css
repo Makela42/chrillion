@@ -992,3 +992,8 @@ input, textarea { caret-color: var(--red); accent-color: var(--red); }
   .pp-parcel, .pp-av, .tile, .tile-sm, .pill-gold, .icon-btn, .supporter-card, .upsell, .save-pill { transition: none !important; }
   .save-pill:hover { transform: none; }
 }
+
+/* More games: "on the way" card */
+.mgp-soon { display: block; text-align: left; padding: 14px 16px; }
+.mgp-soon b { display: block; font: 400 20px var(--font-display); margin-bottom: 4px; opacity: 1; }
+.mgp-soon span { display: block; font-size: 14px; line-height: 1.4; }
