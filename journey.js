@@ -33,14 +33,14 @@
 .journey .j-ms{position:absolute;bottom:0;left:0;transform:translateX(-50%);width:var(--j-size);height:var(--j-size);display:flex;align-items:flex-end;justify-content:center;filter:grayscale(1) brightness(1.05);opacity:.38;transition:filter .4s,opacity .4s}
 .journey .j-ms svg{width:100%;height:100%;display:block;image-rendering:pixelated}
 .journey .j-ms.on{filter:drop-shadow(0 0 5px rgba(242,193,78,.95)) drop-shadow(0 0 10px rgba(242,193,78,.5));opacity:1}
-.journey .j-ms.pop{animation:j-pop .7s cubic-bezier(.3,1.6,.5,1)}
+.journey .j-ms.pop{animation:j-pop .6s cubic-bezier(.22,1,.36,1)}
 .journey .j-tick{position:absolute;bottom:-3px;left:50%;width:2px;height:3px;margin-left:-1px;background:rgba(43,29,24,.35)}
 .journey .j-track{position:absolute;left:14px;right:14px;top:37px;height:11px;border-radius:6px;background:rgba(43,29,24,.22);box-shadow:inset 0 2px 3px rgba(43,29,24,.35),0 1px 0 rgba(255,255,255,.35);overflow:hidden}
 .journey .j-fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:6px;background:repeating-linear-gradient(-45deg,#c8323a 0 7px,#f6ecd6 7px 14px);background-size:19.8px 19.8px;animation:j-scroll 1.4s linear infinite;box-shadow:inset 0 -3px 3px rgba(0,0,0,.18),inset 0 2px 2px rgba(255,255,255,.4)}
 .journey .j-fill::after{content:"";position:absolute;right:0;top:0;bottom:0;width:6px;background:linear-gradient(90deg,transparent,rgba(242,193,78,.85));border-radius:0 6px 6px 0}
-.journey .j-row{position:absolute;left:14px;right:14px;top:50px;display:flex;justify-content:space-between;font-size:12px;line-height:14px;font-weight:700}
+.journey .j-row{position:absolute;left:14px;right:14px;top:50px;display:flex;justify-content:space-between;font-size:13px;line-height:15px;font-weight:700}
 .journey .j-pts{font-variant-numeric:tabular-nums}
-.journey .j-next{opacity:.75;font-weight:600}
+.journey .j-next{opacity:.92;font-weight:700}
 .journey .j-sp{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2px;background:var(--gold,#f2c14e);transform:rotate(45deg);pointer-events:none;animation:j-spark .75s ease-out forwards}
 .journey .j-sp:nth-child(3n){background:#fff}.journey .j-sp:nth-child(3n+1){background:#c8323a}
 @keyframes j-scroll{to{background-position:19.8px 0}}

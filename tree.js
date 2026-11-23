@@ -7,7 +7,7 @@
   "use strict";
 
   const KINDS = ["plain", "candy", "ginger", "snow", "deer", "santa"];
-  const NAMES = { plain: "Bauble", candy: "Candy Cane", ginger: "Gingerbread", snow: "Snowman", deer: "Reindeer", santa: "Santa" };
+  const NAMES = { plain: "Red Bauble", candy: "Teardrop", ginger: "Bell", snow: "Glass Icicle", deer: "Finial", santa: "Gold Star" };
   const RARE_FROM = 3; // snow and up count as "rare"
 
   function kindFor(points) {
@@ -188,7 +188,18 @@
     `<rect x="-1.7" y="-7" width="3.4" height="2.2" rx=".6" fill="url(#${p}cap)" stroke="#9a6f17" stroke-width=".25"/>`;
 
   // ornament art centred on (0,0), ball radius ~5.5
+  // rendered 3D ornament art (orn/*.png): [blender ortho scale, vertical shift], 4.8 svg units per blender unit
+  const IMG = { plain: [3.9, 0.45], candy: [4.7, 0.1], ginger: [4.0, 0.2], snow: [4.9, -0.15], deer: [4.9, -0.3], santa: [3.9, 0.15] };
   function art(kind, p) {
+    const m = IMG[kind];
+    if (m) {
+      const w = m[0] * 4.8, k = 4.8;
+      const im = `<image href="orn/orn-${kind}.png" x="${f1(-w / 2)}" y="${f1(-m[1] * k - w / 2)}" width="${f1(w)}" height="${f1(w)}"/>`;
+      return kind === "santa" ? `<circle r="10" fill="url(#${p}glow)"/><g class="tr-santa">${im}</g>` : im;
+    }
+    return artVec(kind, p);
+  }
+  function artVec(kind, p) {
     switch (kind) {
       case "candy":
         return `<path d="M3,6 L3,-2.6 A3.3 3.3 0 0 0 -3.6,-2.6" fill="none" stroke="#7a1219" stroke-width="3.5" stroke-linecap="round"/>` +

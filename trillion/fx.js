@@ -16,6 +16,10 @@
   };
   const G = 1700, PILE_MAX = 0.24;
   const reduce = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const COIN_F = 6, COIN_W = 88, coinImg = new Image();
+  let coinOK = false;
+  coinImg.onload = () => { coinOK = true; };
+  coinImg.src = "gfx/coin-sheet.png";
   const sfx = (n, a) => { if (window.Sfx) window.Sfx.play(n, a); };
   const scale = () => Math.max(1.1, Math.min(1.7, Math.min(window.innerWidth, window.innerHeight * 0.7) / 380));
 
@@ -64,7 +68,11 @@
       const k = Math.min(1, (t - g.landedAt) / 0.34);
       if (k < 1) ctx.scale(1 + 0.2 * Math.sin(k * Math.PI) * (1 - k), 1 - 0.2 * Math.sin(k * Math.PI) * (1 - k));
     }
-    if (g.kind === "coin" || g.kind === "penny") {
+    if (g.kind === "coin" && coinOK) {
+      // rendered 3D gold coin: 6 spin frames (0 to 150 degrees), face-on when landed
+      const ph = g.landedAt ? 0 : Math.floor((((g.spin % Math.PI) + Math.PI) % Math.PI) / Math.PI * COIN_F) % COIN_F, d = s * 1.05;
+      ctx.drawImage(coinImg, ph * COIN_W, 0, COIN_W, COIN_W, -d / 2, -d / 2, d, d);
+    } else if (g.kind === "coin" || g.kind === "penny") {
       // A coin that tumbles: the face squashes as it spins in the air.
       const flip = g.landedAt ? 1 : Math.max(0.18, Math.abs(Math.cos(g.spin)));
       const gold = g.kind === "coin";

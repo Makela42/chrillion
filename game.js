@@ -346,7 +346,7 @@
       const { url } = await api("/api/checkout", { method: "POST" });
       location.href = url;
     } catch (e) {
-     window.open("https://buy.stripe.com/test_8x28wPcDFeDk5Zs40A5ZC00", "_blank", "noopener,noreferrer");
+     window.open(CONFIG.paymentLink, "_blank", "noopener,noreferrer");
       btn.disabled = false;
       btn.textContent = `Unlock for ${CONFIG.price}`;
     }
