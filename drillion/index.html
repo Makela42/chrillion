@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Drillion · the daily rare-answer dental game</title>
+  <meta name="description" content="A daily word game for dentists and dental students. 7 prompts, 30 seconds each. The rarer your correct answer, the more you score.">
+  <meta name="theme-color" content="#2f9d83">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M22 22c8-10 20-8 28-3 8-5 20-7 28 3 8 11 4 28-1 38-4 9-5 26-12 26-6 0-6-20-15-20s-9 20-15 20c-7 0-8-17-12-26-5-10-9-27-1-38z' fill='%23fbfaf5' stroke='%230f3a40' stroke-width='6' stroke-linejoin='round'/></svg>">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Drillion · the daily rare-answer dental game">
+  <meta property="og:description" content="7 dental prompts. 30 seconds each. The rarer your answer, the more you score.">
+  <meta property="og:image" content="https://www.merrillion.site/drillion/og-image.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <!-- Google Tag Manager -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":new Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src="https://www.googletagmanager.com/gtm.js?id="+i+dl;f.parentNode.insertBefore(j,f);})(window,document,"script","dataLayer","GTM-PRMRMDT6");</script>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({"gtm.start":new Date().getTime(),event:"gtm.js"});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src="https://www.googletagmanager.com/gtm.js?id="+i+dl;f.parentNode.insertBefore(j,f);})(window,document,"script","dataLayer","GTM-TTSZ7SNH");</script>
+  <!-- End Google Tag Manager -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PRMRMDT6" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TTSZ7SNH" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
+
+  <!-- ============ TICKER TAPE ============ -->
+  <div class="ticker" id="ticker" aria-hidden="true"><div class="ticker-track" id="ticker-track"></div></div>
+
+  <!-- ============ TOP BAR ============ -->
+  <header class="appbar" id="appbar">
+    <button class="wordmark" id="btn-home" data-name>Drillion</button>
+    <div class="appbar-actions">
+      <button class="icon-btn" id="btn-music" aria-label="Music" aria-pressed="false" title="Music">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-sfx" aria-label="Sound effects" aria-pressed="true" title="Sound effects">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/><path class="mute" d="m16 9 6 6m0-6-6 6"/></svg>
+      </button>
+      <button class="pill-gold" id="btn-unlock-top"><i data-sprite="seal" data-size="20"></i><span>Pass</span></button>
+      <button class="icon-btn" id="btn-menu" aria-label="Open menu" title="Menu">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ============ HOME ============ -->
+    <section class="screen" id="menu">
+      <div class="hero cert">
+        
+        
+        <div class="hero-text">
+          <p class="cert-no" id="cert-no">Appointment card</p>
+          <p class="eyebrow" id="hero-eyebrow">Daily Check-up</p>
+          <h1 class="hero-title">Rare answers drill deeper.</h1>
+          <p class="hero-sub" id="hero-sub">7 prompts · 30 seconds each</p>
+          <p class="fv-hint" id="fv-hint" hidden>Name the answer nobody else in your year group would. Rarer = more points. <button type="button" class="fv-link" id="btn-how-hint">How to play</button></p>
+          <div class="stamp" aria-hidden="true"><span>No cavities</span></div>
+        </div>
+        <div class="hero-stage"><canvas class="hero-scene" id="hero-scene" aria-hidden="true"></canvas></div>
+      </div>
+
+      <p class="challenge" id="challenge" hidden></p>
+      <button class="btn btn-primary fv-play" id="btn-play-fv" hidden>Play today's 7</button>
+      <button class="fv-more" id="btn-fv-more" hidden>More ways to play &#9662;</button>
+
+      <div class="tiles-main">
+        <button class="tile tile-daily" id="btn-daily">
+          <span class="tile-ico"><span data-sprite="tooth" data-size="28"></span></span>
+          <span class="tile-text"><b>Daily Check-up</b><small id="daily-sub"></small></span>
+          <span class="badge badge-streak" id="streak-badge" hidden></span>
+        </button>
+        <button class="tile tile-online" id="btn-online">
+          <span class="tile-ico"><span data-sprite="chair" data-size="28"></span></span>
+          <span class="tile-text"><b>Staff Room</b><small>Live rooms · play together</small></span>
+          <span class="badge badge-new">NEW</span>
+        </button>
+      </div>
+
+      <button class="card tree-card" id="tree-card" hidden><div id="home-tree"></div><span class="tree-cap" id="tree-cap"></span></button>
+
+      <div class="tiles-grid">
+        <button class="tile-sm" id="btn-unlimited"><span class="tile-sm-ico" data-sprite="infinity" data-size="26"></span><span class="tile-text"><b>Unlimited</b><small id="unl-sub">Fresh runs</small></span></button>
+        <button class="tile-sm" id="btn-archive"><span class="tile-sm-ico" data-sprite="calendar" data-size="26"></span><span class="tile-text"><b>Archive</b><small id="arch-sub">Past check-ups</small></span></button>
+        <button class="tile-sm" id="btn-stats"><span class="tile-sm-ico" data-sprite="chart" data-size="26"></span><span class="tile-text"><b>Stats</b><small id="stats-sub">Streaks & records</small></span></button>
+        <button class="tile-sm" id="btn-how"><span class="tile-sm-ico" data-sprite="question" data-size="26"></span><span class="tile-text"><b>How to play</b><small>Tiers & scoring</small></span></button>
+        <a class="tile-sm tile-other" href="https://www.merrillion.site"><span class="tile-sm-ico" data-sprite="bell" data-size="26"></span><span class="tile-text"><b>Can't wait for tomorrow? Play Merrillion →</b><small>Our other daily game · the Christmas edition</small></span></a>
+      </div>
+
+      <button class="save-pill" id="btn-account"><span data-sprite="seal" data-size="18"></span> Sign in to save your streak</button>
+      <p class="career" id="career"></p>
+      <p class="mkt-status" id="mkt-status"></p>
+      <p class="next-daily" data-countdown></p>
+      <footer class="site-foot"><button data-go="more">+ More games</button><button data-go="privacy">Privacy</button><button data-go="faq">FAQ</button><a href="mailto:merrillion.help@gmail.com">merrillion.help@gmail.com</a></footer>
+    </section>
+
+    <!-- ============ GAME ============ -->
+    <section class="screen" id="game" hidden>
+      <div class="topbar">
+        <button class="icon-btn" id="btn-quit" aria-label="Back to home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg></button>
+        <ol class="dots" id="dots" aria-label="Progress"></ol>
+        <div class="score-pill"><span id="score">0</span> pts</div>
+      </div>
+
+      <div id="journey" class="journey-wrap"></div>
+      <div class="timer" role="progressbar" aria-label="Time left">
+        <div class="timer-fill" id="timer-fill"></div>
+      </div>
+      <div class="timer-label"><span id="timer-sec">25</span>s on the clock</div>
+      <canvas class="scene" id="scene" aria-hidden="true"></canvas>
+      <div class="scene-say" id="scene-say"><span class="say-elf" data-sprite="broker" data-size="34"></span><span class="say-bubble" id="say-text"></span></div>
+
+      <article class="prompt-card cert">
+        
+        
+        <p class="prompt-num" id="prompt-num"></p>
+        <h2 class="prompt-text" id="prompt-text"></h2>
+      </article>
+
+      <p class="answer-msg" id="answer-msg" aria-live="polite"></p>
+      <form id="answer-form" autocomplete="off">
+        <input id="answer" type="text" placeholder="Type your answer…" maxlength="60"
+               autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Your answer">
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </form>
+
+      <div class="feedback" id="feedback" hidden>
+        <div class="fb-mascot"><span class="fb-elf" id="fb-elf"></span><div class="fb-bubble" id="fb-bubble"></div></div>
+        <div class="fb-stamp" id="fb-stamp" aria-hidden="true"><span>One in a<br>Drillion</span></div>
+        <div class="fb-emoji" id="fb-emoji"></div>
+        <div class="fb-label" id="fb-label"></div>
+        <div class="fb-points" id="fb-points"></div>
+        <p class="fb-said" id="fb-said"></p>
+        <p class="fb-blurb" id="fb-blurb"></p>
+        <div class="fb-best" id="fb-best"></div>
+        <button class="btn btn-primary" id="btn-next">Next →</button>
+      </div>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section class="screen" id="summary" hidden>
+      <div class="sum-head">
+        <span class="sum-brand" data-name>Drillion</span>
+        <span class="eyebrow" id="sum-mode"></span>
+      </div>
+      <p class="sum-callout" id="sum-callout" hidden></p>
+      <p class="sum-callout" id="sum-vs" hidden></p>
+      <div class="sum-score-row">
+        <span class="sum-total" id="sum-score">0</span>
+        <span class="sum-side"><span class="sum-max" id="sum-max">/ 700</span><span class="sum-rating" id="sum-rating"></span><span class="sum-miles" id="sum-miles"></span><span class="sum-journey" id="sum-journey"></span></span>
+      </div>
+
+      <p class="sum-tomorrow" id="sum-tomorrow"></p>
+      <div class="sum-actions">
+        <button class="btn btn-primary" id="btn-share">Share result</button>
+        <button class="btn btn-secondary" id="btn-again" hidden>Play another run</button>
+      </div>
+
+      <div class="stat-tiles">
+        <div class="stile"><span class="stile-k" id="st-top-k">Today</span><b id="st-top">—</b><small id="st-rank"></small></div>
+        <div class="stile"><span class="stile-k">Streak</span><b id="st-streak">0</b><small>days</small></div>
+        <div class="stile"><span class="stile-k">Drillions</span><b id="st-mir">0</b><small>this run</small></div>
+      </div>
+
+      <div class="card dist-card" id="dist-card">
+        <div class="card-head"><h3>You vs other players</h3><span class="dist-score" id="dist-score"></span></div>
+        <svg id="dist-chart" viewBox="0 0 340 172" role="img" aria-label="How your score compares with today's players"></svg>
+        <p class="dist-text" id="dist-text"></p>
+        <p class="dist-note" id="dist-note"></p>
+      </div>
+
+      <div class="card recap-card">
+        <div class="card-head"><h3>Treatment notes</h3><span class="recap-score" id="recap-score"></span></div>
+        <svg id="recap-chart" viewBox="0 0 340 170" role="img" aria-label="Points for each prompt"></svg>
+      </div>
+
+      <div class="sum-grid" id="sum-grid"></div>
+      <button class="upsell" id="upsell" hidden>
+        <span class="upsell-ico" data-sprite="infinity" data-size="28"></span>
+        <span class="upsell-text"><b>Want another go?</b><small>The Drillion Pass gives endless fresh runs and every past check-up.</small></span>
+        <span class="upsell-arrow" aria-hidden="true">›</span>
+      </button>
+
+      <div class="card next-card" id="next-card">
+        <div class="card-head"><h3>Your dental chart</h3><span class="next-streak" id="next-streak"></span></div>
+        <div id="next-tree" class="next-tree"></div>
+        <p class="next-msg" id="next-msg"></p>
+        <p class="next-daily next-count" data-countdown></p>
+        <div class="next-actions">
+          <button class="btn btn-primary" id="btn-next-unl" hidden></button>
+          <button class="btn btn-secondary" id="btn-next-online">Challenge friends in the Staff Room</button>
+        </div>
+      </div>
+
+      
+
+      <a class="cross-promo" href="https://www.merrillion.site"><span class="cp-k">Can't wait for tomorrow's check-up?</span><b>Try our other game: Merrillion →</b><small>The Christmas daily word game. Rare answers, advent ornaments, a new run every day.</small></a>
+
+      <div class="bd-title"><h3>Every answer</h3><span>Tap a prompt to see them all</span></div>
+      <ol class="breakdown" id="breakdown"></ol>
+      <button class="btn btn-ghost btn-block missing-btn" id="btn-missing">Missing an answer? Tell us</button>
+
+      <p class="next-daily" data-countdown></p>
+      <button class="btn btn-ghost btn-block" id="btn-menu-home">Back to home</button>
+    </section>
+
+    <!-- ============ ARCHIVE ============ -->
+    <section class="screen" id="archive" hidden>
+      <div class="screen-head">
+        <button class="icon-btn" data-home aria-label="Back to home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12H5m6-6-6 6 6 6"/></svg></button>
+        <h2>Archive</h2>
+      </div>
+      <p class="muted" id="archive-note"></p>
+      <ol class="archive-list" id="archive-list"></ol>
+    </section>
+
+    <!-- ============ ONLINE ============ -->
+    <section class="screen" id="online" hidden></section>
+  </main>
+
+  <!-- ============ MENU SHEET ============ -->
+  <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Menu">
+    <div class="sheet-panel">
+      <div class="sheet-top">
+        <span class="eyebrow">Menu</span>
+        <button class="icon-btn" id="btn-sheet-close" aria-label="Close menu">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <h2 class="sheet-title"><span data-name>Drillion</span><em>.</em></h2>
+      <button class="supporter-card" id="sheet-supporter">
+        <small>Unlimited &amp; archive</small>
+        <b id="sup-title">Get the Drillion Pass</b>
+        <span id="sup-sub"></span>
+      </button>
+      <div class="sheet-toggles">
+        <button class="toggle" id="tg-sfx" aria-pressed="true"><span>Sound effects</span><i aria-hidden="true"></i></button>
+        <button class="toggle" id="tg-music" aria-pressed="false"><span>Music</span><i aria-hidden="true"></i></button>
+      </div>
+      <nav class="sheet-list">
+        <button data-go="daily"><b>Daily Check-up</b><span id="sl-daily"></span></button>
+        <button data-go="online"><b>Staff Room</b><span>Live rooms with friends</span></button>
+        <button data-go="unlimited"><b>Unlimited</b><span id="sl-unl">Pass holders</span></button>
+        <button data-go="archive"><b>Archive</b><span id="sl-archive">Every past check-up</span></button>
+        <button data-go="stats"><b>My stats</b><span>Streaks &amp; records</span></button>
+        <button data-go="how"><b>How to play</b><span>Tiers &amp; scoring</span></button>
+        <button data-go="faq"><b>FAQ</b><span>Common questions</span></button>
+        <button data-go="account"><b>My account</b><span id="sl-acct">Save your streak</span></button>
+        <button data-go="feedback"><b>Feedback</b><span>Bugs, missing answers, ideas</span></button>
+        <button data-go="more"><b>+ More games</b><span>Merrillion · Trillion</span></button>
+        <button data-go="privacy"><b>Privacy</b><span>What we store</span></button>
+      </nav>
+      <p class="sheet-foot" id="sheet-foot"></p>
+    </div>
+  </div>
+
+  <!-- ============ DIALOGS ============ -->
+  <dialog id="dlg-how">
+    <h2>How to play</h2>
+    <p>You get <b>7 prompts</b> and <b>25 seconds</b> for each. Type <b>one answer</b> per prompt.</p>
+    <p>Every valid answer has a <b>fixed</b> point value set in advance. Common answers score low and rare answers score high, so you see your score as soon as you submit.</p>
+    <ul class="tier-list" id="tier-list"></ul>
+    <p class="muted">No AI judges you: every answer has a fixed score from a list we wrote ahead of time, with typo forgiveness. Same score for everyone.</p>
+    <p class="muted">The Daily Check-up is the same for everyone and resets at midnight. Unlimited Runs shuffle new prompts every time.</p>
+    <form method="dialog"><button class="btn btn-primary btn-block">Open wide</button></form>
+  </dialog>
+
+  <dialog id="dlg-info">
+    <h2 id="info-title"></h2>
+    <div id="info-body" class="info-body"></div>
+    <form method="dialog"><button class="btn btn-primary btn-block">Got it</button></form>
+  </dialog>
+
+  <dialog id="dlg-stats">
+    <h2>Your stats</h2>
+    <div class="stat-grid" id="stat-grid"></div>
+    <form method="dialog"><button class="btn btn-primary btn-block">Close</button></form>
+  </dialog>
+
+  <dialog id="dlg-paywall">
+    <div class="pay-mark" data-sprite="seal" data-size="64"></div>
+    <h2>The Drillion Pass</h2>
+    <ul class="perks">
+      <li><i data-sprite="infinity" data-size="24"></i><span><b>Unlimited Runs</b>, freshly shuffled every time</span></li>
+      <li><i data-sprite="calendar" data-size="24"></i><span><b>The full archive</b> of every past Daily Check-up</span></li>
+      <li><i data-sprite="tooth" data-size="24"></i><span>Helps keep Drillion free for everyone</span></li>
+    </ul>
+    <p class="price" id="pay-price"></p>
+    <button class="btn btn-primary btn-block" id="btn-buy">Get the Pass</button>
+    <details class="restore">
+      <summary>Already paid? Restore purchase</summary>
+      <form id="restore-form">
+        <input id="restore-email" type="email" placeholder="Email used at checkout" autocomplete="email" aria-label="Email used at checkout" required>
+        <button class="btn btn-secondary" id="btn-restore" type="submit">Restore</button>
+      </form>
+    </details>
+    <form method="dialog"><button class="btn btn-ghost btn-block">Maybe later</button></form>
+  </dialog>
+
+  <dialog id="dlg-feedback" class="dlg-feedback">
+    <div class="dlg-bar"><span class="eyebrow">Feedback</span>
+      <form method="dialog"><button class="dlg-x" aria-label="Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form></div>
+    <h2>Send us your feedback.</h2>
+    <p>Found a bug, spotted a missing answer or have an idea? We'd love to hear it.</p>
+    <form id="feedback-form" class="fb-form">
+      <label for="fb-email"><b>Your email</b> <span class="muted">(optional)</span></label>
+      <input id="fb-email" type="email" placeholder="you@example.com" autocomplete="email" maxlength="200">
+      <label for="fb-message"><b>Your message</b></label>
+      <textarea id="fb-message" rows="5" maxlength="2000" placeholder="Tell us what happened or what you'd like to see." required></textarea>
+      <p class="muted fb-privacy">Your message (and email, if you add one) is stored privately so we can read it. We'll only use your email to reply.</p>
+      <button class="btn btn-primary btn-block" id="fb-send" type="submit">Send feedback</button>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-share">
+    <h2>Share your run</h2>
+    <canvas class="share-card" id="share-card" width="1080" height="1350" aria-label="Your result card"></canvas>
+    <div class="share-main">
+      <button class="btn btn-primary" id="sh-native">Share…</button>
+      <button class="btn btn-secondary" id="sh-image">Save image</button>
+    </div>
+    <button class="btn btn-ghost btn-block" id="sh-copy">Copy text</button>
+    <p class="share-label">Send it to</p>
+    <div class="share-grid" id="share-grid"></div>
+    <p class="muted share-note">Instagram, TikTok or Snapchat: tap <b>Save image</b>, then post it to your story.</p>
+    <form method="dialog"><button class="btn btn-ghost btn-block">Close</button></form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="bg.js"></script>
+  <script src="config.js"></script>
+  <script src="account.js"></script>
+  <script src="sounds.js"></script>
+  <script src="sprites.js"></script>
+  <script src="icons.js"></script>
+  <script src="journey.js"></script>
+  <script src="tree.js"></script>
+  <script src="fx.js"></script>
+  <script src="scene.js"></script>
+  <script src="title.js"></script>
+  <script src="prompts-1.js"></script>
+  <script src="prompts-2.js"></script>
+  <script src="prompts-3.js"></script>
+  <script src="prompts-4.js"></script>
+  <script src="prompts-5.js"></script>
+  
+  
+  
+  <script src="game.js"></script>
+  <script src="online-core.js"></script>
+  <script src="online-ui.js"></script>
+</body>
+</html>

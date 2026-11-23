@@ -3,7 +3,7 @@ const crypto = require("crypto");
 
 // Values pasted into the Vercel dashboard or piped from a shell can carry an invisible byte-order mark
 // or stray whitespace, which breaks the Stripe Authorization header. Clean them once, before any use.
-for (const k of ["STRIPE_SECRET_KEY", "STRIPE_PRICE_ID", "UNLOCK_SECRET", "SITE_URL", "TRI_PAYMENT_LINK_ID", "MOG_PAYMENT_LINK_ID", "OWNER_CODE"]) {
+for (const k of ["STRIPE_SECRET_KEY", "STRIPE_PRICE_ID", "UNLOCK_SECRET", "SITE_URL", "TRI_PAYMENT_LINK_ID", "DRI_PAYMENT_LINK_ID", "MOG_PAYMENT_LINK_ID", "OWNER_CODE"]) {
   if (typeof process.env[k] === "string") process.env[k] = process.env[k].replace(/^﻿+/, "").trim();
 }
 
@@ -55,14 +55,15 @@ module.exports = { sign, verify, stripe, siteUrl };
 // and Mogillion tokens are signed with a "mog:" prefix so a Merrillion pass can't unlock Mogillion (or the reverse).
 function gameOf(req) {
   const g = (req.query && req.query.game) || (req.body && req.body.game);
-  return g === "mogillion" || g === "trillion" ? g : "merrillion";
+  return g === "mogillion" || g === "trillion" || g === "drillion" ? g : "merrillion";
 }
-function scopeId(game, id) { return game === "mogillion" ? "mog:" + id : game === "trillion" ? "tri:" + id : String(id); }
-function tokenGame(token) { const t = String(token); return t.startsWith("mog:") ? "mogillion" : t.startsWith("tri:") ? "trillion" : "merrillion"; }
+function scopeId(game, id) { return game === "mogillion" ? "mog:" + id : game === "trillion" ? "tri:" + id : game === "drillion" ? "dri:" + id : String(id); }
+function tokenGame(token) { const t = String(token); return t.startsWith("mog:") ? "mogillion" : t.startsWith("tri:") ? "trillion" : t.startsWith("dri:") ? "drillion" : "merrillion"; }
 function sessionGame(s) {
-  const mog = process.env.MOG_PAYMENT_LINK_ID, tri = process.env.TRI_PAYMENT_LINK_ID;
+  const mog = process.env.MOG_PAYMENT_LINK_ID, tri = process.env.TRI_PAYMENT_LINK_ID, dri = process.env.DRI_PAYMENT_LINK_ID;
   if (mog && s && s.payment_link === mog) return "mogillion";
   if (tri && s && s.payment_link === tri) return "trillion";
+  if (dri && s && s.payment_link === dri) return "drillion";
   return "merrillion";
 }
 module.exports.gameOf = gameOf;

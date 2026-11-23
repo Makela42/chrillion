@@ -1,0 +1,1636 @@
+(() => {
+  "use strict";
+
+  // =====================================================================
+  // CONFIG: change these freely
+  // =====================================================================
+  const CONFIG = {
+    name: "Drillion",
+    promptsPerDive: 7,
+    secondsPerPrompt: 30,
+    epoch: "2026-11-23",      // the day the site opened = Daily Check-up No. 1 (YYYY-MM-DD)
+    price: "$3.99",           // display only; the real price is set in Stripe
+    apiBase: "",              // where the /api functions live ("" = same site)
+    paymentLink: "https://buy.stripe.com/14A4gB4LBcHMaCH2n1g7e03",        // Stripe Payment Link for the Drillion Pass (empty = "opens soon")
+    minPlayersForCurve: 5,    // players needed before the "better than X%" curve appears
+  };
+  const DAY_OFFSET = 300000;  // Drillion's days live at day + 300000 in the shared daily_scores table
+
+  // Fixed point tiers. Every answer in the prompt files belongs to exactly one.
+  const TIERS = {
+    miracle: { pts: 100, label: "One in a Drillion", emoji: "🦷", desc: "The one handpicked best answer" },
+    t75:     { pts: 85,  label: "Professor",         emoji: "🎓", desc: "A real deep cut" },
+    t50:     { pts: 60,  label: "Specialist",        emoji: "🔬", desc: "Solid, not everyone gets it" },
+    t25:     { pts: 30,  label: "Associate",         emoji: "🪥", desc: "Well known, safe and steady" },
+    trap:    { pts: 15,  label: "Wrong Tooth",       emoji: "😬", desc: "The 'clever' answer everyone tries" },
+    t10:     { pts: 10,  label: "Fresher",           emoji: "🧵", desc: "The first thing anyone says" },
+    miss:    { pts: 0,   label: "No Match",          emoji: "❌", desc: "Not a valid answer" },
+    timeout: { pts: 0,   label: "Appointment Over",  emoji: "⏰", desc: "Time ran out before a valid answer" },
+  };
+  const TIER_ORDER = ["t75", "t50", "t25", "t10"];
+  const TIER_COLORS = { miracle: "#e0a92b", t75: "#6b3fa0", t50: "#16878f", t25: "#2b6fb0", trap: "#d0507a", t10: "#8a9399", miss: "#c0392b", timeout: "#ffffff" };
+
+  const PROMPTS = [].concat(window.CHRILLION_PROMPTS || [], window.DRILLION_PROMPTS || []);
+  const MAX_SCORE = CONFIG.promptsPerDive * TIERS.miracle.pts;
+
+  // Tidy the answer lists once on load: if the same answer was listed in two tiers,
+  // keep it only in the more common one (so "Santa Claus" is Obvious, never a Rare Find).
+  // The handpicked One in a Merrillion and the Regifted trap always keep their spot.
+  function tidyPrompts() {
+    PROMPTS.forEach((p) => {
+      const claimed = new Set();
+      const keep = (entry) => {
+        if (!entry) return null;
+        const aliases = entry.split("|").map((a) => a.trim()).filter((a) => a && !claimed.has(key(a)));
+        aliases.forEach((a) => claimed.add(key(a)));
+        return aliases.length ? aliases.join("|") : null;
+      };
+      p.miracle = keep(p.miracle) || p.miracle;
+      if (p.trap) p.trap = keep(p.trap);
+      ["t10", "t25", "t50", "t75"].forEach((t) => { p[t] = (p[t] || []).map(keep).filter(Boolean); });
+    });
+  }
+  const Sfx = window.Sfx || { play() {}, duck() {}, isSfx: () => false, isMusic: () => false, setSfx() {}, setMusic() {} };
+
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => Array.from(document.querySelectorAll(s));
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const Spr = window.Sprites;
+  // On screen, tiers use the pixel sprite set; emoji are only used in the shareable text.
+  function tierSprite(tier, size) { return Spr ? Spr.svg(Spr.TIER_SPRITE[tier] || "x", size) : esc(TIERS[tier].emoji); }
+
+  // =====================================================================
+  // Storage (per-browser conveniences; every access is guarded)
+  // =====================================================================
+  const store = {
+    get(k, d) {
+      try { const v = localStorage.getItem("drillion:" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; }
+    },
+    set(k, v) { try { localStorage.setItem("drillion:" + k, JSON.stringify(v)); } catch (e) { /* ignore */ } },
+  };
+
+  function playerId() {
+    let id = store.get("pid", null);
+    if (!id) {
+      id = Array.from({ length: 16 }, () => "abcdefghijkmnpqrstuvwxyz23456789"[Math.floor(Math.random() * 32)]).join("");
+      store.set("pid", id);
+    }
+    return id;
+  }
+
+  // =====================================================================
+  // Answer matching
+  // =====================================================================
+  const NUMW = { zero: "0", one: "1", two: "2", three: "3", four: "4", five: "5", six: "6", seven: "7", eight: "8", nine: "9", ten: "10", eleven: "11", twelve: "12", thirteen: "13", fourteen: "14", fifteen: "15", sixteen: "16", seventeen: "17", eighteen: "18", nineteen: "19", twenty: "20", thirty: "30", forty: "40", fifty: "50", sixty: "60", seventy: "70", eighty: "80", ninety: "90", hundred: "100", thousand: "1000" };
+  function norm(s) {
+    return String(s).toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .replace(/&/g, " and ")
+      .replace(/['\u2019`]/g, "")
+      .replace(/[^\p{L}\p{N}]+/gu, " ")   // keep letters from any alphabet (Cyrillic, Greek, etc.)
+      .trim()
+      .replace(/^(the|a|an) /, "")
+      .replace(/^(st|saint) /, "saint ")
+      .replace(/ (st|saint) /g, " saint ")
+      .split(" ").map((w) => NUMW[w] || w).join(" ");   // twelve -> 12
+  }
+  function key(s) {
+    const n = norm(s);
+    return n.length > 3 && n.endsWith("s") && !n.endsWith("ss") ? n.slice(0, -1) : n;
+  }
+  // Damerau-style edit distance (a swapped pair of letters counts as one edit).
+  function lev(a, b) {
+    const m = a.length, n = b.length;
+    const d = [];
+    for (let i = 0; i <= m; i++) { d[i] = [i]; }
+    for (let j = 0; j <= n; j++) d[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const c = a[i - 1] === b[j - 1] ? 0 : 1;
+        d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + c);
+        if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+      }
+    }
+    return d[m][n];
+  }
+  // Spelling variants of a normalised string: singular/plural (-s, -es, -ies) and with spaces removed.
+  function vars(k) {
+    const s = new Set([k]);
+    if (k.length > 3 && k.endsWith("s") && !k.endsWith("ss")) s.add(k.slice(0, -1));
+    if (k.length > 4 && k.endsWith("es")) s.add(k.slice(0, -2));
+    if (k.length > 4 && k.endsWith("ies")) s.add(k.slice(0, -3) + "y");
+    [...s].forEach((x) => s.add(x.replace(/ /g, "")));
+    return s;
+  }
+
+  const indexCache = new Map();
+  function answerIndex(p) {
+    if (indexCache.has(p.id)) return indexCache.get(p.id);
+    const list = [];
+    const add = (entry, tier) => {
+      if (!entry) return;
+      const aliases = entry.split("|").map((x) => x.trim()).filter(Boolean);
+      aliases.forEach((a) => { const n = norm(a); list.push({ key: key(a), n, vars: vars(n), words: n.split(" "), display: aliases[0], tier }); });
+    };
+    add(p.miracle, "miracle");
+    add(p.trap, "trap");
+    TIER_ORDER.forEach((t) => (p[t] || []).forEach((e) => add(e, t)));
+    indexCache.set(p.id, list);
+    return list;
+  }
+
+  function judge(p, raw) {
+    const n = norm(raw || "");
+    if (!n) return { tier: "miss", display: null };
+    // Word-game prompts can ignore the given word, e.g. "gift card" counts as "card".
+    const cands = [n];
+    if (p.strip) {
+      const w = norm(p.strip);
+      const s = n.replace(new RegExp(`^${w}s? `), "").replace(new RegExp(` ${w}s?$`), "").trim();
+      if (s && s !== n) cands.push(s);
+    }
+    const list = answerIndex(p);
+    const hit = (x, fuzzy) => (fuzzy ? { tier: x.tier, display: x.display, fuzzy: true } : { tier: x.tier, display: x.display });
+    const cvs = cands.map((c) => vars(c));
+    // 1. Exact (literal first, then singular/plural/spacing variants).
+    for (const c of cands) { const x = list.find((e) => e.n === c); if (x) return hit(x); }
+    for (const v of cvs) { const x = list.find((e) => [...v].some((t) => e.vars.has(t))); if (x) return hit(x); }
+    // 2. Surname only: "Carey" -> listed "Mariah Carey", but only when no other answer uses that word.
+    for (let i = 0; i < cands.length; i++) {
+      if (cands[i].includes(" ") || cands[i].length < 4) continue;
+      const v = cvs[i];
+      const owners = new Set(list.filter((e) => e.words.some((w) => v.has(w))).map((e) => e.display));
+      if (owners.size !== 1) continue;
+      const x = list.find((e) => e.words.length >= 2 && e.words.length <= 3 && v.has(e.words[e.words.length - 1]));
+      if (x) return hit(x);
+    }
+    // 3. Longer input containing a listed answer as whole words: "the movie Elf", "Mariah Carey" -> Mariah.
+    let best = null;
+    for (const c of cands) {
+      const cw = c.split(" ");
+      if (cw.length < 2 || cw.length > 9 || /\b(not|never|no|isnt|dont|without)\b/.test(c)) continue;
+      const padded = " " + c + " ";
+      for (const x of list) {
+        if (cw.length - x.words.length > 6) continue;
+        const t = [...x.vars].filter((s) => s.length >= 3 && padded.includes(" " + s + " ")).sort((a, b) => b.length - a.length)[0];
+        if (!t) continue;
+        if (!best || t.length > best.len) best = { x, len: t.length };
+      }
+    }
+    if (best) return hit(best.x);
+    // 4. Typos: 1 edit for 4-6 chars, 2 for 7-11, 3 for 12+; never for answers under 4 chars. Swaps count as one edit.
+    let fz = null, fzD = Infinity;
+    for (const v of cvs) {
+      for (const x of list) {
+        for (const t of x.vars) {
+          const allow = t.length >= 12 ? 3 : t.length >= 7 ? 2 : t.length >= 4 ? 1 : 0;
+          if (!allow) continue;
+          for (const s of v) {
+            if (Math.abs(s.length - t.length) > allow) continue;
+            if (t.length <= 6 && s[0] !== t[0]) continue;
+            const d = lev(s, t);
+            if (d > allow) continue;
+            if (d < fzD || (d === fzD && fz && fz.tier === "trap" && x.tier !== "trap")) { fz = x; fzD = d; }
+          }
+        }
+      }
+    }
+    // A close-but-not-exact match is returned as "fuzzy" so the game can ask "Did you mean…?"
+    return fz ? hit(fz, true) : { tier: "miss", display: null };
+  }
+
+  // =====================================================================
+  // Dates & prompt selection
+  // =====================================================================
+  function todayParts() { const d = new Date(); return [d.getFullYear(), d.getMonth(), d.getDate()]; }
+  function epochUTC() { const [y, m, d] = CONFIG.epoch.split("-").map(Number); return Date.UTC(y, m - 1, d); }
+  function dayNumber() {
+    const [y, m, d] = todayParts();
+    return Math.round((Date.UTC(y, m, d) - epochUTC()) / 864e5) + 1;   // 0 or below = before launch
+  }
+  function dayLabel(day) { return day >= 1 ? `#${day}` : "Preview"; }
+  function dayDate(day) {
+    return new Date(epochUTC() + (day - 1) * 864e5).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
+  }
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6d2b79f5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function shuffledIdx(n, rand) {
+    const arr = Array.from({ length: n }, (_, i) => i);
+    for (let i = n - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; }
+    return arr;
+  }
+
+  // Each run is mostly general Christmas prompts (5 of 7) plus 2 from the rest of the pool
+  // (niche Christmas trivia, word games and everyday categories).
+  const CORE_PER_RUN = 5;
+  const CORE_IDS = new Set([]);
+  const FEATURED = {};
+  const RESET = {};
+  const isCore = (p) => !!p.core || CORE_IDS.has(p.id);
+  let pools = null;
+  function getPools() {
+    // Prompts flagged "core" lead each run; with no flags (or too few) every prompt is in one big pool.
+    if (!pools) {
+      const core = PROMPTS.filter(isCore);
+      pools = core.length >= CORE_PER_RUN ? { core, other: PROMPTS.filter((p) => !isCore(p) && p.broad) } : { core: PROMPTS.slice(), other: [] };
+    }
+    return pools;
+  }
+
+  // Walk through seeded shuffles of a pool so nothing repeats until the whole pool has been used.
+  const cycleCache = new Map();
+  function pickCycle(pool, start, count, seed, seen, out) {
+    const N = pool.length;
+    let pos = start, added = 0, guard = 0;
+    while (N && added < count && guard < N * 3) {
+      const cycle = Math.floor(pos / N), ck = seed + ":" + cycle;
+      if (!cycleCache.has(ck)) cycleCache.set(ck, shuffledIdx(N, mulberry32(seed + cycle * 7919)));
+      const p = pool[cycleCache.get(ck)[((pos % N) + N) % N]];
+      if (!seen.has(p.id)) { seen.add(p.id); out.push(p); added++; }
+      pos++; guard++;
+    }
+  }
+
+  function dailyPrompts(day) {
+    if (FEATURED[day]) { const f = FEATURED[day].map((id) => PROMPTS.find((p) => p.id === id)).filter(Boolean); if (f.length === CONFIG.promptsPerDive) return f; }
+    const { core, other } = getPools();
+    const nCore = Math.min(CORE_PER_RUN, core.length), nOther = CONFIG.promptsPerDive - nCore;
+    const out = [], seen = new Set();
+    pickCycle(core, (day - 1) * nCore, nCore, 0xc4115, seen, out);
+    pickCycle(other, (day - 1) * nOther, nOther, 0x5eed1, seen, out);
+    return shuffledIdx(out.length, mulberry32(0xabc + day * 31)).map((i) => out[i]);   // mix the order
+  }
+
+  let recentUnlimited = [];
+  function randomPrompts() {
+    const { core, other } = getPools();
+    const pick = (pool, n) => {
+      const order = shuffledIdx(pool.length, Math.random).map((i) => pool[i]);
+      return order.filter((p) => !recentUnlimited.includes(p.id)).concat(order.filter((p) => recentUnlimited.includes(p.id))).slice(0, n);
+    };
+    const nCore = Math.min(CORE_PER_RUN, core.length);
+    const picked = pick(core, nCore).concat(pick(other, CONFIG.promptsPerDive - nCore));
+    const mixed = shuffledIdx(picked.length, Math.random).map((i) => picked[i]);
+    recentUnlimited = mixed.map((p) => p.id);
+    return mixed;
+  }
+
+  // =====================================================================
+  // Unlock / payments
+  // =====================================================================
+  const ONLINE = /^https?:$/.test(location.protocol);
+  const LOCAL = !ONLINE || ["localhost", "127.0.0.1"].includes(location.hostname);
+
+  function getToken() { return store.get("unlockToken", null); }
+  function isUnlocked() { const t = getToken(); return !!t && (t !== "dev" || LOCAL); }
+
+  async function api(path, opts) {
+    const r = await fetch(CONFIG.apiBase + path, opts);
+    let j = {};
+    try { j = await r.json(); } catch (e) { /* not JSON */ }
+    if (!r.ok) { const err = new Error(j.error || `HTTP ${r.status}`); err.status = r.status; throw err; }
+    return j;
+  }
+  function cleanUrl() { try { history.replaceState(null, "", location.pathname); } catch (e) { /* ignore */ } }
+
+  function unlockedNow(msg) {
+    track("unlock");
+    Sfx.play("unlock");
+    toast(msg);
+    renderMenu();
+  }
+
+  async function handleCheckoutReturn() {
+    const sid = new URLSearchParams(location.search).get("session_id");
+    if (!sid) return;
+    cleanUrl();
+    try {
+      const { token } = await api("/api/unlock?game=drillion&session_id=" + encodeURIComponent(sid));
+      store.set("unlockToken", token);
+      unlockedNow("Drillion Pass active. Thank you!");
+    } catch (e) {
+      toast("Couldn't confirm the payment yet. Try “Restore purchase”.");
+    }
+  }
+
+  async function reverifyToken() {
+    const t = getToken();
+    if (!t || t === "dev" || !ONLINE) return;
+    try {
+      const r = await api("/api/unlock?game=drillion&token=" + encodeURIComponent(t));
+      if (r.valid === false) { store.set("unlockToken", null); renderMenu(); }
+    } catch (e) { /* network/API missing: keep the unlock */ }
+  }
+
+  async function buy() {
+    if (CONFIG.paymentLink) { location.href = CONFIG.paymentLink; return; }   // Stripe Payment Link; it should redirect back with ?session_id={CHECKOUT_SESSION_ID}
+    toast("The Drillion Pass opens soon");
+  }
+
+  async function restore(e) {
+    e.preventDefault();
+    const email = $("#restore-email").value.trim();
+    if (!email) return;
+    const btn = $("#btn-restore");
+    btn.disabled = true;
+    try {
+      const { token } = await api("/api/restore?game=drillion", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }),
+      });
+      store.set("unlockToken", token);
+      $("#dlg-paywall").close();
+      unlockedNow("Pass restored");
+    } catch (err) {
+      toast(err.status === 404 ? "No purchase found for that email." : "Couldn't restore right now.");
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // =====================================================================
+  // Player comparison ("better than X% of today's players") via Supabase
+  // =====================================================================
+  function cloud() {
+    const c = window.CHRILLION_ONLINE || {};
+    return c.supabaseUrl && c.supabaseAnonKey ? { url: c.supabaseUrl.replace(/\/+$/, ""), key: c.supabaseAnonKey } : null;
+  }
+
+  async function submitScore(day, score) {
+    const c = cloud();
+    if (!c || day < 1 || store.get("submitted:" + day, false)) return;
+    try {
+      const r = await fetch(`${c.url}/rest/v1/daily_scores`, {
+        method: "POST",
+        headers: { apikey: c.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ day: day + DAY_OFFSET, score, player: playerId() }),
+      });
+      if (r.ok || r.status === 409) store.set("submitted:" + day, true);
+    } catch (e) { /* offline: try again next time results are shown */ }
+  }
+
+  async function fetchHistogram(day) {
+    const c = cloud();
+    const r = await fetch(`${c.url}/rest/v1/rpc/daily_histogram`, {
+      method: "POST",
+      headers: { apikey: c.key, "Content-Type": "application/json" },
+      body: JSON.stringify({ p_day: day + DAY_OFFSET }),
+    });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    return (await r.json()).map((row) => ({ bucket: Number(row.bucket), n: Number(row.n) }));
+  }
+
+  // =====================================================================
+  // Screens & home
+  // =====================================================================
+  let state = null;   // { mode: daily|archive|unlimited, day, prompts, i, results, timer, deadline, answered }
+
+  function total(results) { return results.reduce((s, r) => s + r.pts, 0); }
+  function grid(results) { return results.map((r) => TIERS[r.tier].emoji).join(""); }
+
+  function showScreen(id) {
+    $$(".screen").forEach((s) => { s.hidden = s.id !== id; });
+    $("#appbar").hidden = id === "game";
+    window.scrollTo(0, 0);
+    if (id === "menu") { renderMenu(); drawHero(); }
+    if (window.Fx && id !== "game" && id !== "summary") window.Fx.clear();
+    if (window.Scene && id !== "game") window.Scene.stop();
+    if (window.Title && id !== "menu") window.Title.stop();
+    if (window.BgScene) window.BgScene.setMood(id === "game" ? "game" : id === "summary" ? "summary" : "menu");
+    if (id !== "online" && window.DrillionOnlineUI && window.DrillionOnlineUI.isOpen()) window.DrillionOnlineUI.leave();
+  }
+
+  const certNo = (n) => "#" + Math.max(0, n);
+  function marketText() {
+    const day = dayNumber();
+    return day >= 1 ? `Check-up ${certNo(day)} · surgery open` : "Waiting room · opens soon";
+  }
+
+  function loadStats() {
+    return Object.assign(
+      { played: 0, totalPts: 0, best: 0, streak: 0, maxStreak: 0, lastDay: 0, miracles: 0, unlimitedPlayed: 0, unlimitedBest: 0 },
+      store.get("stats", {})
+    );
+  }
+  function currentStreak() { const s = loadStats(); return s.lastDay >= dayNumber() - 1 ? s.streak : 0; }
+
+  function rating(score) {
+    const pct = score / MAX_SCORE;
+    if (pct >= 0.7) return "Golden Crown";
+    if (pct >= 0.5) return "Consultant Material";
+    if (pct >= 0.3) return "Safe Pair of Hands";
+    if (pct >= 0.15) return "Needs a Scale & Polish";
+    return "Brace Yourself";
+  }
+
+  // ---------- career ladder (lifetime, by Daily Check-ups finished) + streak seals ----------
+  const CAREER = [[0, "Waiting Room"], [1, "Dental Student"], [3, "Foundation Dentist"], [7, "Associate"], [14, "Specialist Trainee"], [30, "Specialist"], [60, "Consultant"], [100, "Professor"]];
+  const SEALS = [[3, "Amalgam Streak"], [7, "Composite Streak"], [14, "Porcelain Streak"], [30, "Gold Crown Streak"], [60, "Diamond Streak"], [100, "Drillion Streak"]];
+  function careerInfo() {
+    const n = loadStats().played;
+    let i = 0;
+    CAREER.forEach((c, k) => { if (n >= c[0]) i = k; });
+    const next = CAREER[i + 1];
+    return { title: CAREER[i][1], next: next ? { title: next[1], left: next[0] - n } : null, seals: store.get("seals", []) };
+  }
+  // A different flavour every weekday. Pure copy: scoring never changes.
+  const TWISTS = [
+    ["Sweet-Tooth Sunday", "Slow Sunday. Dig deeper than the first thing in your head."],
+    ["Molar Monday", "Grind through it. The back-of-the-mouth answers pay."],
+    ["Textbook Tuesday", "Somewhere in chapter 12 is the answer nobody else gives."],
+    ["Wisdom Wednesday", "Wisdom teeth come in late. So do the best answers."],
+    ["Throwback Thursday", "Old-school dentistry. Go vintage."],
+    ["Floss Friday", "Get into the gaps everyone else misses."],
+    ["Root Canal Saturday", "Go deep. Then go deeper."],
+  ];
+  const twist = () => TWISTS[new Date().getDay()];
+  // Memorable run titles: the first one that fits replaces the plain rating.
+  function runTitle(results, score) {
+    const c = (t) => results.filter((r) => r.tier === t).length;
+    if (c("miracle") >= 3) return "Tooth Whisperer";
+    if (c("miracle") >= 2) return "Golden Drill";
+    if (c("trap") >= 3) return "Pulled the Wrong Tooth";
+    if (results.length && results.every((r) => r.tier === "t10" || r.tier === "timeout" || r.tier === "miss")) return "First-Year Fresher";
+    if (c("timeout") >= 3) return "Still Under Sedation";
+    if (c("miracle") === 1 && score < 300) return "One Lucky Extraction";
+    return rating(score);
+  }
+
+  let fvExpanded = false;
+  function hasCompletedRun() { const s = loadStats(); return (s.played || 0) > 0 || (s.unlimitedPlayed || 0) > 0; }
+  function renderMenu() {
+    const firstTime = !hasCompletedRun();
+    const collapse = false;   // every home button stays visible, even on a first visit
+    $("#menu").classList.toggle("fv", collapse);
+    $("#fv-hint").hidden = !firstTime;
+    $("#btn-play-fv").hidden = !collapse;
+    $("#btn-fv-more").hidden = !collapse;
+    $("#btn-account").hidden = firstTime;
+    const day = dayNumber();
+    const saved = store.get(dayKey(day), null);
+    const played = saved && saved.done;
+    const unlocked = isUnlocked();
+    const streak = currentStreak();
+    const pastDays = Math.max(0, day - 1);
+
+    $("#hero-eyebrow").textContent = day >= 1 ? `Daily Check-up ${certNo(day)}` : "Waiting-room preview";
+    $("#hero-sub").textContent = played
+      ? `You scored ${total(saved.results)} of ${MAX_SCORE}: ${rating(total(saved.results))}.`
+      : `${twist()[0]}: ${twist()[1]}`;
+    const ci = careerInfo();
+    $("#career").innerHTML = `<b>${esc(ci.title)}</b>` + (ci.next ? ` · ${ci.next.left} more Check-up${ci.next.left === 1 ? "" : "s"} to ${esc(ci.next.title)}` : " · top of the ladder") +
+      (ci.seals.length ? `<span class="seals">${ci.seals.map((n) => `<i title="${esc(n)}">${Spr ? Spr.svg("seal", 18) : ""}</i>`).join("")}</span>` : "");
+    $("#daily-sub").textContent = played ? "Stamped paid · see your results" : streak > 0 ? `Keep your ${streak}-day streak alive!` : "Same 7 for everyone";
+    renderTree($("#home-tree"), true);
+    const badge = $("#streak-badge");
+    badge.hidden = streak < 1;
+    badge.innerHTML = (Spr ? Spr.svg("flame", 14) : "") + `<span>${streak}</span>`;
+
+    $("#unl-sub").textContent = unlocked ? "Play as many as you like" : freeRunLeft() ? "1 free run on us" : "Pass holders only";
+    $("#arch-sub").textContent = pastDays ? `${pastDays} past session${pastDays === 1 ? "" : "s"}` : "Opens tomorrow";
+    const s = loadStats();
+    $("#stats-sub").textContent = s.played ? `Best ${s.best} · streak ${streak}` : "Streaks & records";
+    $("#mkt-status").textContent = marketText();
+    $("#cert-no").textContent = day >= 1 ? "Appointment card " + certNo(day) : "Appointment card · Preview";
+
+    const acct = window.Account && window.Account.user();
+    $("#btn-account").lastChild.textContent = acct ? " Signed in · streak saved" : " Sign in to save your streak";
+    $("#sl-acct").textContent = acct ? "Signed in" : "Save your streak";
+    const top = $("#btn-unlock-top");
+    top.hidden = unlocked || firstTime;
+    renderSheet();
+  }
+
+  // ---------- menu sheet ----------
+  function renderSheet() {
+    const unlocked = isUnlocked();
+    const day = dayNumber();
+    const card = $("#sheet-supporter");
+    card.classList.toggle("is-supporter", unlocked);
+    $("#sup-title").textContent = unlocked ? "Drillion Pass · active" : "Get the Drillion Pass";
+    $("#sup-sub").textContent = unlocked
+      ? "Unlimited runs and the full archive are unlocked. Thank you!"
+      : `Every past check-up + endless fresh runs · ${CONFIG.price} once`;
+    $("#sl-daily").textContent = day >= 1 ? certNo(day) : "Preview";
+    $("#sl-unl").textContent = unlocked ? "Unlocked ∞" : freeRunLeft() ? "1 free run" : "Pass holders";
+    $("#sl-archive").textContent = day > 1 ? `${day - 1} past session${day - 1 === 1 ? "" : "s"}` : "Every past check-up";
+    $("#tg-sfx").setAttribute("aria-pressed", String(Sfx.isSfx()));
+    $("#tg-music").setAttribute("aria-pressed", String(Sfx.isMusic()));
+    $("#btn-sfx").setAttribute("aria-pressed", String(Sfx.isSfx()));
+    $("#btn-music").setAttribute("aria-pressed", String(Sfx.isMusic()));
+    $("#sheet-foot").textContent = `Drillion · ${marketText()}`;
+  }
+  function openSheet() { renderSheet(); $("#sheet").hidden = false; document.body.classList.add("sheet-open"); Sfx.play("open"); $("#btn-sheet-close").focus(); }
+  function closeSheet() { if ($("#sheet").hidden) return; $("#sheet").hidden = true; document.body.classList.remove("sheet-open"); Sfx.play("close"); }
+
+  function toggleSfx() { Sfx.setSfx(!Sfx.isSfx()); renderSheet(); if (Sfx.isSfx()) Sfx.play("click"); }
+  function toggleMusic() { Sfx.setMusic(!Sfx.isMusic()); renderSheet(); }
+
+  function go(where) {
+    closeSheet();
+    ({
+      daily: startDaily,
+      online: openOnline,
+      unlimited: startUnlimited,
+      archive: openArchive,
+      stats: openStats,
+      how: openHow,
+      faq: openFaq,
+      feedback: () => openFeedback(),
+      account: openAccount,
+      more: openMoreGames,
+      privacy: openPrivacy,
+    }[where] || (() => {}))();
+  }
+
+  function openOnline() {
+    if (window.DrillionOnlineUI) { showScreen("online"); window.DrillionOnlineUI.open(); }
+    else toast("Online play is loading… try again in a moment.");
+  }
+
+  // =====================================================================
+  // Runs
+  // =====================================================================
+  function storeKey() { return state.mode === "archive" ? "archive:" + state.day : dayKey(state.day); }
+  // A day listed in RESET gets a fresh save slot, so everyone replays it (used when a day's prompts are swapped).
+  function dayKey(day) { return "daily:" + day + (RESET[day] ? ":" + RESET[day] : ""); }
+
+  function saveProgress(extra) {
+    store.set(storeKey(), Object.assign({
+      results: state.results, started: state.i + 1, done: false, ids: state.prompts.map((p) => p.id),
+    }, extra));
+  }
+
+  // Use the prompts this player actually started with, so a site update mid-day can't swap them.
+  function promptsFromIds(ids) {
+    if (!Array.isArray(ids)) return null;
+    const list = ids.map((id) => PROMPTS.find((p) => p.id === id));
+    return list.every(Boolean) ? list : null;
+  }
+
+  function startStored(mode, day) {
+    state = { mode, day, prompts: null, i: 0, results: [] };
+    const saved = store.get(storeKey(), null);
+    state.prompts = (saved && promptsFromIds(saved.ids)) || dailyPrompts(day);
+    if (saved) {
+      state.results = saved.results || [];
+      if (saved.done) { showSummary(); return; }
+      // Reloading or leaving mid-prompt counts that prompt as out of time.
+      if ((saved.started || 0) > state.results.length && state.results.length < state.prompts.length) {
+        const p = state.prompts[state.results.length];
+        state.results.push({ id: p.id, input: "", tier: "timeout", matched: null, pts: 0 });
+      }
+      state.i = state.results.length;
+    }
+    if (state.i >= state.prompts.length) { completeDive(); return; }
+    if (window.Fx) window.Fx.clear();
+    showScreen("game");
+    startPrompt();
+  }
+
+  function startDaily() { track("run_start", { mode: "daily" }); startStored("daily", dayNumber()); }
+
+  function startArchive(day) {
+    if (!isUnlocked()) { openPaywall(); return; }
+    const daily = store.get(dayKey(day), null);
+    if (daily && daily.done) {   // already played that day live: just show it
+      state = { mode: "daily", day, prompts: promptsFromIds(daily.ids) || dailyPrompts(day), i: 0, results: daily.results };
+      showSummary();
+      return;
+    }
+    startStored("archive", day);
+  }
+
+  function freeRunLeft() { return !isUnlocked() && !store.get("freeUnl", false); }
+  function startUnlimited() {
+    if (!isUnlocked()) {
+      if (!freeRunLeft()) { openPaywall(); return; }
+      store.set("freeUnl", true);
+      toast("Your free Unlimited Run, on the house");
+    }
+    track("run_start", { mode: "unlimited" });
+    state = { mode: "unlimited", prompts: randomPrompts(), i: 0, results: [] };
+    if (window.Fx) window.Fx.clear();
+    showScreen("game");
+    startPrompt();
+  }
+
+  // ---------- prompt loop ----------
+  function renderDots() {
+    const ol = $("#dots");
+    ol.innerHTML = "";
+    state.prompts.forEach((_, idx) => {
+      const li = document.createElement("li");
+      const r = state.results[idx];
+      if (r) li.innerHTML = tierSprite(r.tier, 16);
+      if (idx === state.i && !state.answered) li.classList.add("current");
+      ol.appendChild(li);
+    });
+    { const sc = $("#score"), v = total(state.results); if (sc.textContent !== String(v) && v > 0) { sc.parentNode.classList.remove("bump"); void sc.parentNode.offsetWidth; sc.parentNode.classList.add("bump"); } sc.textContent = v; }
+  }
+
+  function startPrompt() {
+    const p = state.prompts[state.i];
+    state.answered = false;
+    state.lastSec = null;
+    $("#prompt-num").textContent = `Prompt ${state.i + 1} of ${state.prompts.length}`;
+    // Words drop in one by one.
+    $("#prompt-text").innerHTML = p.text.split(" ").map((w, i) => `<span class="pw" style="--i:${i}">${esc(w)}</span>`).join(" ");
+    const card = $(".prompt-card");
+    card.classList.remove("card-in"); void card.offsetWidth; card.classList.add("card-in");
+    $("#feedback").hidden = true;
+    $("#answer-form").classList.remove("shake");   // only shake on an invalid answer
+    $("#answer-form").hidden = false;
+    say(pickLine(SAY.start));
+    if (window.Journey) window.Journey.set(total(state.results), false);
+    $("#answer-msg").textContent = "";
+    state.pending = null;
+    const input = $("#answer");
+    input.value = "";
+    input.disabled = false;
+    input.focus();
+    renderDots();
+    $("#game").classList.remove("revealing");   // presents from earlier answers stay piled up
+    if (window.Scene) window.Scene.play(state.i);   // a dental scene plays while you think
+    Sfx.play("start");
+    Sfx.duck(true);
+
+    if (state.mode !== "unlimited") saveProgress();
+
+    state.deadline = performance.now() + CONFIG.secondsPerPrompt * 1000;
+    clearInterval(state.timer);
+    tick();
+    state.timer = setInterval(tick, 100);
+  }
+
+  function tick() {
+    const totalMs = CONFIG.secondsPerPrompt * 1000;
+    const left = Math.max(0, state.deadline - performance.now());
+    const sec = Math.ceil(left / 1000);
+    $("#timer-fill").style.transform = `scaleX(${left / totalMs})`;
+    $("#timer-sec").textContent = sec;
+    $(".timer").classList.toggle("urgent", left <= 5000);
+    if (sec !== state.lastSec) {
+      if (sec <= 5 && sec >= 1 && state.lastSec !== null) Sfx.play("tick", sec);
+      if (sec === 15) say(pickLine(SAY.mid));
+      if (sec === 6) say(pickLine(SAY.late));
+      state.lastSec = sec;
+    }
+    if (left <= 0) finishPrompt(null, true);
+  }
+
+  // Answers that aren't on the list don't count: shake the bar and let the player try again.
+  function rejectAnswer(text, message) {
+    $("#answer-msg").textContent = message || `“${text.trim()}” isn't on the list. Try again!`;
+    const f = $("#answer-form");
+    f.classList.remove("shake");
+    void f.offsetWidth;            // restart the animation
+    f.classList.add("shake");
+    setTimeout(() => f.classList.remove("shake"), 420);
+    say(pickLine(SAY.nope));
+    Sfx.play("nope");
+    $("#answer").select();
+  }
+
+  // Close spelling: ask before counting it.
+  function suggestAnswer(text, r) {
+    state.pending = { text, r };
+    const msg = $("#answer-msg");
+    msg.innerHTML = `Did you mean <b>${esc(r.display)}</b>? <button type="button" class="dym-btn" id="dym-yes">Yes</button> <button type="button" class="dym-btn dym-no" id="dym-no">No</button>`;
+    Sfx.play("open");
+    $("#dym-yes").addEventListener("click", () => {
+      const pend = state.pending;
+      state.pending = null;
+      if (!pend || state.answered) return;
+      Sfx.play("submit");
+      finishPrompt(pend.text, false, pend.r);
+    });
+    $("#dym-no").addEventListener("click", () => {
+      state.pending = null;
+      rejectAnswer(text, "Okay! That one isn't on the list. Try another.");
+    });
+  }
+
+  function finishPrompt(raw, timedOut, judged) {
+    if (!state || state.answered) return;
+    state.answered = true;
+    clearInterval(state.timer);
+    const typed = $("#answer").value.trim();
+    $("#answer").disabled = true;
+    Sfx.duck(false);
+
+    const p = state.prompts[state.i];
+    const r = timedOut ? { tier: "timeout", display: null } : (judged || judge(p, raw));
+    const res = { id: p.id, input: timedOut ? typed : (raw || "").trim(), tier: r.tier, matched: r.display, pts: TIERS[r.tier].pts };
+    state.results.push(res);
+    if (state.mode !== "unlimited") saveProgress();
+    Sfx.play(r.tier);
+    $("#game").classList.add("revealing");      // hide the prompt so the coins have the screen to themselves
+    if (window.Scene) window.Scene.stop();
+    if (window.Fx) window.Fx.celebrate(r.tier);
+    if (window.BgScene && BgScene.react) BgScene.react(r.tier === "miracle" || r.tier === "t75" || r.tier === "t50");
+    renderDots();
+    if (window.Journey) window.Journey.set(total(state.results));
+    renderFeedback(p, res);
+  }
+
+  // ---------- portfolio of share certificates + "what's next" (the reason to come back tomorrow) ----------
+  function renderTree(el, compact, newDay) {
+    const orn = store.get("certs", []);
+    if (compact) {
+      $("#tree-card").hidden = !window.AdventTree || !orn.length;
+      $("#tree-cap").textContent = `Your dental chart · ${orn.length} of 32 teeth`;
+    }
+    if (window.AdventTree && el && (orn.length || !compact)) window.AdventTree.render(el, orn, { compact, newDay });
+  }
+  function renderNext() {
+    const daily = state.mode === "daily";
+    const streak = currentStreak();
+    $("#next-card").hidden = !window.AdventTree && !daily;
+    renderTree($("#next-tree"), false, state.fresh ? state.newOrn : null);
+    $("#next-streak").textContent = streak ? `${streak}-day streak` : "";
+    $("#next-msg").textContent = daily
+      ? (state.newOrn ? "New tooth filled! Come back tomorrow for another one" : "Come back tomorrow to fill a new tooth") + (streak ? ` and make your streak ${streak + 1}.` : ".")
+      : "Every Daily Check-up fills a tooth on your chart. Don't miss tomorrow's!";
+    state.newOrn = null;
+    const b = $("#btn-next-unl");
+    const free = freeRunLeft();
+    b.hidden = !(isUnlocked() || free);
+    b.textContent = free ? "Play your FREE Unlimited run" : "Play another run";
+  }
+
+  // The Broker chats while you think.
+  const SAY = {
+    start: ["Open wide… and think rare.", "The obvious answer barely pays!", "Skip the first thing in your head!", "Go deep, like a root canal.", "Think like the consultant, not the fresher.", "Rare answers = more teeth!"],
+    mid: ["Tick tock, the patient's waiting!", "Still thinking? Probe a little deeper!", "Halfway through the appointment!", "Spit and try again…"],
+    late: ["Appointment's nearly over!", "Any answer beats no answer!", "Quick, before the anaesthetic wears off!"],
+    nope: ["That's not in any textbook I've read.", "Bold. Also not a real answer.", "Wrong quadrant! Try again.", "Hmm, not on the chart. Another!", "Close… but not quite!"],
+  };
+  const pickLine = (a) => a[Math.floor(Math.random() * a.length)];
+  function say(text) {
+    const b = $("#say-text");
+    if (!b) return;
+    b.textContent = text;
+    const w = b.parentElement;
+    w.classList.remove("say-pop"); void w.offsetWidth; w.classList.add("say-pop");
+  }
+
+  // The Broker reacts to every answer.
+  const REACTIONS = {
+    miracle: ["ONE IN A DRILLION! Gold crown!", "Nobody gets that one. Nobody.", "The professor just stood up and clapped.", "Absolute golden tooth.", "That's going in the textbook."],
+    t75: ["Big brain pick!", "Ooh, a deep cut. Respect.", "Professor-level stuff.", "Locked in!", "Straight from the journal club."],
+    t50: ["Nice, specialist energy!", "Solid pick.", "Clean margins on that one.", "Textbook. The good kind.", "Good call."],
+    t25: ["Safe and steady. Like a good filling.", "Respect the classics.", "A crowd favourite!", "Bread-and-butter dentistry."],
+    trap: ["Wrong tooth!", "Too clever… everyone tries that one.", "Ouch. That was the trap.", "Oof, pulled the wrong one!"],
+    t10: ["Fresher answer… but it counts!", "Too basic! Go deeper next time.", "Everyone's first answer.", "Valid. Very, very first-year."],
+    timeout: ["Appointment over!", "The patient left the chair.", "Oof. Time's up!", "Still numb?"],
+    miss: ["Hmm, that's not listed."],
+  };
+  function react(tier, res) {
+    let lines = REACTIONS[tier] || REACTIONS.miss;
+    const a = res && res.matched;
+    if (tier === "trap" && a) lines = lines.concat([`"${a}"? Half the year group said that.`, `"${a}". Right mouth, wrong tooth.`, `"${a}" looked smart. It was bait.`]);
+    if (tier === "t10" && a) lines = lines.concat([`"${a}". Bold. Brave. Extremely common.`, `Somebody in your class said "${a}" too.`]);
+    if (tier === "miracle" && a) lines = [`"${a}"?! Nobody else found that one.`, `"${a}" is the one. Gold crown for you.`, "ONE IN A DRILLION! Tell your friends. Slowly."];
+    const bubble = $("#fb-bubble"), elf = $("#fb-elf");
+    elf.innerHTML = Spr ? Spr.svg("broker", 48) : "";
+    bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
+    const box = bubble.parentElement;
+    box.classList.remove("talk");
+    void box.offsetWidth;
+    box.classList.add("talk");
+  }
+
+  function renderFeedback(p, res) {
+    const t = TIERS[res.tier];
+    const fb = $("#feedback");
+    $("#answer-form").hidden = true;
+    fb.hidden = false;
+    fb.dataset.tier = res.tier;
+    $("#fb-emoji").innerHTML = tierSprite(res.tier, 56);
+    react(res.tier, res);
+    $("#fb-label").textContent = t.label;
+    $("#fb-points").textContent = `+${t.pts}`;
+
+    let said;
+    if (res.tier === "timeout") said = res.input ? `“${res.input}”` : "No answer this time.";
+    else if (res.tier === "miss") said = `“${res.input}” isn't a valid answer.`;
+    else if (key(res.input) === key(res.matched)) said = `You said “${res.matched}”.`;
+    else said = `You said “${res.input}”, which counts as ${res.matched}.`;
+    $("#fb-said").textContent = said;
+
+    let blurb = "";
+    if (res.tier === "miracle") { track("miracle_hit", { mode: state.mode }); blurb = p.miracleNote || "You found the handpicked best answer!"; }
+    else if (res.tier === "trap") blurb = p.trapNote || "Too clever. Everybody tries that one.";
+    else if (res.tier === "timeout") blurb = "The appointment ended without you.";
+    else if (res.tier === "miss") blurb = "Not on our list. Try a simpler, more common word next time.";
+    else if (t.desc) blurb = t.desc + ". Rarer answers pay more.";
+    $("#fb-blurb").textContent = blurb;
+
+    // The other answers stay secret until the end of the run.
+    $("#fb-best").innerHTML = `<p class="fb-later">Every answer for this prompt is revealed at the end of the run.</p>`;
+
+    const last = state.i >= state.prompts.length - 1;
+    $("#btn-next").textContent = last ? "See results" : "Next →";
+    $("#btn-next").focus();
+  }
+
+  function nextPrompt() {
+    state.i++;
+    if (state.i < state.prompts.length) startPrompt();
+    else completeDive();
+  }
+
+  // ---------- completion ----------
+  function completeDive() {
+    clearInterval(state.timer);
+    Sfx.duck(false);
+    const score = total(state.results);
+    const miracles = state.results.filter((r) => r.tier === "miracle").length;
+    if (state.mode === "daily") {
+      const already = store.get(dayKey(state.day), {});
+      if (!already.done) {
+        saveProgress({ started: state.prompts.length, done: true });
+        const s = loadStats();
+        state.prevBest = s.best; state.prevTitle = careerInfo().title;
+        s.played++;
+        s.totalPts += score;
+        s.best = Math.max(s.best, score);
+        s.streak = s.lastDay === state.day - 1 ? s.streak + 1 : 1;
+        s.maxStreak = Math.max(s.maxStreak, s.streak);
+        { const seals = store.get("seals", []); const m = SEALS.find((x) => x[0] === s.streak); if (m && !seals.includes(m[1])) { seals.push(m[1]); store.set("seals", seals); state.seal = m[1]; } }
+        s.lastDay = state.day;
+        s.miracles += miracles;
+        store.set("stats", s);
+        const orn = store.get("certs", []);
+        if (!orn.some((o) => o.day === state.day)) { orn.push({ day: state.day, kind: window.AdventTree ? window.AdventTree.kindFor(score) : "amalgam" }); store.set("certs", orn); state.newOrn = state.day; }
+      }
+    } else if (state.mode === "archive") {
+      saveProgress({ started: state.prompts.length, done: true });
+    } else {
+      const s = loadStats();
+      state.prevBest = s.unlimitedBest;
+      s.unlimitedPlayed++;
+      s.unlimitedBest = Math.max(s.unlimitedBest, score);
+      s.miracles += miracles;
+      store.set("stats", s);
+    }
+    state.fresh = true;   // play the count-up + fanfare
+    showSummary();
+    if (window.Account) window.Account.push();
+  }
+
+  // ---------- results ----------
+  function modeLabel() {
+    if (state.mode === "daily") return state.day >= 1 ? `Check-up ${certNo(state.day)} closed` : "Preview appointment closed";
+    if (state.mode === "archive") return `Archive · ${certNo(state.day)}`;
+    return "Unlimited appointment";
+  }
+
+  function showSummary() {
+    const score = total(state.results);
+    $("#sum-mode").textContent = modeLabel();
+    $("#sum-max").textContent = `/ ${MAX_SCORE}`;
+    $("#sum-rating").textContent = runTitle(state.results, score);
+    {
+      const bits = [], pb = state.prevBest, ci = careerInfo();
+      if (state.prevTitle && state.prevTitle !== ci.title) bits.push("Promoted to " + ci.title + "!");
+      if (state.seal) bits.push(state.seal + " earned for your " + currentStreak() + "-day streak.");
+      if (pb !== undefined && state.mode !== "archive") {
+        if (!pb) bits.push("First run on the books. Welcome to the floor.");
+        else if (score > pb) bits.push("New personal best! +" + (score - pb) + " over your old " + pb + ".");
+        else if (score === pb) bits.push("You tied your personal best of " + pb + ".");
+        else if (pb - score <= 40) bits.push("Just " + (pb - score) + " short of your best (" + pb + ").");
+      }
+      const co = $("#sum-callout");
+      co.hidden = !bits.length; co.textContent = bits.join(" ");
+    }
+    $("#sum-miles").textContent = state.results.filter((r) => r.tier !== "miss" && r.tier !== "timeout").length + " of 7 teeth treated";
+    $("#recap-score").textContent = `${score} pts`;
+    $("#dist-score").textContent = `You: ${score} pts`;
+    const ms = window.Journey && window.Journey.reached(score);
+    $("#sum-journey").textContent = ms ? `Career level: ${ms.name}` : "Score 50 to make Hygiene Student!";
+    track("run_complete", { mode: state.mode, score });
+    track("run_finish", { mode: state.mode, score });
+    $("#sum-tomorrow").textContent = `Come back tomorrow${state.mode === "daily" ? "" : " for a fresh 7"} · streak ${currentStreak()}`;
+    renderNext();
+    $("#sum-grid").innerHTML = state.results.map((r) => tierSprite(r.tier, 30)).join("");
+    $("#btn-again").hidden = state.mode !== "unlimited";
+    $("#upsell").hidden = isUnlocked();
+    $("#st-streak").textContent = currentStreak();
+    $("#st-mir").textContent = state.results.filter((r) => r.tier === "miracle").length;
+    $("#st-top-k").textContent = state.mode === "unlimited" ? "Best" : "Today";
+    $("#st-top").textContent = state.mode === "unlimited" ? loadStats().unlimitedBest : "—";
+    $("#st-rank").textContent = state.mode === "unlimited" ? "unlimited score" : "";
+
+    // Each prompt opens to show every accepted answer, grouped and colour-coded by tier.
+    const ol = $("#breakdown");
+    ol.innerHTML = state.results.map((r, idx) => {
+      const p = state.prompts[idx];
+      if (!p) return "";
+      const yourKey = r.matched ? key(r.matched) : null;
+      const groups = ["miracle", "t75", "t50", "t25", "trap", "t10"].map((t) => {
+        const entries = t === "miracle" || t === "trap" ? (p[t] ? [p[t]] : []) : (p[t] || []);
+        if (!entries.length) return "";
+        const chips = entries.map((e) => {
+          const name = e.split("|")[0];
+          const you = yourKey && key(name) === yourKey;
+          return `<span class="ans-chip${you ? " is-you" : ""}">${esc(name)}${you ? " <i>YOU</i>" : ""}</span>`;
+        }).join("");
+        return `<div class="ans-group" data-tier="${t}">
+          <div class="ans-head">${tierSprite(t, 16)}<b>${esc(TIERS[t].label)}</b><span>${TIERS[t].pts} pts · ${entries.length}</span></div>
+          <div class="ans-chips">${chips}</div></div>`;
+      }).join("");
+      const yours = r.tier === "timeout" ? (r.input ? `“${esc(r.input)}” · nothing landed` : "Nothing landed") : esc(r.matched || r.input || "—");
+      return `<li data-tier="${esc(r.tier)}"><details class="bd">
+        <summary><span class="bd-emoji">${tierSprite(r.tier, 24)}</span>
+          <span class="bd-mid"><span class="bd-prompt">${esc(p.text)}</span><span class="bd-answer">${yours}</span></span>
+          <span class="bd-pts">${r.pts}</span><span class="bd-caret" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg></span></summary>
+        <div class="ans-groups">${groups}</div>
+        ${p.miracleNote ? `<p class="bd-note"><b>Why ${esc(String(p.miracle).split("|")[0])} wins:</b> ${esc(p.miracleNote)}</p>` : ""}
+        ${p.trapNote ? `<p class="bd-note"><b>Why ${esc(String(p.trap).split("|")[0])} is a trap:</b> ${esc(p.trapNote)}</p>` : ""}
+      </details></li>`;
+    }).join("");
+
+    showScreen("summary");
+    renderRecap(state.results);
+    renderComparison(score);
+    renderVs(score);
+
+    const fresh = state.fresh;
+    state.fresh = false;
+    countUp(score, fresh);
+  }
+
+  function countUp(score, animate) {
+    const el = $("#sum-score");
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (animate && window.Fx) window.Fx.fadeOut();
+    if (!animate || reduce || score === 0) {
+      el.textContent = score;
+      if (animate) Sfx.play("fanfare", score / MAX_SCORE);
+      return;
+    }
+    const dur = 1100 + Math.min(score, 500);
+    const t0 = performance.now();
+    let lastTick = 0, done = false;
+    // Safety net: if animation frames are paused (background tab), still show the final score.
+    setTimeout(() => { if (!done) { done = true; el.textContent = score; } }, dur + 400);
+    const step = (t) => {
+      if (done) return;
+      const p = Math.min(1, (t - t0) / dur);
+      if (p >= 1) done = true;
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(score * eased);
+      if (t - lastTick > 55 && p < 1) { Sfx.play("count", eased); lastTick = t; }
+      if (p < 1) requestAnimationFrame(step);
+      else Sfx.play("fanfare", score / MAX_SCORE);
+    };
+    requestAnimationFrame(step);
+  }
+
+  // Per-prompt column chart ("Gift log").
+  function renderRecap(results) {
+    const W = 340, H = 170, top = 30, base = 128, gap = 10;
+    const n = Math.max(results.length, 1);
+    const colW = (W - gap * (n + 1)) / n;
+    let s = `<line x1="0" y1="${base}" x2="${W}" y2="${base}" stroke="#1b2a24" stroke-width="1.5"/>`;
+    [25, 50, 75, 100].forEach((v) => {
+      const y = base - (v / 100) * (base - top);
+      s += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="rgba(27,42,36,.16)" stroke-dasharray="2 4"/>`;
+    });
+    results.forEach((r, i) => {
+      const x = gap + i * (colW + gap);
+      const h = Math.max(3, (r.pts / 100) * (base - top));
+      const y = base - h;
+      const wick = Math.min(10, 3 + h * 0.15);
+      s += `<line x1="${x + colW / 2}" y1="${y - wick}" x2="${x + colW / 2}" y2="${base}" stroke="${TIER_COLORS[r.tier] === "#ffffff" ? "#1b2a24" : TIER_COLORS[r.tier]}" stroke-width="1.5"/>`;
+      s += `<rect x="${x}" y="${y}" width="${colW}" height="${h}" fill="${TIER_COLORS[r.tier]}" stroke="#1b2a24" stroke-width="1.5"/>`;
+      s += `<text class="chart-val" x="${x + colW / 2}" y="${y - wick - 3}" text-anchor="middle">${r.pts}</text>`;
+      if (Spr) s += Spr.inner(Spr.TIER_SPRITE[r.tier] || "x", x + colW / 2 - 9, base + 6, 18);
+      s += `<text class="chart-axis" x="${x + colW / 2}" y="${base + 36}" text-anchor="middle">${i + 1}</text>`;
+    });
+    $("#recap-chart").innerHTML = s;
+  }
+
+  // Until real player data exists, an estimated bell curve of typical scores (labelled as an estimate).
+  function simulatedHist() {
+    const out = [];
+    for (let b = 0; b < 28; b++) { const c = b * 25 + 12.5; out.push({ bucket: b, n: Math.round(1000 * Math.exp(-((c - 230) ** 2) / (2 * 95 * 95))) }); }
+    return out;
+  }
+  function percentile(hist, score) {
+    const totalN = hist.reduce((a, h) => a + h.n, 0) || 1;
+    const b = Math.min(Math.floor(score / 25), 27);
+    const below = hist.reduce((a, h) => a + (h.bucket < b ? h.n : h.bucket === b ? h.n / 2 : 0), 0);
+    return Math.round((below / totalN) * 100);
+  }
+
+  // The score "slope": how everyone scored, with you marked on the curve.
+  function drawDistribution(score, hist) {
+    const svg = $("#dist-chart");
+    const W = 340, H = 172, padL = 14, padR = 14, top = 30, base = 128;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const h = hist && hist.length ? hist : simulatedHist();
+    const x = (v) => padL + (v / MAX_SCORE) * (W - padL - padR);
+    const pts = [];
+    let maxD = 0;
+    for (let v = 0; v <= MAX_SCORE; v += 5) {
+      let d = 0;
+      h.forEach(({ bucket, n }) => { const c = bucket * 25 + 12.5; d += n * Math.exp(-((v - c) ** 2) / (2 * 40 * 40)); });
+      pts.push([v, d]);
+      maxD = Math.max(maxD, d);
+    }
+    const y = (d) => base - (d / (maxD || 1)) * (base - top);
+    const line = pts.map(([v, d], i) => `${i ? "L" : "M"}${x(v).toFixed(1)},${y(d).toFixed(1)}`).join(" ");
+    let s = `<defs><linearGradient id="distFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1f9d63" stop-opacity=".42"/><stop offset="1" stop-color="#1f9d63" stop-opacity=".03"/></linearGradient></defs>`;
+    for (let g = 1; g <= 3; g++) s += `<line x1="${padL}" y1="${base - g * (base - top) / 3}" x2="${W - padR}" y2="${base - g * (base - top) / 3}" stroke="rgba(27,42,36,.12)" stroke-dasharray="2 4"/>`;
+    s += `<path d="${line} L${x(MAX_SCORE)},${base} L${x(0)},${base} Z" fill="url(#distFill)"/>`;
+    s += `<path d="${line}" fill="none" stroke="#14704a" stroke-width="2.6" stroke-linejoin="round"/>`;
+    s += `<line x1="${padL}" y1="${base}" x2="${W - padR}" y2="${base}" stroke="#1b2a24" stroke-width="1.5"/>`;
+    for (let v = 0; v <= MAX_SCORE; v += 100) {
+      s += `<line x1="${x(v)}" y1="${base}" x2="${x(v)}" y2="${base + 5}" stroke="#1b2a24" stroke-width="1.5"/>`;
+      s += `<text class="chart-axis" x="${x(v)}" y="${base + 19}" text-anchor="middle">${v}</text>`;
+    }
+    // Height of the curve at any score (smooth, for the marker's ride).
+    const yAt = (v) => {
+      const f = Math.max(0, Math.min(pts.length - 1, v / 5)), i0 = Math.floor(f), i1 = Math.min(pts.length - 1, i0 + 1), k = f - i0;
+      return y(pts[i0][1] * (1 - k) + pts[i1][1] * k);
+    };
+    const sx = x(Math.min(score, MAX_SCORE)), sy = yAt(score);
+    s += `<line id="dist-drop" x1="${sx}" y1="${sy}" x2="${sx}" y2="${base}" stroke="#a3262e" stroke-width="1.6" stroke-dasharray="3 3" opacity="0"/>`;
+    // A gold coin rides along the curve to your score.
+    s += `<g id="dist-santa"><circle r="7.5" fill="#d4a017" stroke="#1b2a24" stroke-width="1.6"/><circle r="4" fill="none" stroke="#8a6410" stroke-width="1"/></g>`;
+    s += `<text id="dist-you" class="chart-you" x="${Math.min(W - 52, Math.max(52, sx))}" y="${Math.max(14, sy - 16)}" text-anchor="middle" fill="#a3262e" opacity="0">You · ${score} pts</text>`;
+    svg.innerHTML = s;
+    const paths = svg.querySelectorAll("path");
+    const area = paths[0], curve = paths[1];
+    const santa = $("#dist-santa"), drop = $("#dist-drop"), you = $("#dist-you");
+    const place = (v) => santa.setAttribute("transform", `translate(${x(v).toFixed(1)},${yAt(v).toFixed(1)})`);
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      cancelAnimationFrame(drawDistribution.raf);
+      curve.style.transition = "none";
+      area.style.transition = "none";
+      curve.style.strokeDashoffset = "0";
+      area.style.opacity = "1";
+      place(score);
+      drop.setAttribute("opacity", "1");
+      you.setAttribute("opacity", "1");
+      you.classList.add("pop");
+    };
+    cancelAnimationFrame(drawDistribution.raf);
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { finish(); return; }
+    // Draw the curve in, fade the fill, then Santa rides from 0 to your score.
+    const len = curve.getTotalLength ? curve.getTotalLength() : 900;
+    curve.style.strokeDasharray = len;
+    curve.style.strokeDashoffset = len;
+    area.style.opacity = "0";
+    curve.getBoundingClientRect();
+    curve.style.transition = "stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)";
+    area.style.transition = "opacity 0.9s ease 0.3s";
+    curve.style.strokeDashoffset = "0";
+    area.style.opacity = "1";
+    place(0);
+    const t0 = performance.now(), delay = 450, dur = 1600;
+    const step = () => {
+      if (done) return;
+      const p = Math.max(0, Math.min(1, (performance.now() - t0 - delay) / dur));
+      place(score * (1 - Math.pow(1 - p, 3)));
+      if (p < 1) drawDistribution.raf = requestAnimationFrame(step);
+      else finish();
+    };
+    drawDistribution.raf = requestAnimationFrame(step);
+    setTimeout(finish, delay + dur + 600);   // safety net: the marker always ends up on your score
+  }
+
+  function ordinal(n) {
+    const s = ["th", "st", "nd", "rd"], v = n % 100;
+    return n.toLocaleString() + (s[(v - 20) % 10] || s[v] || s[0]);
+  }
+
+  function setDistText(text, note) {
+    $("#dist-text").textContent = text;
+    $("#dist-note").textContent = note || "";
+  }
+
+  async function renderComparison(score) {
+    const card = $("#dist-card");
+    card.hidden = state.mode === "unlimited";
+    if (card.hidden) return;
+    // Start with the estimated curve; swap in real player data when it's available.
+    drawDistribution(score, null);
+    const estPct = percentile(simulatedHist(), score);
+    const est = `Better than ~${estPct}% of players. ` + (estPct >= 85 ? "Screenshot this and send it to your friends." : estPct >= 50 ? "Not bad. Can your best friend beat you?" : "Your friends will say the obvious thing. Send them the link.");
+    const day = state.day;
+    if (day < 1) { setDistText(est, "Estimated curve. Live player comparison starts with the first Check-up."); $("#st-rank").textContent = "soon"; return; }
+    if (!cloud()) { setDistText(est, "Estimated curve. Live player comparison turns on once the site is online."); $("#st-rank").textContent = "once online"; return; }
+    setDistText(est, "Estimated curve · loading today's players…");
+    try {
+      if (state.mode === "daily") await submitScore(day, score);
+      const hist = await fetchHistogram(day);
+      if (state.day !== day) return;
+      const totalN = hist.reduce((a, b) => a + b.n, 0);
+      if (totalN < CONFIG.minPlayersForCurve) {
+        setDistText(est, `Estimated curve. You're one of the first ${Math.max(totalN, 1)} players${state.mode === "daily" ? " today" : ""}, so check back later!`);
+        return;
+      }
+      drawDistribution(score, hist);
+      const b = Math.min(Math.floor(score / 25), 27);
+      const pct = percentile(hist, score);
+      setDistText(`Better than ${pct}% of ${state.mode === "daily" ? "today's" : "that day's"} players`, `${totalN.toLocaleString()} players so far`);
+      // Rank estimate from the score buckets, Daily Holes style ("Top 29% · ≈62nd of 219").
+      const above = hist.reduce((a, h) => a + (h.bucket > b ? h.n : h.bucket === b ? h.n / 2 : 0), 0);
+      const rank = Math.min(totalN, Math.round(above) + 1);
+      $("#st-top").textContent = `Top ${Math.max(1, Math.ceil((rank / totalN) * 100))}%`;
+      $("#st-rank").textContent = `≈${ordinal(rank)} of ${totalN.toLocaleString()}`;
+    } catch (e) {
+      setDistText(est, "Estimated curve. Couldn't load other players' scores right now.");
+    }
+  }
+
+  // ---------- share ----------
+  const TIER_LETTER = { miracle: "m", t75: "a", t50: "b", t25: "c", trap: "t", t10: "p", miss: "x", timeout: "z" };
+  const LETTER_TIER = Object.fromEntries(Object.entries(TIER_LETTER).map(([k, v]) => [v, k]));
+  // Head-to-head: the link carries your score, the day, and your tier letters; a friend sees "beat N" and a win/lose/tie after their run.
+  const shareUrl = () => {
+    if (!ONLINE) return "";
+    const base = location.origin + location.pathname;
+    if (!state || state.mode === "unlimited" || !(state.day >= 1) || !state.results.length) return base;
+    return `${base}?beat=${total(state.results)}&d=${state.day}&t=${state.results.map((r) => TIER_LETTER[r.tier] || "x").join("")}`;
+  };
+  let challenge = null;
+  function readChallenge() {
+    const q = new URLSearchParams(location.search), beat = parseInt(q.get("beat"), 10), day = parseInt(q.get("d"), 10);
+    if (!(beat >= 0 && beat <= MAX_SCORE) || !(day >= 1)) return;
+    const t = (q.get("t") || "").slice(0, 12).split("").map((c) => LETTER_TIER[c]).filter(Boolean);
+    challenge = { beat, day, tiers: t };
+    const el = $("#challenge");
+    if (el) {
+      const strip = t.length ? `<span class="ch-strip">${t.map((x) => tierSprite(x, 16)).join("")}</span>` : "";
+      el.innerHTML = `<b>A friend scored ${beat}. Can you beat it?</b>${strip}<small>${day === dayNumber() ? "Same 7 prompts today, so play the Daily." : "That was Check-up " + dayLabel(day) + ". Find it in the Archive."}</small>`;
+      el.hidden = false;
+    }
+    try { history.replaceState(null, "", location.pathname); } catch (e) { /* ignore */ }
+  }
+  function renderVs(score) {
+    const el = $("#sum-vs");
+    if (!el) return;
+    const ok = challenge && state.day === challenge.day && state.mode !== "unlimited";
+    el.hidden = !ok;
+    if (!ok) return;
+    const d = score - challenge.beat;
+    el.textContent = d > 0 ? `You beat your friend! ${score} vs ${challenge.beat} (+${d}).` : d < 0 ? `Your friend wins this one: ${challenge.beat} vs your ${score} (${d}). Rematch tomorrow.` : `A tie at ${score}! Great minds think rare.`;
+  }
+  function shareTitle() {
+    return state.mode === "daily" ? `${CONFIG.name} ${state.day >= 1 ? certNo(state.day) : "Preview"}`
+      : state.mode === "archive" ? `${CONFIG.name} ${certNo(state.day)} (archive)` : `${CONFIG.name} Unlimited`;
+  }
+  function shareText(withUrl = true) {
+    const url = withUrl && ONLINE ? "\n" + shareUrl() : "";
+    const score = total(state.results);
+    const n = (t) => state.results.filter((r) => r.tier === t).length;
+    const brag = [n("miracle") ? "🦷 x" + n("miracle") + " One in a Drillion" : "", n("trap") ? "😬 x" + n("trap") + " wrong teeth" : "", n("timeout") ? "⏰ x" + n("timeout") + " fell asleep in the chair" : ""].filter(Boolean).join(" · ");
+    return `${shareTitle()} 📈 ${score}/${MAX_SCORE} · "${runTitle(state.results, score)}"\n${grid(state.results)}${brag ? "\n" + brag : ""}\nThink you can beat ${score}? Same 7 prompts for everyone.${url}`;
+  }
+
+  async function copyText(text, msg) {
+    try { await navigator.clipboard.writeText(text); toast(msg); }
+    catch (e) {
+      const ta = document.createElement("textarea");
+      ta.value = text; document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy"); toast(msg); } catch (err) { toast("Couldn't copy, sorry"); }
+      ta.remove();
+    }
+  }
+
+  const E = encodeURIComponent;
+  const PLATFORMS = [
+    { id: "whatsapp", label: "WhatsApp", color: "#1f9e55", make: (t) => `https://wa.me/?text=${E(t)}` },
+    { id: "x", label: "X", color: "#1b1b1b", make: (t) => `https://twitter.com/intent/tweet?text=${E(t)}` },
+    { id: "facebook", label: "Facebook", color: "#1d66d8", needsUrl: true, make: (t, u) => `https://www.facebook.com/sharer/sharer.php?u=${E(u)}&quote=${E(t)}` },
+    { id: "messages", label: "Messages", color: "#2e9e4a", make: (t) => `sms:?&body=${E(t)}`, direct: true },
+    { id: "reddit", label: "Reddit", color: "#e2470f", make: (t, u) => (u ? `https://www.reddit.com/submit?url=${E(u)}&title=${E(shareTitle() + " · " + total(state.results) + "/" + MAX_SCORE)}` : `https://www.reddit.com/submit?selftext=true&title=${E(shareTitle())}&text=${E(t)}`) },
+    { id: "telegram", label: "Telegram", color: "#1c8cc7", make: (t, u) => `https://t.me/share/url?url=${E(u || " ")}&text=${E(shareText(false))}` },
+    { id: "threads", label: "Threads", color: "#2b1d18", make: (t) => `https://www.threads.net/intent/post?text=${E(t)}` },
+    { id: "bluesky", label: "Bluesky", color: "#1270d8", make: (t) => `https://bsky.app/intent/compose?text=${E(t)}` },
+    { id: "discord", label: "Discord", color: "#4f5bd5", copy: "Copied! Paste it in Discord." },
+    { id: "email", label: "Email", color: "#6e5a4c", make: (t) => `mailto:?subject=${E("My " + shareTitle() + " score")}&body=${E(t)}`, direct: true },
+  ];
+
+  function shareTo(id) {
+    const p = PLATFORMS.find((x) => x.id === id);
+    if (!p) return;
+    Sfx.play("share");
+    const text = shareText();
+    if (p.copy) { copyText(text, p.copy); return; }
+    if (p.needsUrl && !ONLINE) { copyText(text, `${p.label} sharing works once the site is online. Text copied instead!`); return; }
+    const url = p.make(text, shareUrl());
+    if (p.direct) location.href = url;
+    else window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  // Tier icons for the share card: render the SVG into an <img> and draw that on the canvas.
+  const iconImgs = new Map();
+  function loadIcon(name, px) {
+    const k = name + px;
+    if (iconImgs.has(k)) return iconImgs.get(k);
+    const p = new Promise((res) => {
+      const img = new Image();
+      img.onload = () => res(img);
+      img.onerror = () => res(null);
+      const svg = Spr.svg(name, px).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" ');
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    });
+    iconImgs.set(k, p);
+    return p;
+  }
+
+  function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+  // A result card (1080x1350) drawn as a dental appointment card, for stories and posts.
+  async function drawShareCard() {
+    const c = $("#share-card"), W = 1080, H = 1350, ctx = c.getContext("2d");
+    try { await Promise.all([document.fonts.load('800 120px "Bricolage Grotesque"'), document.fonts.load('600 40px "IBM Plex Sans"'), document.fonts.load('500 30px "IBM Plex Mono"')]); } catch (e) { /* fall back to system fonts */ }
+    const icons = Spr ? await Promise.all(state.results.map((r) => loadIcon(Spr.TIER_SPRITE[r.tier] || "x", 96))) : [];
+    const score = total(state.results);
+    const disp = '"Bricolage Grotesque", system-ui, sans-serif', sans = '"IBM Plex Sans", system-ui, sans-serif', mono = '"IBM Plex Mono", ui-monospace, monospace';
+    const INK = "#0f3a40", MINT = "#2f9d83", PINK = "#e8818a";
+    ctx.fillStyle = "#bfe8d9"; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = "rgba(15,58,64,.08)"; ctx.lineWidth = 2;
+    for (let x = 0; x <= W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for (let y = 0; y <= H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    // the appointment card, with a hard offset shadow
+    const px = 70, py = 90, pw = 940, ph = 1060;
+    ctx.fillStyle = INK; roundRect(ctx, px + 14, py + 14, pw, ph, 28); ctx.fill();
+    ctx.fillStyle = "#fbfaf5"; roundRect(ctx, px, py, pw, ph, 28); ctx.fill();
+    ctx.strokeStyle = INK; ctx.lineWidth = 6; roundRect(ctx, px, py, pw, ph, 28); ctx.stroke();
+    // header band
+    ctx.save(); roundRect(ctx, px, py, pw, 300, 28); ctx.clip(); ctx.fillStyle = MINT; ctx.fillRect(px, py, pw, 300); ctx.restore();
+    ctx.strokeStyle = INK; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(px, py + 300); ctx.lineTo(px + pw, py + 300); ctx.stroke();
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#fbfaf5"; ctx.font = `800 150px ${disp}`; ctx.fillText("Drillion", W / 2, py + 170);
+    ctx.font = `600 30px ${sans}`;
+    const sub = state.mode === "unlimited" ? "UNLIMITED APPOINTMENT" : state.day >= 1 ? `DAILY CHECK-UP ${certNo(state.day)} · ${dayDate(state.day).toUpperCase()}` : "PREVIEW APPOINTMENT";
+    ctx.fillText(sub, W / 2, py + 245);
+    // dotted tear line under the header
+    ctx.fillStyle = INK; ctx.font = `500 26px ${mono}`; ctx.fillText("PATIENT: YOU   ·   CHAIR: 3   ·   7 PROMPTS", W / 2, py + 360);
+    ctx.fillStyle = INK; ctx.font = `800 300px ${disp}`; ctx.fillText(String(score), W / 2, py + 640);
+    ctx.fillStyle = "#5c7478"; ctx.font = `600 40px ${sans}`;
+    ctx.fillText(`/ ${MAX_SCORE} PTS`, W / 2, py + 705);
+    ctx.fillStyle = PINK; ctx.font = `800 64px ${disp}`; ctx.fillText(runTitle(state.results, score), W / 2, py + 795);
+    const n = state.results.length, size = 96, gap = 18;
+    const startX = (W - (n * size + (n - 1) * gap)) / 2;
+    icons.forEach((img, i) => { if (img) ctx.drawImage(img, startX + i * (size + gap), py + 835, size, size); });
+    ctx.fillStyle = INK; ctx.font = `700 40px ${sans}`; ctx.fillText("CAN YOU BEAT MY SCORE?", W / 2, py + 1000);
+    // rubber stamp
+    ctx.save(); ctx.translate(px + pw - 170, py + 420); ctx.rotate(-0.2); ctx.globalAlpha = 0.85;
+    ctx.strokeStyle = "#c0392b"; ctx.lineWidth = 6; roundRect(ctx, -130, -38, 260, 76, 10); ctx.stroke();
+    ctx.fillStyle = "#c0392b"; ctx.font = `700 36px ${sans}`; ctx.fillText("NO CAVITIES", 0, 13); ctx.restore();
+    ctx.fillStyle = INK; ctx.font = `600 40px ${sans}`;
+    ctx.fillText(ONLINE ? (location.host + location.pathname).replace(/\/$/, "").toUpperCase() : "DRILLION", W / 2, H - 64);
+  }
+
+
+  async function openShare() {
+    track("share_click", { mode: state && state.mode });
+    Sfx.play("open");
+    $("#dlg-share").showModal();
+    await drawShareCard();
+  }
+
+  async function nativeShare() {
+    const text = shareText();
+    const blob = await new Promise((r) => $("#share-card").toBlob(r, "image/png"));
+    const file = blob ? new File([blob], "drillion-run.png", { type: "image/png" }) : null;
+    try {
+      if (file && navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], text }); return; }
+      if (navigator.share) { await navigator.share({ title: shareTitle(), text, url: shareUrl() || undefined }); return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    copyText(text, "Copied! Paste it anywhere.");
+  }
+
+  function saveImage() {
+    const a = document.createElement("a");
+    a.download = "drillion-run.png";
+    a.href = $("#share-card").toDataURL("image/png");
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast("Image saved. Post it to your story!");
+  }
+
+  // =====================================================================
+  // Archive
+  // =====================================================================
+  function openArchive() {
+    const today = dayNumber();
+    const unlocked = isUnlocked();
+    const list = $("#archive-list");
+    list.innerHTML = "";
+    if (today <= 1) {
+      $("#archive-note").textContent = "Every past Check-up is filed here, starting tomorrow.";
+    } else {
+      $("#archive-note").textContent = unlocked
+        ? "Play any past Check-up. Archive scores don't affect your streak."
+        : "The archive comes with the Drillion Pass. Tap any session to unlock.";
+      for (let d = today - 1; d >= 1; d--) {
+        const daily = store.get(dayKey(d), null);
+        const arch = store.get("archive:" + d, null);
+        const done = (daily && daily.done && daily) || (arch && arch.done && arch);
+        const li = document.createElement("li");
+        const b = document.createElement("button");
+        b.innerHTML = `<span><b>${certNo(d)}</b><small>${esc(dayDate(d))}</small></span>` +
+          `<span class="arch-score">${done ? `${total(done.results)} pts` : unlocked ? "Play" : "Locked"}</span>`;
+        b.addEventListener("click", () => startArchive(d));
+        li.appendChild(b);
+        list.appendChild(li);
+      }
+    }
+    showScreen("archive");
+  }
+
+  // =====================================================================
+  // Dialogs
+  // =====================================================================
+  function openHow() {
+    const ul = $("#tier-list");
+    ul.innerHTML = "";
+    ["miracle", "t75", "t50", "t25", "trap", "t10", "timeout"].forEach((k) => {
+      const t = TIERS[k];
+      const li = document.createElement("li");
+      li.style.setProperty("--tc", TIER_COLORS[k]);
+      li.dataset.tier = k;
+      li.innerHTML = `<span>${tierSprite(k, 22)}</span><span>${esc(t.label)}<span class="desc">${esc(t.desc)}</span></span><b>${t.pts}</b>`;
+      ul.appendChild(li);
+    });
+    $("#dlg-how").showModal();
+  }
+
+  const CONTACT = "merrillion.help@gmail.com";
+  function track(event, params) { try { if (typeof window.gtag === "function") window.gtag("event", event, params || {}); else (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
+  function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
+  function openMoreGames() {
+    openInfo("More games", `<div class="more-games"><a class="mg-card mg-mer" href="https://www.merrillion.site"><span class="mg-art" aria-hidden="true">🎄</span><b>Merrillion</b><p>The Christmas daily word game. Seven festive prompts, rare answers and a new advent ornament every day.</p><span class="mg-play"><span>Play →</span></span></a><div class="mg-soon"><b>More games on the way</b><span>New daily rare-answer games are in the works, each with its own world.</span></div><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
+  }
+  function openPrivacy() {
+    openInfo("Privacy", `<p>Drillion keeps your stats and streak in your browser. If you sign in, we store your email and stats in your account so they sync between devices.</p><p>We use Google Analytics (via Google Tag Manager) to count visits and see which features people use. Payments are handled by Stripe; we never see your card.</p><p>Feedback you send is stored so we can read it. We don't sell your data.</p><p>Questions or delete requests: <a href="mailto:${CONTACT}">${CONTACT}</a></p>`);
+  }
+
+  function openInfo(title, html) {
+    $("#info-title").textContent = title;
+    $("#info-body").innerHTML = html;
+    $("#dlg-info").showModal();
+  }
+
+  // ---------- feedback (stored in Supabase's "feedback" table) ----------
+  function openFeedback(prefill) {
+    const f = $("#feedback-form");
+    f.reset();
+    if (prefill) $("#fb-message").value = prefill;
+    $("#fb-send").disabled = false;
+    $("#dlg-feedback").showModal();
+    setTimeout(() => $(prefill ? "#fb-message" : "#fb-email").focus(), 30);
+  }
+
+  async function sendFeedback(e) {
+    e.preventDefault();
+    const message = $("#fb-message").value.trim();
+    const email = $("#fb-email").value.trim();
+    if (message.length < 3) { toast("Please write a little more."); return; }
+    const c = cloud();
+    if (!c) { toast("Feedback sending works once the site is online."); return; }
+    const btn = $("#fb-send");
+    btn.disabled = true;
+    const context = "Drillion · " + (state && state.prompts ? `${state.mode} ${state.day || ""} · ${state.prompts.map((p) => p.id).join(",")}` : "menu");
+    try {
+      const r = await fetch(`${c.url}/rest/v1/feedback`, {
+        method: "POST",
+        headers: { apikey: c.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ message: message.slice(0, 2000), email: email ? email.slice(0, 200) : null, context: context.slice(0, 500) }),
+      });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      $("#dlg-feedback").close();
+      Sfx.play("share");
+      toast("Thanks! Your feedback was sent.");
+    } catch (err) {
+      btn.disabled = false;
+      toast("Couldn't send right now. Please try again.");
+    }
+  }
+
+  // FAQ as an accordion: tap a question to open it.
+  const FAQ = [
+    ["What is Drillion?", "A daily rare-answer word game for dentists, dental students, hygienists and dental nurses. Every day there's a Daily Check-up of 7 prompts, like “Name a branch of the facial nerve”. You get 30 seconds per prompt, and the rarer your (correct) answer, the more you score."],
+    ["Who is the game for?", "Anyone in the dental world, from first-year students to consultants. Five prompts a day are clinical, two are light everyday ones anyone can answer. It's a game, not clinical guidance, so please don't revise from it."],
+    ["How many prompts are in a Daily Check-up?", "Seven, with 30 seconds each. A perfect run (a One in a Drillion on every prompt) scores 700."],
+    ["How does rare-answer scoring work?", "Every answer has a fixed value set in advance by how familiar it is: Fresher 10, Associate 30, Specialist 60, Professor 85, and one handpicked One in a Drillion worth 100. The “clever” answer everyone tries is the Wrong Tooth, worth 15. Your score never depends on what other players typed."],
+    ["Can I try again after a wrong answer?", "Yes. If your answer isn't listed, the answer bar shakes and you can keep trying until the timer runs out. Once a valid answer lands, it's locked in."],
+    ["Do spelling mistakes count?", "Small ones are fine. Capitals, accents and “the” are ignored, and if you're one or two letters off we'll ask “Did you mean…?” so you can confirm."],
+    ["How are the answer lists made?", "Each list is pulled together from reference sources with some AI help, then cleaned up and checked. Different spellings of the same answer are merged."],
+    ["Why is the One in a Drillion sometimes less rare than a Professor?", "It isn't chosen on rarity alone. It's the answer that's most satisfying to land, usually with a fun story behind it, and one that at least a few players actually get."],
+    ["Why wasn't my answer accepted?", "It's probably missing from the list, sorry! The lists get updated between runs, so it may count in future."],
+    ["When does the Daily Check-up reset?", "At midnight in your time zone. Everyone gets the same 7 prompts that day."],
+    ["What happens if I close the game mid-run?", "Your progress is saved. When you come back you'll pick up where you left off, but the prompt you were on when you left counts as out of time."],
+    ["Does my progress sync between devices?", "Yes, if you sign in (Menu → My account) we save your streak and stats to your account. Without an account they live in this browser. If you have the Drillion Pass, use “Restore purchase” with your checkout email to unlock on a new device."],
+    ["Can I play with friends?", "Yes! Open the Staff Room → Create a private room and send the code, or try Quick Play and Practice with bots. Everyone takes a seat in the staff room and takes turns answering."],
+    ["Is Drillion free to play?", `The Daily Check-up and the Staff Room are free, no account needed. Everyone gets one free Unlimited Run. The Drillion Pass (${CONFIG.price}, one time) gives you Unlimited Runs and the full archive.`],
+  ];
+  function openFaq() {
+    openInfo("FAQ", `<div class="faq">${FAQ.map(([q, a]) => `<details><summary><span>${esc(q)}</span><i aria-hidden="true"></i></summary><p>${esc(a)}</p></details>`).join("")}</div>`);
+  }
+
+  function openStats() {
+    const s = loadStats();
+    const items = [
+      [s.played, "Sessions played"],
+      [s.played ? Math.round(s.totalPts / s.played) : 0, "Average"],
+      [s.best, "Best session"],
+      [currentStreak(), "Current streak"],
+      [s.maxStreak, "Best streak"],
+      [s.miracles, "One in a Drillion"],
+    ];
+    if (isUnlocked()) items.push([s.unlimitedPlayed, "Unlimited played"], [s.unlimitedBest, "Best unlimited"]);
+    $("#stat-grid").innerHTML = items.map(([v, l]) => `<div class="stat"><b>${v}</b><span>${esc(l)}</span></div>`).join("");
+    $("#dlg-stats").showModal();
+  }
+
+  function openPaywall() {
+    $("#pay-price").textContent = `${CONFIG.price} · one time`;
+    const btn = $("#btn-buy");
+    btn.disabled = !ONLINE;
+    btn.textContent = ONLINE ? `Get the Pass · ${CONFIG.price}` : "Checkout works once the site is online";
+    $("#dlg-paywall").showModal();
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $("#toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove("show"), 2400);
+  }
+
+  // ---------- clocks ----------
+  function updateClocks() {
+    const now = new Date();
+    const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+    const s = Math.max(0, Math.floor((midnight - now) / 1000));
+    const hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
+    const txt = `Next Daily Check-up in ${hh}h ${String(mm).padStart(2, "0")}m ${String(ss).padStart(2, "0")}s`;
+    $$("[data-countdown]").forEach((el) => { el.textContent = txt; });
+    if (!$("#menu").hidden && s === 0) renderMenu();
+  }
+
+  // =====================================================================
+  // Wire up
+  // =====================================================================
+  function drawHero() {
+    if (window.Title) window.Title.start();   // the animated dental surgery hero
+  }
+
+  // ---------- ticker tape (tier stats + fun fake tickers) ----------
+  function buildTicker() {
+    const items = [
+      ["ONE IN A DRILLION", "▲100"], ["PROFESSOR", "▲85"], ["SPECIALIST", "▲60"], ["ASSOCIATE", "▲30"], ["WRONG TOOTH", "▼15"], ["FRESHER", "▼10"],
+      ["NOW SEEING", "▲ROOM 3"], ["FLOSS TODAY?", "▼"], ["ENAMEL", "▲HARDEST"], ["SUGAR", "▼BANNED"], ["32 TEETH", "▲"], ["NEXT PATIENT", "▲YOU"],
+    ];
+    const html = items.map(([s, c]) => `<span class="tk"><b>${esc(s)}</b> <i class="${c.indexOf("▲") === 0 ? "up" : "down"}">${esc(c)}</i></span>`).join("");
+    const track = $("#ticker-track");
+    if (track) track.innerHTML = html + html + html + html;
+  }
+
+  function init() {
+    tidyPrompts();
+    buildTicker();
+    $$("[data-name]").forEach((el) => { el.textContent = CONFIG.name; });
+    if (Spr) Spr.hydrate();
+    drawHero();
+    let heroTimer;
+    window.addEventListener("resize", () => { clearTimeout(heroTimer); heroTimer = setTimeout(drawHero, 150); });
+
+    // Dev helpers (local only): ?unlock=dev unlocks supporter features, ?reset replays today's run.
+    readChallenge();
+    const params = new URLSearchParams(location.search);
+    if (LOCAL && params.get("unlock") === "dev") {
+      store.set("unlockToken", "dev");
+      setTimeout(() => toast("Drillion Pass unlocked (dev mode)"), 300);
+      cleanUrl();
+    }
+    // Owner unlock (live site): open the site once with ?owner=YOUR_CODE (the OWNER_CODE set in Vercel).
+    // The server checks the code and hands back a signed unlock, so the code never appears in this file.
+    const ownerCode = params.get("owner");
+    if (ownerCode) {
+      cleanUrl();
+      if (LOCAL) { store.set("unlockToken", "dev"); setTimeout(() => toast("Owner unlock active on this computer"), 300); }
+      else {
+        api("/api/unlock?game=drillion&owner=" + encodeURIComponent(ownerCode))
+          .then(({ token }) => { store.set("unlockToken", token); unlockedNow("Owner unlock active."); })
+          .catch(() => toast("That owner code didn't work."));
+      }
+    }
+    if (LOCAL && params.has("reset")) {
+      const d = dayNumber();
+      try { localStorage.removeItem("drillion:daily:" + d); localStorage.removeItem("drillion:submitted:" + d); } catch (e) { /* ignore */ }
+      setTimeout(() => toast("Today's run has been reset"), 300);
+      cleanUrl();
+    }
+
+    // Soft click on every button (specific actions add their own sounds on top).
+    document.addEventListener("click", (e) => { if (e.target.closest("button")) Sfx.play("click"); });
+
+    $("#btn-home").addEventListener("click", () => { closeSheet(); showScreen("menu"); });
+    $("#btn-menu").addEventListener("click", openSheet);
+    $("#btn-sheet-close").addEventListener("click", closeSheet);
+    $("#sheet").addEventListener("click", (e) => { if (e.target.id === "sheet") closeSheet(); });
+    document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeSheet(); });
+    $$(".sheet-list [data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+    $("#sheet-supporter").addEventListener("click", () => { if (!isUnlocked()) { closeSheet(); openPaywall(); } });
+    $("#btn-unlock-top").addEventListener("click", () => { track("pass_click"); openPaywall(); });
+    $("#btn-sfx").addEventListener("click", toggleSfx);
+    $("#btn-music").addEventListener("click", toggleMusic);
+    $("#tg-sfx").addEventListener("click", toggleSfx);
+    $("#tg-music").addEventListener("click", toggleMusic);
+
+    $("#btn-daily").addEventListener("click", startDaily);
+    $("#btn-online").addEventListener("click", openOnline);
+    $("#btn-unlimited").addEventListener("click", startUnlimited);
+    $("#btn-account").addEventListener("click", openAccount);
+    $$(".site-foot [data-go]").forEach((b) => b.addEventListener("click", () => go(b.dataset.go)));
+    $("#btn-archive").addEventListener("click", openArchive);
+    $("#btn-how").addEventListener("click", openHow);
+    $("#btn-stats").addEventListener("click", openStats);
+    $("#btn-menu-home").addEventListener("click", () => showScreen("menu"));
+    $$("[data-home]").forEach((b) => b.addEventListener("click", () => showScreen("menu")));
+    $("#btn-again").addEventListener("click", startUnlimited);
+    $("#btn-next-unl").addEventListener("click", startUnlimited);
+    $("#btn-next-online").addEventListener("click", openOnline);
+    $("#tree-card").addEventListener("click", () => toast("Finish each Daily Check-up to fill a tooth. Better runs earn gold crowns and diamonds!"));
+    $("#upsell").addEventListener("click", openPaywall);
+    $("#btn-share").addEventListener("click", openShare);
+    $("#feedback-form").addEventListener("submit", sendFeedback);
+    $("#btn-missing").addEventListener("click", () => openFeedback("Missing answer: (prompt) → (your answer)\n"));
+    $("#sh-native").addEventListener("click", nativeShare);
+    $("#sh-image").addEventListener("click", saveImage);
+    $("#sh-copy").addEventListener("click", () => copyText(shareText(), "Copied! Paste it anywhere."));
+    $("#share-grid").innerHTML = PLATFORMS.map((p) => `<button class="share-btn" data-p="${p.id}" style="--pc:${p.color}"><i></i>${esc(p.label)}</button>`).join("");
+    $("#share-grid").addEventListener("click", (e) => { const b = e.target.closest("[data-p]"); if (b) shareTo(b.dataset.p); });
+    $("#btn-next").addEventListener("click", nextPrompt);
+    $("#btn-buy").addEventListener("click", buy);
+    $("#restore-form").addEventListener("submit", restore);
+
+    let lastKey = 0;
+    $("#answer").addEventListener("keydown", (e) => {
+      if (e.key.length === 1 && performance.now() - lastKey > 35) { Sfx.play("key"); lastKey = performance.now(); }
+    });
+    $("#answer-form").addEventListener("submit", (e) => {
+      e.preventDefault();
+      const v = $("#answer").value;
+      if (!v.trim() || !state || state.answered) return;
+      const r = judge(state.prompts[state.i], v);
+      if (r.tier === "miss") { rejectAnswer(v); return; }
+      if (r.fuzzy) { suggestAnswer(v, r); return; }
+      Sfx.play("submit");
+      finishPrompt(v, false, r);
+    });
+    $("#answer").addEventListener("input", () => {
+      if (state && state.pending) { state.pending = null; $("#answer-msg").textContent = ""; }
+    });
+
+    $("#btn-quit").addEventListener("click", () => {
+      if (state && !state.answered && state.mode !== "unlimited") {
+        if (!confirm("Leave this run? The current prompt will count as out of time.")) return;
+      }
+      if (state) clearInterval(state.timer);
+      Sfx.duck(false);
+      showScreen("menu");
+    });
+
+    renderMenu();
+    updateClocks();
+    setInterval(updateClocks, 1000);
+    handleCheckoutReturn();
+    reverifyToken();
+    if (window.Journey) window.Journey.mount($("#journey"));
+    if (window.Account) window.Account.init({ getStats: loadStats, setStats: (s) => { store.set("stats", s); renderMenu(); }, onChange: () => renderMenu() });
+
+    $("#btn-play-fv").addEventListener("click", startDaily);
+    $("#btn-how-hint").addEventListener("click", openHow);
+    $("#btn-fv-more").addEventListener("click", () => { fvExpanded = true; renderMenu(); });
+
+    // Shared with online-ui.js, and a hook for automated tests.
+    window.Drillion = { isCore, judge, key, TIERS, PROMPTS, store, toast, showScreen, esc, CONFIG, tierSprite };
+    window.DRILLION_DEBUG = { judge, key, dailyPrompts, dayNumber, PROMPTS, drawDistribution, renderRecap };
+  }
+
+  init();
+})();

@@ -2,6 +2,7 @@
   "redirects": [
     { "source": "/mogillion", "destination": "/trillion/", "permanent": false },
     { "source": "/mogillion/:path*", "destination": "/trillion/", "permanent": false },
-    { "source": "/trillion", "destination": "/trillion/", "permanent": true }
+    { "source": "/trillion", "destination": "/trillion/", "permanent": true },
+    { "source": "/drillion", "destination": "/drillion/", "permanent": true }
   ]
 }
