@@ -997,3 +997,13 @@ input, textarea { caret-color: var(--red); accent-color: var(--red); }
 .mgp-soon { display: block; text-align: left; padding: 14px 16px; }
 .mgp-soon b { display: block; font: 400 20px var(--font-display); margin-bottom: 4px; opacity: 1; }
 .mgp-soon span { display: block; font-size: 14px; line-height: 1.4; }
+
+/* Drillion promo: mint + enamel dental look */
+.tile-other.tile-dri { background: #bfe8d9 !important; border: 2px solid #0f3a40 !important; box-shadow: 0 4px 0 #0f3a40 !important; }
+.tile-other.tile-dri b { color: #0f3a40 !important; }
+.tile-other.tile-dri small { color: #1f6f5f !important; }
+.mgp-dri { background: #bfe8d9; border: 2px solid #0f3a40; padding-top: 28px; }
+.mgp-dri .mgp-sky { background: linear-gradient(rgba(15,58,64,.07) 1px, transparent 1px) 0 0 / 16px 16px, linear-gradient(90deg, rgba(15,58,64,.07) 1px, transparent 1px) 0 0 / 16px 16px; }
+.mgp-dri .mgp-txt b { font-family: system-ui, sans-serif; font-weight: 800; font-size: 27px; letter-spacing: -.01em; color: #0f3a40; }
+.mgp-dri .mgp-pitch { color: #0f3a40; }
+.mgp-dri .mgp-go { background: #ef5a4c; color: #fff; box-shadow: 0 3px 0 #0f3a40; }

@@ -920,3 +920,5 @@ dialog { max-width: calc(100vw - 24px); }
 .mg-soon { display: block; margin: 0 0 12px; padding: 14px 16px; border: 2px dashed rgba(31,77,58,.45); border-radius: 12px; color: #2a2a22; background: rgba(31,77,58,.05); }
 .mg-soon b { display: block; font-family: var(--font-display, Georgia, serif); font-size: 20px; color: var(--green-deep, #1f4d3a); margin-bottom: 4px; }
 .mg-soon span { display: block; font-size: 14px; line-height: 1.4; opacity: .9; }
+.mg-dri { color: #ef5a4c; background: #bfe8d9; border: 2px solid #0f3a40; } .more-games a.mg-card.mg-dri { color: #ef5a4c; } .more-games .mg-dri p { color: #0f3a40; } .more-games .mg-dri b { color: #0f3a40; }
+.mg-dri .mg-play span { color: #fff; }

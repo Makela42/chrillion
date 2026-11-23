@@ -30,7 +30,7 @@
   const TIER_ORDER = ["t75", "t50", "t25", "t10"];
   const TIER_COLORS = { miracle: "#e0a92b", t75: "#6b3fa0", t50: "#16878f", t25: "#2b6fb0", trap: "#d0507a", t10: "#8a9399", miss: "#c0392b", timeout: "#ffffff" };
 
-  const PROMPTS = [].concat(window.CHRILLION_PROMPTS || [], window.DRILLION_PROMPTS || []);
+  const PROMPTS = [].concat(window.CHRILLION_PROMPTS || [], window.DRILLION_PROMPTS || []).filter((p, i, a) => a.findIndex((q) => q.text.toLowerCase() === p.text.toLowerCase()) === i);   // drop repeated topics
   const MAX_SCORE = CONFIG.promptsPerDive * TIERS.miracle.pts;
 
   // Tidy the answer lists once on load: if the same answer was listed in two tiers,
@@ -471,7 +471,7 @@
     $("#fv-hint").hidden = !firstTime;
     $("#btn-play-fv").hidden = !collapse;
     $("#btn-fv-more").hidden = !collapse;
-    $("#btn-account").hidden = firstTime;
+    $("#btn-account").hidden = false;
     const day = dayNumber();
     const saved = store.get(dayKey(day), null);
     const played = saved && saved.done;
@@ -503,7 +503,7 @@
     $("#btn-account").lastChild.textContent = acct ? " Signed in · streak saved" : " Sign in to save your streak";
     $("#sl-acct").textContent = acct ? "Signed in" : "Save your streak";
     const top = $("#btn-unlock-top");
-    top.hidden = unlocked || firstTime;
+    top.hidden = unlocked;
     renderSheet();
   }
 
@@ -1379,7 +1379,7 @@
   function track(event, params) { try { if (typeof window.gtag === "function") window.gtag("event", event, params || {}); else (window.dataLayer = window.dataLayer || []).push(Object.assign({ event }, params)); } catch (e) { /* ignore */ } }
   function openAccount() { if (window.Account) window.Account.open(); else toast("Accounts are loading… try again in a moment."); }
   function openMoreGames() {
-    openInfo("More games", `<div class="more-games"><a class="mg-card mg-mer" href="https://www.merrillion.site"><span class="mg-art" aria-hidden="true">🎄</span><b>Merrillion</b><p>The Christmas daily word game. Seven festive prompts, rare answers and a new advent ornament every day.</p><span class="mg-play"><span>Play →</span></span></a><div class="mg-soon"><b>More games on the way</b><span>New daily rare-answer games are in the works, each with its own world.</span></div><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
+    openInfo("More games", `<div class="more-games"><a class="mg-card mg-mer" href="https://www.merrillion.site"><span class="mg-art" aria-hidden="true">🎄</span><b>Merrillion</b><p>The Christmas daily word game. Seven festive prompts, rare answers and a new advent ornament every day.</p><span class="mg-play"><span>Play →</span></span></a><a class="mg-card mg-tri" href="/trillion/"><span class="mg-art" aria-hidden="true">📈</span><b>Trillion</b><p>The daily finance word game. Build a portfolio of rare money answers.</p><span class="mg-play"><span>Play →</span></span></a><div class="mg-soon"><b>More games on the way</b><span>New daily rare-answer games are in the works, each with its own world.</span></div><p class="muted">Got an idea for one? <a href="mailto:${CONTACT}">${CONTACT}</a></p></div>`);
   }
   function openPrivacy() {
     openInfo("Privacy", `<p>Drillion keeps your stats and streak in your browser. If you sign in, we store your email and stats in your account so they sync between devices.</p><p>We use Google Analytics (via Google Tag Manager) to count visits and see which features people use. Payments are handled by Stripe; we never see your card.</p><p>Feedback you send is stored so we can read it. We don't sell your data.</p><p>Questions or delete requests: <a href="mailto:${CONTACT}">${CONTACT}</a></p>`);

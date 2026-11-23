@@ -983,3 +983,5 @@ dialog { max-width: calc(100vw - 24px); }
 .toast { background: var(--ink); color: #fff; border-radius: 999px; }
 .fb-stamp { color: var(--gold-deep); border-color: var(--gold); }
 @media (prefers-reduced-motion: reduce) { .ticker-track { animation: none; } }
+.mg-tri { color: #f1d58a; background: linear-gradient(135deg, #14503c, #0b2f23); border: 2px solid #d9a93c; } .more-games a.mg-card.mg-tri { color: #f1d58a; } .more-games .mg-tri p { color: #f5ecd7; }
+.more-games .mg-card { border-radius: var(--radius); }
