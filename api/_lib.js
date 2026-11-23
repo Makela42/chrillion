@@ -1,6 +1,12 @@
 // Shared helpers for the payment functions. Files starting with "_" are not routes on Vercel.
 const crypto = require("crypto");
 
+// Values pasted into the Vercel dashboard or piped from a shell can carry an invisible byte-order mark
+// or stray whitespace, which breaks the Stripe Authorization header. Clean them once, before any use.
+for (const k of ["STRIPE_SECRET_KEY", "STRIPE_PRICE_ID", "UNLOCK_SECRET", "SITE_URL", "TRI_PAYMENT_LINK_ID", "MOG_PAYMENT_LINK_ID", "OWNER_CODE"]) {
+  if (typeof process.env[k] === "string") process.env[k] = process.env[k].replace(/^﻿+/, "").trim();
+}
+
 // Unlock tokens are "<stripe session id>.<HMAC signature>", so only this server can mint them.
 function sign(sessionId) {
   const secret = process.env.UNLOCK_SECRET;
