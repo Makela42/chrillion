@@ -33,6 +33,16 @@
   const PROMPTS = [].concat(window.CHRILLION_PROMPTS || [], window.DRILLION_PROMPTS || []).filter((p, i, a) => a.findIndex((q) => q.text.toLowerCase() === p.text.toLowerCase()) === i);   // drop repeated topics
   const MAX_SCORE = CONFIG.promptsPerDive * TIERS.miracle.pts;
 
+  // Extra answers from extra-*.js files: { promptId: { t75: [...], t50: [...], t25: [...], t10: [...] } }.
+  // Merged before tidying so add-only files can never drop an existing answer.
+  function mergeExtras() {
+    const ex = window.DRILLION_EXTRA || {};
+    PROMPTS.forEach((p) => {
+      const e = ex[p.id];
+      if (!e) return;
+      ["t10", "t25", "t50", "t75"].forEach((t) => { if (Array.isArray(e[t])) p[t] = (p[t] || []).concat(e[t].filter((x) => typeof x === "string" && x.trim())); });
+    });
+  }
   // Tidy the answer lists once on load: if the same answer was listed in two tiers,
   // keep it only in the more common one (so "Santa Claus" is Obvious, never a Rare Find).
   // The handpicked One in a Merrillion and the Regifted trap always keep their spot.
@@ -685,6 +695,21 @@
     if (left <= 0) finishPrompt(null, true);
   }
 
+  // Log rejected answers (anonymously) to the feedback table so missing valid answers can be added.
+  let rejLogged = 0;
+  function logRejected(text) {
+    try {
+      const c = cloud(), p = state && state.prompts && state.prompts[state.i];
+      const t = (text || "").trim();
+      if (!c || !p || t.length < 2 || rejLogged >= 30 || /localhost|^file:/.test(location.href)) return;
+      rejLogged++;
+      fetch(`${c.url}/rest/v1/feedback`, {
+        method: "POST", keepalive: true,
+        headers: { apikey: c.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ message: "[rejected] " + t.slice(0, 120), email: null, context: ("rejected:" + p.id + " · " + p.text).slice(0, 500) }),
+      }).catch(() => {});
+    } catch (e) { /* never break the game */ }
+  }
   // Answers that aren't on the list don't count: shake the bar and let the player try again.
   function rejectAnswer(text, message) {
     $("#answer-msg").textContent = message || `“${text.trim()}” isn't on the list. Try again!`;
@@ -1510,6 +1535,7 @@
   }
 
   function init() {
+    mergeExtras();
     tidyPrompts();
     buildTicker();
     $$("[data-name]").forEach((el) => { el.textContent = CONFIG.name; });
@@ -1597,7 +1623,7 @@
       const v = $("#answer").value;
       if (!v.trim() || !state || state.answered) return;
       const r = judge(state.prompts[state.i], v);
-      if (r.tier === "miss") { rejectAnswer(v); return; }
+      if (r.tier === "miss") { logRejected(v); rejectAnswer(v); return; }
       if (r.fuzzy) { suggestAnswer(v, r); return; }
       Sfx.play("submit");
       finishPrompt(v, false, r);

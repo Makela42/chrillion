@@ -685,6 +685,21 @@
     if (left <= 0) finishPrompt(null, true);
   }
 
+  // Log rejected answers (anonymously) to the feedback table so missing valid answers can be added.
+  let rejLogged = 0;
+  function logRejected(text) {
+    try {
+      const c = cloud(), p = state && state.prompts && state.prompts[state.i];
+      const t = (text || "").trim();
+      if (!c || !p || t.length < 2 || rejLogged >= 30 || /localhost|^file:/.test(location.href)) return;
+      rejLogged++;
+      fetch(`${c.url}/rest/v1/feedback`, {
+        method: "POST", keepalive: true,
+        headers: { apikey: c.key, "Content-Type": "application/json", Prefer: "return=minimal" },
+        body: JSON.stringify({ message: "[rejected] " + t.slice(0, 120), email: null, context: ("rejected:" + p.id + " · " + p.text).slice(0, 500) }),
+      }).catch(() => {});
+    } catch (e) { /* never break the game */ }
+  }
   // Answers that aren't on the list don't count: shake the bar and let the player try again.
   function rejectAnswer(text, message) {
     $("#answer-msg").textContent = message || `“${text.trim()}” isn't on the list. Try again!`;
@@ -1620,7 +1635,7 @@
       const v = $("#answer").value;
       if (!v.trim() || !state || state.answered) return;
       const r = judge(state.prompts[state.i], v);
-      if (r.tier === "miss") { rejectAnswer(v); return; }
+      if (r.tier === "miss") { logRejected(v); rejectAnswer(v); return; }
       if (r.fuzzy) { suggestAnswer(v, r); return; }
       Sfx.play("submit");
       finishPrompt(v, false, r);
