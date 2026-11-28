@@ -22,10 +22,20 @@
     W = cssW; H = cssH;
   }
 
+  const BGI = new Image(); BGI.src = "trillion-strip.jpg";
+  function paintBg() {
+    if (!BGI.complete || !BGI.naturalWidth) return false;
+    const k = Math.max(W / BGI.naturalWidth, H / BGI.naturalHeight), w = BGI.naturalWidth * k, h = BGI.naturalHeight * k;
+    ctx.drawImage(BGI, (W - w) / 2, (H - h) / 2, w, h);
+    ctx.fillStyle = "rgba(6,35,27,.64)"; ctx.fillRect(0, 0, W, H);
+    return true;
+  }
+
   function panel() {
     const g = ctx.createLinearGradient(0, 0, 0, H);
     g.addColorStop(0, "#0b2f24"); g.addColorStop(1, "#06241b");
     ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    paintBg();
     ctx.strokeStyle = "rgba(246,213,120,.07)"; ctx.lineWidth = 1;
     for (let x = 0; x < W; x += 30) { ctx.beginPath(); ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); ctx.stroke(); }
     for (let y = 0; y < H; y += 24) { ctx.beginPath(); ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); ctx.stroke(); }

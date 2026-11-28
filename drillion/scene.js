@@ -23,8 +23,18 @@
     W = cssW; H = cssH;
   }
 
+  const BGI = new Image(); BGI.src = "drillion-strip.jpg";
+  function paintBg() {
+    if (!BGI.complete || !BGI.naturalWidth) return false;
+    const k = Math.max(W / BGI.naturalWidth, H / BGI.naturalHeight), w = BGI.naturalWidth * k, h = BGI.naturalHeight * k;
+    ctx.drawImage(BGI, (W - w) / 2, (H - h) / 2, w, h);
+    ctx.fillStyle = "rgba(223,243,234,.6)"; ctx.fillRect(0, 0, W, H);
+    return true;
+  }
+
   function panel() {
     ctx.fillStyle = PANEL; ctx.fillRect(0, 0, W, H);
+    paintBg();
     ctx.fillStyle = "rgba(47,157,131,.16)";
     for (let x = 12; x < W; x += 24) for (let y = 10; y < H; y += 24) { ctx.beginPath(); ctx.arc(x + ((y / 24) & 1) * 12, y, 1.6, 0, TAU); ctx.fill(); }
   }

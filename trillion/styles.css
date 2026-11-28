@@ -922,3 +922,15 @@ dialog { max-width: calc(100vw - 24px); }
 .mg-soon span { display: block; font-size: 14px; line-height: 1.4; opacity: .9; }
 .mg-dri { color: #ef5a4c; background: #bfe8d9; border: 2px solid #0f3a40; } .more-games a.mg-card.mg-dri { color: #ef5a4c; } .more-games .mg-dri p { color: #0f3a40; } .more-games .mg-dri b { color: #0f3a40; }
 .mg-dri .mg-play span { color: #fff; }
+
+/* ---- impasto art direction: paint backgrounds (hero, prompt card) ---- */
+.hero.cert { background-color: #14382a; background-image: url("trillion-hero.jpg"); background-size: cover; background-position: center; }
+.hero.cert .hero-text { background: linear-gradient(180deg, rgba(7,30,22,.62) 0%, rgba(7,30,22,.42) 30%, rgba(7,30,22,.42) 85%, rgba(7,30,22,.08) 100%); }
+.hero.cert .hero-title, .hero.cert .hero-sub, .hero.cert .cert-no, .hero.cert .fv-hint { color: #f6efd8; }
+.hero.cert .eyebrow { color: #f6d578; }
+.hero.cert .hero-title::after { border-color: #f6d578; }
+.hero.cert .fv-link { color: #f6d578; }
+.prompt-card { background-image: linear-gradient(rgba(245,236,211,.9), rgba(245,236,211,.9)), url("trillion-tile.jpg"); background-size: cover; background-position: center; }
+
+/* keep hero text readable over lighter scrim */
+.hero.cert .hero-text * { text-shadow: 0 1px 3px rgba(0,0,0,.65), 0 0 14px rgba(0,0,0,.35); }
