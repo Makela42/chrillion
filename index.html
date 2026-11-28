@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Merrillion · the Christmas daily run</title>
+  <title>Merrillion · the Christmas word game</title>
   <meta name="description" content="7 Christmas prompts. 25 seconds each. The rarer your answer, the more you score.">
   <meta name="theme-color" content="#0f1f17">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎄</text></svg>">
@@ -48,14 +48,22 @@
     <section class="screen" id="menu">
       <div class="hero">
         <div class="hero-text">
-          <p class="eyebrow" id="hero-eyebrow">Daily Sleigh Run</p>
-          <h1 class="hero-title">Your daily seven.</h1>
-          <p class="hero-sub" id="hero-sub">7 Christmas prompts · 25 seconds each</p>
+          <p class="eyebrow" id="hero-eyebrow">Daily run</p>
+          <span class="hero-chip" id="hero-theme"></span>
+          <h1 class="hero-title">The Christmas word game: name the answer nobody else will</h1>
+          <p class="hero-sub" id="hero-sub">7 prompts, 25 seconds each, same 7 for everyone</p>
           <p class="twist" id="twist-banner" hidden></p>
-          <p class="hero-hint" id="hero-hint" hidden>Name the answer nobody else will. Rarer = more points. <button type="button" class="hint-link" id="btn-how-link">How to play</button></p>
+          <p class="hero-hint" id="hero-hint" hidden>Rarer answers score more. <button type="button" class="hint-link" id="btn-how-link">How to play</button></p>
+        </div>
+        <div class="demo" aria-hidden="true">
+          <p class="demo-q">Name a Christmas movie</p>
+          <ul class="demo-list">
+            <li class="d1"><span>Elf</span><b>10</b></li>
+            <li class="d2"><span>Klaus</span><b>60</b></li>
+            <li class="d3 gold"><span>Fatman</span><b>100</b></li>
+          </ul>
         </div>
         <canvas class="hero-scene" id="hero-scene" aria-hidden="true"></canvas>
-        <span class="hero-chip">Today</span>
       </div>
 
       <div class="tiles-main">
@@ -113,7 +121,7 @@
       <p class="answer-msg" id="answer-msg" aria-live="polite"></p>
       <form id="answer-form" autocomplete="off">
         <input id="answer" type="text" placeholder="Type your answer…" maxlength="60"
-               autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Your answer">
+               autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go" aria-label="Your answer">
         <button class="btn btn-primary" type="submit">Submit</button>
       </form>
 
@@ -315,13 +323,11 @@
     <h2>Share your run</h2>
     <canvas class="share-card" id="share-card" width="1080" height="1350" aria-label="Your result card"></canvas>
     <div class="share-main">
-      <button class="btn btn-primary" id="sh-native">Share…</button>
-      <button class="btn btn-secondary" id="sh-image">Save image</button>
+      <button class="btn btn-primary" id="sh-native">Share</button>
+      <button class="btn btn-secondary" id="sh-copy">Copy</button>
     </div>
-    <button class="btn btn-ghost btn-block" id="sh-copy">Copy text</button>
-    <p class="share-label">Send it to</p>
-    <div class="share-grid" id="share-grid"></div>
-    <p class="muted share-note">Instagram, TikTok or Snapchat: tap <b>Save image</b>, then post it to your story.</p>
+    <button id="sh-image" hidden></button>
+    <div id="share-grid" hidden></div>
     <form method="dialog"><button class="btn btn-ghost btn-block">Close</button></form>
   </dialog>
 

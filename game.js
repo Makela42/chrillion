@@ -437,6 +437,7 @@
   let state = null;   // { mode: daily|archive|unlimited, day, prompts, i, results, timer, deadline, answered }
 
   function total(results) { return results.reduce((s, r) => s + r.pts, 0); }
+  function bestResult() { let b = null; state && state.results.forEach((r) => { if (r.matched && r.pts > 0 && (!b || r.pts > b.pts)) b = r; }); return b; }
   function grid(results) { return results.map((r) => TIERS[r.tier].emoji).join(""); }
 
   function showScreen(id) {
@@ -485,21 +486,21 @@
   // Run titles: the score rating, unless how you played earned a funnier one.
   function runTitle(results, score) {
     const c = (t) => results.filter((r) => r.tier === t).length;
-    if (c("miracle") >= 2) return "Rare Drop Machine";
-    if (c("trap") >= 3) return "Regift Royalty";
+    if (c("miracle") >= 2) return "Rare Finder";
+    if (c("trap") >= 3) return "Trap Collector";
     if (c("t10") >= 5) return "Basic Bundle";
-    if (c("timeout") >= 3) return "Asleep at the Sleigh";
+    if (c("timeout") >= 3) return "Out of Time";
     if (c("miracle") === 1 && score < MAX_SCORE * 0.5) return "One-Hit Wonder";
     return rating(score);
   }
-  const STREAK_MARKS = [[3, "Stocking Stuffer"], [7, "Sleigh Hand"], [14, "Reindeer Whisperer"], [25, "Santa's Right Hand"]];
+  const STREAK_MARKS = [[3, "Three-Day Streak"], [7, "Week Streak"], [14, "Fortnight Streak"], [25, "25-Day Streak"]];
   const streakTitle = (n) => { let t = ""; STREAK_MARKS.forEach(([d, name]) => { if (n >= d) t = name; }); return t; };
   // A friend's challenge link (?beat=score&d=day) is read once and kept for the results screen.
   let challenge = null;
 
   // ---------- weekday twist: a bonus ornament upgrade, never extra points ----------
   const TWISTS = [
-    { name: "Sleigh-In Sunday", rule: "Finish today's run for a bonus ornament", ok: () => true },
+    { name: "Bonus Sunday", rule: "Finish today's run for a bonus ornament", ok: () => true },
     { name: "Trap-Dodge Monday", rule: "Dodge the trap answer for a bonus ornament", ok: (rs) => !rs.some((r) => r.tier === "trap") },
     { name: "Rare Tuesday", rule: "Land a Rare Find (75) for a bonus ornament", ok: (rs) => rs.some((r) => r.tier === "t75" || r.tier === "miracle") },
     { name: "Deep Cut Wednesday", rule: "Any 50+ answer earns a bonus ornament", ok: (rs) => rs.some((r) => r.pts >= 50) },
@@ -517,7 +518,30 @@
     el.classList.toggle("won", won === "win");
     el.textContent = played ? (won === "win" ? `${t.name}: bonus ornament earned!` : `${t.name}: no bonus this time`) : `${t.name}: ${t.rule}`;
   }
+  // Each weekday has its own hero image, accent colour, label and overlay (Mon = 1 ... Sun = 7).
+  const DAY_THEMES = [
+    null,
+    { label: "Cabin Light Monday", accent: "#ff7a59", fx: "twinkle" },
+    { label: "Gingerbread Tuesday", accent: "#ffa94d", fx: "snow" },
+    { label: "Frosted Glass Wednesday", accent: "#7be3ff", fx: "snow" },
+    { label: "Northern Lights Thursday", accent: "#5df2b4", fx: "aurora" },
+    { label: "Fireside Friday", accent: "#ffbf47", fx: "twinkle" },
+    { label: "Snowfall Saturday", accent: "#b9d9ff", fx: "snow" },
+    { label: "Starlit Sunday", accent: "#f2c14e", fx: "twinkle" },
+  ];
+  function applyDayTheme() {
+    const hero = $("#menu .hero");
+    if (!hero) return;
+    const wd = new Date().getDay() || 7;
+    const t = DAY_THEMES[wd];
+    hero.style.setProperty("--hero-img", `url("hero-day-${wd}.jpg"), url("hero-merrillion.jpg")`);
+    document.documentElement.style.setProperty("--day", t.accent);
+    hero.dataset.fx = t.fx;
+    const lab = $("#hero-theme");
+    if (lab) lab.textContent = t.label;
+  }
   function renderMenu() {
+    applyDayTheme();
     const day = dayNumber();
     const saved = store.get(dayKey(day), null);
     const played = saved && saved.done;
@@ -525,11 +549,11 @@
     const streak = currentStreak();
     const pastDays = Math.max(0, day - 1);
 
-    $("#hero-eyebrow").textContent = day >= 1 ? `Sleigh Run #${day} · ${streak > 2 ? streakTitle(streak) : "Streak " + streak}` : "Preview sleigh run";
+    $("#hero-eyebrow").textContent = day >= 1 ? `Run #${day} · ${streak > 2 ? streakTitle(streak) : "Streak " + streak}` : "Preview run";
     $("#hero-sub").textContent = played
       ? `You scored ${total(saved.results)} of ${MAX_SCORE}: ${rating(total(saved.results))}.`
-      : "7 Christmas prompts · 25 seconds each";
-    $("#daily-sub").textContent = played ? "Done ✓ · see your results" : streak > 0 ? `Keep your ${streak}-day streak alive!` : "Same 7 for everyone";
+      : "7 prompts, 25 seconds each, same 7 for everyone";
+    $("#daily-sub").textContent = played ? "Done for today" : streak > 0 ? `Keep your ${streak}-day streak alive!` : "Same 7 for everyone";
     renderTwist(day, !!played);
     renderTree($("#home-tree"), true);
     const badge = $("#streak-badge");
@@ -550,7 +574,7 @@
     top.hidden = unlocked;
     document.body.classList.remove("first-visit");
     $("#hero-hint").hidden = !first;
-    $("#daily-title").textContent = "Today's Sleigh Run";
+    $("#daily-title").textContent = played ? "See today's results" : "Play today's 7";
     renderSheet();
   }
 
@@ -833,7 +857,7 @@
   const SAY = {
     start: ["Think rare. The obvious stuff barely scores!", "Your best friend will say the obvious one. Beat them.", "Skip the first thing in your head!", "Deep cuts fill the sleigh!", "Dig into that Christmas brain!", "Rare answers = more presents!"],
     mid: ["Tick tock, the reindeer are waiting!", "Still thinking? Go weird!", "Halfway there!", "Santa's checking his watch…"],
-    late: ["Quick! The sleigh's leaving!", "Any answer beats no answer!", "Hurry, hurry, hurry!"],
+    late: ["Quick, the clock is running!", "Any answer beats no answer!", "Hurry, hurry, hurry!"],
     nope: ["Not on Santa's list! Try again.", "Hmm, nope. Another one!", "Close… but not quite!"],
   };
   const pickLine = (a) => a[Math.floor(Math.random() * a.length)];
@@ -847,14 +871,14 @@
 
   // Jingle the elf reacts to every answer.
   const REACTIONS = {
-    miracle: ["NO WAY. A One in a Merrillion!", "Elf-credible! Nobody gets that one.", "Rare drop! Santa's taking notes.", "Absolute cinema.", "You actually ate that."],
-    t75: ["Big brain pick!", "Ooh, deep cut. Respect.", "That's actually so good.", "Locked in!", "W answer."],
-    t50: ["Nice, not everyone gets that!", "Solid pick.", "Clutch!", "Chat, we're so back.", "Chilly pick, I like it."],
-    t25: ["Classic. Can't go wrong.", "Respect the classics.", "A crowd favourite!", "Safe and sound."],
-    trap: ["Everyone said that one. EVERYONE.", "The clever one. Sadly, so did everybody else.", "Everyone said that one.", "Too clever… everyone tried it.", "Bruh. Regifted.", "Oof, the trap got you!"],
-    t10: ["Mid… but it counts!", "Too basic! Go deeper next time.", "Everyone's first answer.", "Valid. Very, very basic."],
-    timeout: ["The sleigh left without you!", "Frozen solid?", "Oof. Time's up!", "Not even close… to answering!"],
-    miss: ["Hmm, that's not on the list."],
+    miracle: ["One in a Merrillion. Nobody finds that one.", "The best answer on the list. Well found.", "Santa would be taking notes."],
+    t75: ["A deep cut. Nicely done.", "Rare pick. That scores well.", "Not many people think of that."],
+    t50: ["A good one, fewer people say it.", "Solid pick.", "Better than the obvious answer."],
+    t25: ["A familiar answer, still worth points.", "Well known, safe points.", "A crowd favourite."],
+    trap: ["Everyone tries that one.", "Clever, but most people had the same idea.", "The popular trap. Try a different angle next time."],
+    t10: ["The first thing most people say.", "Valid, but very common. Go deeper next time.", "Everyone's first answer."],
+    timeout: ["Time ran out on that one.", "The clock beat you this time.", "No answer in time."],
+    miss: ["That one is not on the list."],
   };
   function react(tier) {
     const lines = REACTIONS[tier] || REACTIONS.miss;
@@ -901,7 +925,9 @@
     $("#fb-blurb").textContent = blurb;
 
     // The other answers stay secret until the end of the run.
-    $("#fb-best").innerHTML = `<p class="fb-later">Every answer for this prompt is revealed at the end of the run.</p>`;
+    const first = (v) => (Array.isArray(v) ? v[0] : v || "").split("|")[0];
+    const rare = first(p.miracle), common = first(p.t10);
+    $("#fb-best").innerHTML = rare && common ? `<p class="fb-reveal"><span><small>Rarest</small><b>${esc(rare)}</b></span><span><small>Most common</small><b>${esc(common)}</b></span></p>` : "";
 
     const last = state.i >= state.prompts.length - 1;
     $("#btn-next").textContent = last ? "See results" : "Next →";
@@ -975,9 +1001,9 @@
 
   // ---------- results ----------
   function modeLabel() {
-    if (state.mode === "daily") return state.day >= 1 ? `Sleigh Run #${state.day} complete` : "Preview sleigh run complete";
+    if (state.mode === "daily") return state.day >= 1 ? `Run #${state.day} complete` : "Preview run complete";
     if (state.mode === "archive") return `Archive · Run #${state.day}`;
-    return "Unlimited sleigh run";
+    return "Unlimited run";
   }
 
   function showSummary() {
@@ -993,7 +1019,7 @@
       calls.unshift(diff > 0 ? `You beat your friend's ${challenge.beat} by ${diff}.` : diff < 0 ? `Your friend's ${challenge.beat} beat you by ${-diff}. Rematch tomorrow.` : `Dead tie with your friend's ${challenge.beat}.`);
     }
     $("#sum-callouts").innerHTML = calls.map((c) => `<li>${esc(c)}</li>`).join("");
-    $("#sum-miles").textContent = `${(score * 10).toLocaleString()} sleigh miles`;
+    { const b = bestResult(); $("#sum-miles").textContent = b ? `Best answer: ${b.matched}` : ""; }
     $("#recap-score").textContent = `${score} pts`;
     $("#dist-score").textContent = `You: ${score} pts`;
     const ms = window.Journey && window.Journey.reached(score);
@@ -1248,7 +1274,10 @@
     const score = total(state.results);
     const mir = state.results.filter((r) => r.tier === "miracle").length;
     const brag = mir ? `\n${mir > 1 ? mir + " One in a Merrillions" : "I found a One in a Merrillion"}. Find yours.` : "";
-    return `${shareTitle()} 🎄 ${score}/${MAX_SCORE} · ${runTitle(state.results, score)}\n${grid(state.results)}${brag}\nCan you beat my ${score}?${url}`;
+    const bst = bestResult();
+    const best = bst ? `
+My best answer: ${bst.matched} (${bst.pts})` : "";
+    return `${shareTitle()} 🎄 ${score}/${MAX_SCORE} · ${runTitle(state.results, score)}\n${grid(state.results)}${best}${brag}\nCan you beat my ${score}?${url}`;
   }
 
   async function copyText(text, msg) {
@@ -1335,13 +1364,21 @@
     ctx.fillText(String(score), W / 2, py + 330);
     ctx.font = '800 72px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillStyle = "#6e5a4c";
-    ctx.fillText(`/ ${MAX_SCORE} · ${(score * 10).toLocaleString()} SLEIGH MILES`, W / 2, py + 420);
+    ctx.fillText(`/ ${MAX_SCORE}`, W / 2, py + 410);
     ctx.fillStyle = "#c8323a";
     ctx.font = '800 84px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillText(runTitle(state.results, score).toUpperCase(), W / 2, py + 520);
     const n = state.results.length, cell = 8, size = 12 * cell, gap = 22;
     const startX = (W - (n * size + (n - 1) * gap)) / 2;
-    state.results.forEach((r, i) => drawTierDot(ctx, r.tier, startX + i * (size + gap) + size / 2, py + 580 + size / 2, size / 2 - 6));
+    state.results.forEach((r, i) => drawTierDot(ctx, r.tier, startX + i * (size + gap) + size / 2, py + 570 + size / 2, size / 2 - 6));
+    const bb = bestResult();
+    if (bb) {
+      ctx.fillStyle = "#6e5a4c"; ctx.font = '700 36px "Atkinson Hyperlegible", sans-serif';
+      ctx.fillText("MY BEST ANSWER", W / 2, py + 700);
+      ctx.fillStyle = "#2b1d18"; ctx.font = '800 50px "Bricolage Grotesque", Impact, sans-serif';
+      let t = `${bb.matched} (${bb.pts})`; while (t.length > 3 && ctx.measureText(t).width > pw - 80) t = t.slice(0, -2);
+      ctx.fillText(t, W / 2, py + 750);
+    }
     ctx.fillStyle = "#f6ecd6";
     ctx.font = '800 64px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillText("CAN YOU BEAT IT?", W / 2, H - 140);

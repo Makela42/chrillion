@@ -99,6 +99,11 @@
       <circle cx="32" cy="45" r="5" fill="url(#${u("n")})" ${sw(1.6)} stroke="#8e1f26"/>
       <circle cx="30.3" cy="43.3" r="1.4" fill="#fff" fill-opacity=".8"/>`,
 
+    bolt: (u) => `<defs>${lg(u("r"), "#ffe27a", "#e8a21a", 0, 0, 1, 1)}</defs>
+      <path d="M36 6 L14 36 H29 L25 58 L50 26 H34 Z" fill="url(#${u("r")})" ${sw(2.4)} stroke="#8a5a0a" stroke-linejoin="round"/>`,
+    coal: (u) => `<defs>${lg(u("r"), "#5a5f68", "#1f2227", 0, 0, 1, 1)}</defs>
+      <path d="M12 38 L20 16 L38 10 L54 24 L50 46 L30 56 Z" fill="url(#${u("r")})" ${sw(2.4)} stroke="#0e0f12" stroke-linejoin="round"/>
+      <path d="M22 20 L36 15" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>`,
     x: (u) => `<defs>${lg(u("r"), "#ff7a74", "#c42a34", 0, 0, 1, 1)}</defs>
       <path d="M14 14 L50 50 M50 14 L14 50" stroke="#7d1620" stroke-width="13" stroke-linecap="round"/>
       <path d="M14 14 L50 50 M50 14 L14 50" stroke="url(#${u("r")})" stroke-width="9.5" stroke-linecap="round"/>
@@ -167,7 +172,7 @@
 
   Spr.svg = function (name, px, opts) {
     const f = I[name];
-    if (!f) return origSvg(name, px, opts);
+    if (!f) return "";
     const o = opts || {};
     const id = ++counter;
     const u = (k) => `ic${id}${k}`;
@@ -200,4 +205,5 @@
   };
 
   Spr.illustrated = (n) => !!I[n];
+  Spr.has = (n) => !!I[n];
 })();

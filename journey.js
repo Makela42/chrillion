@@ -12,9 +12,9 @@
 
   // Clean line icons (Lucide style: 24 grid, stroke 2, round caps/joins; custom paths where Lucide has none).
   const ICONS = {
-    candy: '<path d="M8 21V8.5a4.5 4.5 0 0 1 9 0V10"/><path d="M6 18l4-2"/><path d="M6 13.5l4-2"/>',
-    cookie: '<circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V15"/><path d="M4.5 10.5 12 8.5l7.5 2"/><path d="M12 15l-4 6"/><path d="M12 15l4 6"/>',
-    snowman: '<circle cx="12" cy="6" r="3"/><circle cx="12" cy="16" r="5"/><path d="M12 15h.01"/><path d="M12 18h.01"/>',
+    candy: '<path d="M10 21V9a4 4 0 0 1 8 0v1"/><path d="M7.5 18.5l5-2"/><path d="M7.5 14l5-2"/>',
+    cookie: '<circle cx="12" cy="5.5" r="2.5"/><path d="M12 8c-3 0-6 .8-8 2.5l1.5 2.3L9 12v3l-2.5 5.5h3.2L12 17l2.3 3.5h3.2L15 15v-3l3.5.8 1.5-2.3C18 8.8 15 8 12 8z"/>',
+    snowman: '<path d="M9.5 4.5h5"/><path d="M10.5 4.5v-2h3v2"/><circle cx="12" cy="8" r="2.5"/><circle cx="12" cy="16.5" r="4.5"/><path d="M12 15.5h.01"/><path d="M12 18.5h.01"/>',
     deer: '<path d="M8 10h8l-1.5 8a2.5 2.5 0 0 1-5 0z"/><path d="M8 10 6 5"/><path d="M6 5 3 6"/><path d="M6 5 5.5 2"/><path d="M16 10l2-5"/><path d="M18 5l3 1"/><path d="M18 5l.5-3"/><path d="M10 13.5h.01"/><path d="M14 13.5h.01"/><path d="M12 17h.01"/>',
     santa: '<path d="M5 13c0-6 3-9 8-9"/><path d="M13 4l2.2.6"/><circle cx="17" cy="5.5" r="2"/><path d="M4 13h16"/><path d="M6 13v2a6 6 0 0 0 12 0v-2"/>',
   };
@@ -23,17 +23,17 @@
   }
 
   const CSS = `
-.journey{--j-size:26px;position:relative;width:100%;max-width:640px;margin:0 auto;padding:0 14px;box-sizing:border-box;height:64px;font-family:var(--font-body,system-ui,sans-serif);color:var(--ink,#2b1d18);user-select:none}
-.journey .j-stage{position:absolute;left:14px;right:14px;top:0;height:34px}
-.journey .j-ms{position:absolute;bottom:0;left:0;transform:translateX(-50%);width:var(--j-size);height:var(--j-size);display:flex;align-items:flex-end;justify-content:center;color:#f6ecd6;opacity:.45;transition:color .4s,opacity .4s,filter .4s}
+.journey{--j-size:26px;position:relative;width:100%;max-width:640px;margin:0 auto;padding:0 14px;box-sizing:border-box;height:92px;padding-top:10px;margin-bottom:14px;border-radius:16px;background:rgba(255,255,255,.08);font-family:var(--font-body,system-ui,sans-serif);color:#f6ecd6;user-select:none}
+.journey .j-stage{position:absolute;left:24px;right:24px;top:10px;height:34px}
+.journey .j-ms{position:absolute;bottom:0;left:0;transform:translateX(-50%);width:34px;height:34px;border-radius:50%;background:#1b2f27;border:2px solid rgba(255,255,255,.55);padding:5px;box-sizing:border-box;display:flex;align-items:flex-end;justify-content:center;color:#f6ecd6;opacity:1;transition:color .4s,opacity .4s,filter .4s}
 .journey .j-ms svg{width:100%;height:100%;display:block}
-.journey .j-ms.on{color:#f2c14e;filter:drop-shadow(0 0 6px rgba(242,193,78,.8));opacity:1}
+.journey .j-ms.on{color:#2b1d00;background:#f2c14e;border-color:#fff3c4;box-shadow:0 0 10px rgba(242,193,78,.7)}
 .journey .j-ms.pop{animation:j-pop .6s cubic-bezier(.22,1,.36,1)}
-.journey .j-tick{position:absolute;bottom:-3px;left:50%;width:2px;height:3px;margin-left:-1px;background:rgba(43,29,24,.35)}
-.journey .j-track{position:absolute;left:14px;right:14px;top:37px;height:11px;border-radius:6px;background:rgba(43,29,24,.22);box-shadow:inset 0 2px 3px rgba(43,29,24,.35),0 1px 0 rgba(255,255,255,.35);overflow:hidden}
+.journey .j-tick{display:none;position:absolute;bottom:-3px;left:50%;width:2px;height:3px;margin-left:-1px;background:rgba(43,29,24,.35)}
+.journey .j-track{position:absolute;left:24px;right:24px;top:52px;height:10px;border-radius:6px;background:rgba(0,0,0,.4);box-shadow:inset 0 2px 3px rgba(0,0,0,.4);overflow:hidden}
 .journey .j-fill{position:absolute;left:0;top:0;bottom:0;width:0;border-radius:6px;background:repeating-linear-gradient(-45deg,#c8323a 0 7px,#f6ecd6 7px 14px);background-size:19.8px 19.8px;animation:j-scroll 1.4s linear infinite;box-shadow:inset 0 -3px 3px rgba(0,0,0,.18),inset 0 2px 2px rgba(255,255,255,.4)}
 .journey .j-fill::after{content:"";position:absolute;right:0;top:0;bottom:0;width:6px;background:linear-gradient(90deg,transparent,rgba(242,193,78,.85));border-radius:0 6px 6px 0}
-.journey .j-row{position:absolute;left:14px;right:14px;top:50px;display:flex;justify-content:space-between;font-size:13px;line-height:15px;font-weight:700}
+.journey .j-row{position:absolute;left:24px;right:24px;top:68px;display:flex;justify-content:space-between;font-size:14px;line-height:16px;font-weight:700}
 .journey .j-pts{font-variant-numeric:tabular-nums}
 .journey .j-next{opacity:.92;font-weight:700}
 .journey .j-sp{position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2px;background:var(--gold,#f2c14e);transform:rotate(45deg);pointer-events:none;animation:j-spark .75s ease-out forwards}
@@ -41,7 +41,6 @@
 @keyframes j-scroll{to{background-position:19.8px 0}}
 @keyframes j-pop{0%{transform:translateX(-50%) scale(.5)}45%{transform:translateX(-50%) translateY(-9px) scale(1.3)}70%{transform:translateX(-50%) scale(.92)}100%{transform:translateX(-50%) scale(1)}}
 @keyframes j-spark{0%{opacity:1;transform:translate(0,0) rotate(45deg) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) rotate(225deg) scale(.2)}}
-@media (min-width:600px){.journey{--j-size:34px;height:72px}.journey .j-stage{height:42px}.journey .j-track{top:45px;height:12px}.journey .j-row{top:60px;font-size:13px}}
 @media (prefers-reduced-motion:reduce){.journey .j-fill{animation:none}.journey .j-ms.pop{animation:none}.journey .j-sp{display:none}}
 `;
 
