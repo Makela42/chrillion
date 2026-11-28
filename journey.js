@@ -1,4 +1,4 @@
-/* Journey: festive milestone progress bar (0-700 pts). Needs sprites.js (optional fallback: none). */
+/* Journey: festive milestone progress bar (0-700 pts). Line icons, no dependencies. */
 (() => {
   "use strict";
   const MAX = 700;
@@ -10,29 +10,24 @@
     { points: 560, name: "Santa", label: "Santa", sprite: "santa" },
   ];
 
-  const CANDY = [
-    "....RRWW....", "...RWRRWR...", "..RW....WR..", "..WR....RW..", "..RW........", "..WR........",
-    "..RW........", "..WR........", "..RW........", "..WR........", "..RW........", "..WW........",
-  ];
-  function candySvg(px) {
-    const P = (window.Sprites && window.Sprites.PAL) || { R: "#c8323a", W: "#f6ecd6" };
-    let r = "";
-    CANDY.forEach((row, y) => [...row].forEach((ch, x) => {
-      if (ch !== ".") r += `<rect x="${x}" y="${y}" width="1.02" height="1.02" fill="${P[ch]}"/>`;
-    }));
-    return `<svg class="spr" width="${px}" height="${px}" viewBox="0 0 12 12" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
-  }
+  // Clean line icons (Lucide style: 24 grid, stroke 2, round caps/joins; custom paths where Lucide has none).
+  const ICONS = {
+    candy: '<path d="M8 21V8.5a4.5 4.5 0 0 1 9 0V10"/><path d="M6 18l4-2"/><path d="M6 13.5l4-2"/>',
+    cookie: '<circle cx="12" cy="5" r="2.5"/><path d="M12 7.5V15"/><path d="M4.5 10.5 12 8.5l7.5 2"/><path d="M12 15l-4 6"/><path d="M12 15l4 6"/>',
+    snowman: '<circle cx="12" cy="6" r="3"/><circle cx="12" cy="16" r="5"/><path d="M12 15h.01"/><path d="M12 18h.01"/>',
+    deer: '<path d="M8 10h8l-1.5 8a2.5 2.5 0 0 1-5 0z"/><path d="M8 10 6 5"/><path d="M6 5 3 6"/><path d="M6 5 5.5 2"/><path d="M16 10l2-5"/><path d="M18 5l3 1"/><path d="M18 5l.5-3"/><path d="M10 13.5h.01"/><path d="M14 13.5h.01"/><path d="M12 17h.01"/>',
+    santa: '<path d="M5 13c0-6 3-9 8-9"/><path d="M13 4l2.2.6"/><circle cx="17" cy="5.5" r="2"/><path d="M4 13h16"/><path d="M6 13v2a6 6 0 0 0 12 0v-2"/>',
+  };
   function sprite(name, px) {
-    if (name === "candy") return candySvg(px);
-    return window.Sprites ? window.Sprites.svg(name, px) : "";
+    return `<svg class="spr" width="${px}" height="${px}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
   }
 
   const CSS = `
 .journey{--j-size:26px;position:relative;width:100%;max-width:640px;margin:0 auto;padding:0 14px;box-sizing:border-box;height:64px;font-family:var(--font-body,system-ui,sans-serif);color:var(--ink,#2b1d18);user-select:none}
 .journey .j-stage{position:absolute;left:14px;right:14px;top:0;height:34px}
-.journey .j-ms{position:absolute;bottom:0;left:0;transform:translateX(-50%);width:var(--j-size);height:var(--j-size);display:flex;align-items:flex-end;justify-content:center;filter:grayscale(1) brightness(1.05);opacity:.38;transition:filter .4s,opacity .4s}
-.journey .j-ms svg{width:100%;height:100%;display:block;image-rendering:pixelated}
-.journey .j-ms.on{filter:drop-shadow(0 0 5px rgba(242,193,78,.95)) drop-shadow(0 0 10px rgba(242,193,78,.5));opacity:1}
+.journey .j-ms{position:absolute;bottom:0;left:0;transform:translateX(-50%);width:var(--j-size);height:var(--j-size);display:flex;align-items:flex-end;justify-content:center;color:#f6ecd6;opacity:.45;transition:color .4s,opacity .4s,filter .4s}
+.journey .j-ms svg{width:100%;height:100%;display:block}
+.journey .j-ms.on{color:#f2c14e;filter:drop-shadow(0 0 6px rgba(242,193,78,.8));opacity:1}
 .journey .j-ms.pop{animation:j-pop .6s cubic-bezier(.22,1,.36,1)}
 .journey .j-tick{position:absolute;bottom:-3px;left:50%;width:2px;height:3px;margin-left:-1px;background:rgba(43,29,24,.35)}
 .journey .j-track{position:absolute;left:14px;right:14px;top:37px;height:11px;border-radius:6px;background:rgba(43,29,24,.22);box-shadow:inset 0 2px 3px rgba(43,29,24,.35),0 1px 0 rgba(255,255,255,.35);overflow:hidden}

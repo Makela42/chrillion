@@ -56,7 +56,21 @@
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const Spr = window.Sprites;
   // On screen, tiers use the pixel sprite set; emoji are only used in the shareable text.
-  function tierSprite(tier, size) { return Spr ? Spr.svg(Spr.TIER_SPRITE[tier] || "x", size) : esc(TIERS[tier].emoji); }
+  // Tier icons: clean Lucide-style line icons (24 grid, stroke 2, round caps) in the tier colour.
+  const TIER_ICON = {
+    miracle: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+    t75: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5A4.8 8 0 0 1 12 8a4.8 8 0 0 1 4.5-5 2.5 2.5 0 0 1 0 5"/>',
+    t50: '<path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z"/><path d="M12 22v-3"/>',
+    t25: '<line x1="2" x2="22" y1="12" y2="12"/><line x1="12" x2="12" y1="2" y2="22"/><path d="m20 16-4-4 4-4"/><path d="m4 8 4 4-4 4"/><path d="m16 4-4 4-4-4"/><path d="m8 20 4-4 4 4"/>',
+    trap: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>',
+    t10: '<circle cx="12" cy="12" r="10"/><path d="M8 12h8"/>',
+    miss: '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+    timeout: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  };
+  const tierInk = (tier) => (tier === "timeout" ? "#6b7280" : TIER_COLORS[tier] || "#2b1d18");
+  function tierSprite(tier, size) {
+    return `<svg class="spr tier-ico" width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${tierInk(tier)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TIER_ICON[tier] || TIER_ICON.miss}</svg>`;
+  }
 
   // =====================================================================
   // Storage (per-browser conveniences; every access is guarded)
@@ -415,6 +429,8 @@
   function showScreen(id) {
     $$(".screen").forEach((s) => { s.hidden = s.id !== id; });
     $("#appbar").hidden = id === "game";
+    document.body.dataset.screen = id;
+    $$(".tabbar [data-tab]").forEach((t) => { const on = t.dataset.tab === (id === "menu" ? "home" : id === "archive" ? "archive" : id === "online" ? "home" : ""); t.classList.toggle("active", on); if (on) t.setAttribute("aria-current", "page"); else t.removeAttribute("aria-current"); });
     window.scrollTo(0, 0);
     if (id === "menu") { renderMenu(); drawHero(); }
     if (window.Fx && id !== "game" && id !== "summary") window.Fx.clear();
@@ -505,7 +521,7 @@
     renderTree($("#home-tree"), true);
     const badge = $("#streak-badge");
     badge.hidden = streak < 1;
-    badge.innerHTML = (Spr ? Spr.svg("flame", 14) : "") + `<span>${streak}</span>`;
+    badge.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="#e8591f" stroke="#e8591f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>' + `<span>${streak}</span>`;
 
     $("#unl-sub").textContent = unlocked ? "Play as many as you like" : freeRunLeft() ? "1 free run on us" : "Supporters only";
     $("#arch-sub").textContent = pastDays ? `${pastDays} past run${pastDays === 1 ? "" : "s"}` : "Opens tomorrow";
@@ -829,8 +845,7 @@
   };
   function react(tier) {
     const lines = REACTIONS[tier] || REACTIONS.miss;
-    const bubble = $("#fb-bubble"), elf = $("#fb-elf");
-    elf.innerHTML = Spr ? Spr.svg("elf", 44) : "";
+    const bubble = $("#fb-bubble");
     bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
     const box = bubble.parentElement;
     box.classList.remove("talk");
@@ -1067,7 +1082,7 @@
       const y = base - h;
       s += `<rect x="${x}" y="${y}" width="${colW}" height="${h}" fill="${TIER_COLORS[r.tier]}" stroke="#2b1d18" stroke-width="2"/>`;
       s += `<text class="chart-val" x="${x + colW / 2}" y="${y - 5}" text-anchor="middle">${r.pts}</text>`;
-      if (Spr) s += Spr.rects(Spr.TIER_SPRITE[r.tier] || "x", x + colW / 2 - 8, base + 6, 16 / 12);
+      s += `<g transform="translate(${(x + colW / 2 - 8).toFixed(1)},${base + 6}) scale(0.667)" fill="none" stroke="${tierInk(r.tier)}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">${TIER_ICON[r.tier] || TIER_ICON.miss}</g>`;
       s += `<text class="chart-axis" x="${x + colW / 2}" y="${base + 36}" text-anchor="middle">${i + 1}</text>`;
     });
     $("#recap-chart").innerHTML = s;
@@ -1118,8 +1133,8 @@
     };
     const sx = x(Math.min(score, MAX_SCORE)), sy = yAt(score);
     s += `<line id="dist-drop" x1="${sx}" y1="${sy}" x2="${sx}" y2="${base}" stroke="#c8323a" stroke-width="2" stroke-dasharray="4 3" opacity="0"/>`;
-    // A little pixel Santa sleds along the curve to your score.
-    s += `<g id="dist-santa">${Spr ? Spr.rects("santa", -12, -22, 2) : `<rect x="-6" y="-6" width="12" height="12" fill="#c8323a"/>`}</g>`;
+    // A clean marker rides the curve to your score.
+    s += `<g id="dist-santa"><circle r="8" cy="-2" fill="#c8323a" stroke="#fff" stroke-width="3"/><circle r="2.5" cy="-2" fill="#fff"/></g>`;
     s += `<text id="dist-you" class="chart-you" x="${Math.min(W - 24, Math.max(24, sx))}" y="${Math.max(16, sy - 28)}" text-anchor="middle" fill="#c8323a" opacity="0">YOU</text>`;
     svg.innerHTML = s;
     const paths = svg.querySelectorAll("path");
@@ -1259,15 +1274,16 @@
     else window.open(url, "_blank", "noopener,noreferrer");
   }
 
-  function drawSprite(ctx, name, x, y, cell) {
-    if (!Spr) return;
-    Spr.runs(name).runs.forEach((r) => { ctx.fillStyle = r.c; ctx.fillRect(x + r.x * cell, y + r.y * cell, r.w * cell + 0.5, cell + 0.5); });
+  function drawTierDot(ctx, tier, cx, cy, r) {
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fillStyle = TIER_COLORS[tier] || "#8e1f26"; ctx.fill();
+    ctx.lineWidth = 6; ctx.strokeStyle = "#2b1d18"; ctx.stroke();
   }
 
   // A knitted result card (1080×1350) for stories and posts.
   async function drawShareCard() {
     const c = $("#share-card"), W = 1080, H = 1350, ctx = c.getContext("2d");
-    try { await Promise.all([document.fonts.load('120px "Jersey 15"'), document.fonts.load('700 40px "Atkinson Hyperlegible"')]); } catch (e) { /* fall back to system fonts */ }
+    try { await Promise.all([document.fonts.load('800 120px "Bricolage Grotesque"'), document.fonts.load('700 40px "Atkinson Hyperlegible"')]); } catch (e) { /* fall back to system fonts */ }
     const score = total(state.results);
     ctx.fillStyle = "#5e1219";
     ctx.fillRect(0, 0, W, H);
@@ -1285,10 +1301,10 @@
     for (let x = W, k = 0; x >= -70; x -= 70, k++) ctx.quadraticCurveTo(x - 35, H - 78 - (k % 3) * 16, x - 70, H - 46);
     ctx.closePath(); ctx.fill();
     ctx.textAlign = "center";
-    ctx.font = '150px "Jersey 15", Impact, sans-serif';
+    ctx.font = '800 150px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillStyle = "#8e1f26"; ctx.fillText(CONFIG.name, W / 2 + 7, 247);
     ctx.fillStyle = "#f6ecd6"; ctx.fillText(CONFIG.name, W / 2, 240);
-    ctx.font = '60px "Jersey 15", Impact, sans-serif';
+    ctx.font = '800 60px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillStyle = "#f2c14e";
     const sub = state.mode === "unlimited" ? "UNLIMITED SLEIGH RUN" : state.day >= 1 ? `SLEIGH RUN #${state.day} · ${dayDate(state.day).toUpperCase()}` : "PREVIEW SLEIGH RUN";
     ctx.fillText(sub, W / 2, 322);
@@ -1302,22 +1318,22 @@
     ctx.strokeRect(px + 20, py + 20, pw - 40, ph - 40);
     ctx.setLineDash([]);
     ctx.fillStyle = "#2b1d18";
-    ctx.font = '330px "Jersey 15", Impact, sans-serif';
+    ctx.font = '800 330px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillText(String(score), W / 2, py + 330);
-    ctx.font = '72px "Jersey 15", Impact, sans-serif';
+    ctx.font = '800 72px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillStyle = "#6e5a4c";
     ctx.fillText(`/ ${MAX_SCORE} · ${(score * 10).toLocaleString()} SLEIGH MILES`, W / 2, py + 420);
     ctx.fillStyle = "#c8323a";
-    ctx.font = '84px "Jersey 15", Impact, sans-serif';
+    ctx.font = '800 84px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillText(runTitle(state.results, score).toUpperCase(), W / 2, py + 520);
     const n = state.results.length, cell = 8, size = 12 * cell, gap = 22;
     const startX = (W - (n * size + (n - 1) * gap)) / 2;
-    state.results.forEach((r, i) => drawSprite(ctx, (Spr && Spr.TIER_SPRITE[r.tier]) || "x", startX + i * (size + gap), py + 580, cell));
+    state.results.forEach((r, i) => drawTierDot(ctx, r.tier, startX + i * (size + gap) + size / 2, py + 580 + size / 2, size / 2 - 6));
     ctx.fillStyle = "#f6ecd6";
-    ctx.font = '64px "Jersey 15", Impact, sans-serif';
+    ctx.font = '800 64px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillText("CAN YOU BEAT IT?", W / 2, H - 140);
     ctx.fillStyle = "#f2c14e";
-    ctx.font = '46px "Jersey 15", Impact, sans-serif';
+    ctx.font = '800 46px "Bricolage Grotesque", Impact, sans-serif';
     ctx.fillText(ONLINE ? location.host.toUpperCase() : "MERRILLION", W / 2, H - 92);
   }
 
@@ -1528,6 +1544,8 @@
     const hh = Math.floor(s / 3600), mm = Math.floor((s % 3600) / 60), ss = s % 60;
     const txt = `Next Daily Sleigh Run in ${hh}h ${String(mm).padStart(2, "0")}m ${String(ss).padStart(2, "0")}s`;
     $$("[data-countdown]").forEach((el) => { el.textContent = txt; });
+    const short = `New prompts in ${hh}h ${String(mm).padStart(2, "0")}m`;
+    $$("[data-countdown-short]").forEach((el) => { el.textContent = short; });
     if (!$("#menu").hidden && s === 0) renderMenu();
   }
 
@@ -1553,8 +1571,7 @@
         f.y += f.vy;
         f.x += Math.sin(t / 1500 + f.phase) * 0.3;
         if (f.y > h + 10) Object.assign(f, make(false));
-        const sz = f.r > 2 ? 4 : f.r > 1.4 ? 3 : 2;       // square "stitch" flakes to match the pixel art
-        ctx.fillRect(Math.round(f.x), Math.round(f.y), sz, sz);
+        ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2); ctx.fill();
       }
       requestAnimationFrame(frame);
     }
@@ -1629,6 +1646,14 @@
     $("#tg-music").addEventListener("click", toggleMusic);
 
     $("#btn-daily").addEventListener("click", startDaily);
+    $$(".tabbar [data-tab]").forEach((t) => t.addEventListener("click", () => {
+      const k = t.dataset.tab;
+      if (k === "home") showScreen("menu");
+      else if (k === "stats") openStats();
+      else if (k === "archive") openArchive();
+      else if (k === "profile") openAccount();
+      else if (k === "tree") { showScreen("menu"); const tc = $("#tree-card"); if (!tc.hidden) tc.scrollIntoView({ behavior: "smooth", block: "center" }); toast("Finish each Daily Sleigh Run to hang a new ornament. Better runs earn rarer ones!"); }
+    }));
     $("#btn-online").addEventListener("click", openOnline);
     $("#btn-unlimited").addEventListener("click", startUnlimited);
     $("#btn-account").addEventListener("click", openAccount);

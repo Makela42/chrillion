@@ -18,13 +18,14 @@
   <!-- End Google Tag Manager -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Jersey+15&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PRMRMDT6" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-TTSZ7SNH" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
+  <div class="app" id="app">
   <!-- ============ TOP BAR ============ -->
   <header class="appbar" id="appbar">
     <button class="wordmark" id="btn-home" data-name>Merrillion</button>
@@ -54,6 +55,7 @@
           <p class="hero-hint" id="hero-hint" hidden>Name the answer nobody else will. Rarer = more points. <button type="button" class="hint-link" id="btn-how-link">How to play</button></p>
         </div>
         <canvas class="hero-scene" id="hero-scene" aria-hidden="true"></canvas>
+        <span class="hero-chip">Today</span>
       </div>
 
       <div class="tiles-main">
@@ -62,6 +64,7 @@
           <span class="tile-text"><b id="daily-title">Today's Sleigh Run</b><small id="daily-sub"></small></span>
           <span class="badge badge-streak" id="streak-badge" hidden></span>
         </button>
+        <p class="live-line"><i class="live-dot" aria-hidden="true"></i><span data-countdown-short></span></p>
         <button class="tile tile-online" id="btn-online">
           <span class="tile-ico" data-sprite="people" data-size="22"></span>
           <span class="tile-text"><b>Play Online</b><small>Live rooms · play together</small></span>
@@ -100,7 +103,7 @@
       </div>
       <div class="timer-label"><span id="timer-sec">25</span>s</div>
       <canvas class="scene" id="scene" aria-hidden="true"></canvas>
-      <div class="scene-say" id="scene-say"><span class="say-elf" data-sprite="elf" data-size="30"></span><span class="say-bubble" id="say-text"></span></div>
+      <div class="scene-say" id="scene-say"><span class="say-bubble" id="say-text"></span></div>
 
       <article class="prompt-card">
         <p class="prompt-num" id="prompt-num"></p>
@@ -115,7 +118,7 @@
       </form>
 
       <div class="feedback" id="feedback" hidden>
-        <div class="fb-mascot"><span class="fb-elf" id="fb-elf"></span><div class="fb-bubble" id="fb-bubble"></div></div>
+        <div class="fb-mascot"><div class="fb-bubble" id="fb-bubble"></div></div>
         <div class="fb-emoji" id="fb-emoji"></div>
         <div class="fb-label" id="fb-label"></div>
         <div class="fb-points" id="fb-points"></div>
@@ -205,6 +208,15 @@
     <!-- ============ ONLINE ============ -->
     <section class="screen" id="online" hidden></section>
   </main>
+
+  <nav class="tabbar" aria-label="Main">
+    <button class="tab active" data-tab="home" aria-current="page"><span class="tab-ico"><i data-sprite="play" data-size="22"></i></span><span class="tab-lbl">Play</span></button>
+    <button class="tab" data-tab="stats"><span class="tab-ico"><i data-sprite="chart" data-size="22"></i></span><span class="tab-lbl">Stats</span></button>
+    <button class="tab" data-tab="tree"><span class="tab-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m17 14 3 3.3a1 1 0 0 1-.7 1.7H4.7a1 1 0 0 1-.7-1.7L7 14h-.3a1 1 0 0 1-.7-1.7L9 9h-.2A1 1 0 0 1 8 7.3L12 3l4 4.3a1 1 0 0 1-.8 1.7H15l3 3.3a1 1 0 0 1-.7 1.7H17Z"/><path d="M12 22v-3"/></svg></span><span class="tab-lbl">Tree</span></button>
+    <button class="tab" data-tab="archive"><span class="tab-ico"><i data-sprite="calendar" data-size="22"></i></span><span class="tab-lbl">Archive</span></button>
+    <button class="tab" data-tab="profile"><span class="tab-ico"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span><span class="tab-lbl">Profile</span></button>
+  </nav>
+  </div>
 
   <!-- ============ MENU SHEET ============ -->
   <div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-label="Menu">
