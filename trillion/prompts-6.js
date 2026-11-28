@@ -1,4 +1,4 @@
-/* Trillion prompts, set 6: money talk from late 2026 (loud budgeting, moneymaxxing, holiday spending, BNPL, creator money, earnings). Beginner-friendly. */
+/* Trillion prompts, set 6: money talk from late 2026 (loud budgeting, stretching money, holiday spending, BNPL, creator money, earnings). Beginner-friendly. */
 (window.CHRILLION_PROMPTS = window.CHRILLION_PROMPTS || []).push(
   {
     id: "g6-no-buy-list", core: true, broad: true, text: "Name something people put on a \"no-buy\" list",
@@ -10,7 +10,7 @@
     t10: ["Clothes","Food","Coffee"]
   },
   {
-    id: "g6-moneymaxxing", core: true, broad: true, text: "Name a way people try to \"moneymaxx\" (get more from their money)",
+    id: "g6-moneymaxxing", core: true, broad: true, text: "Name a way people try to get more out of their money",
     miracle: "Credit card sign-up bonus|Sign-up bonus|Signup bonus|Welcome bonus", miracleNote: "Some cards pay a bonus if you spend a set amount in the first few months. It only pays off if you would have spent that money anyway and pay the balance in full.",
     trap: "Gambling", trapNote: "Gambling is a bet where the house expects to win. It is not a reliable way to get more from your money.",
     t75: ["Cashback apps|Cash back apps","Rewards points|Points","Price comparison|Comparing prices","Price match","Loyalty programs","Student discounts","Senior discounts","Employer match|401k match","Roth IRA","Index funds|Index fund","Compound interest","Dividend stocks|Dividends","Bond ladder","CDs|Certificates of deposit|CD","Treasury bills|T-bills","Money market account|Money market fund","Automatic savings|Auto savings","Round-up savings|Round ups","Savings challenges|52 week challenge","Envelope budgeting|Cash stuffing","Zero-based budget|Zero based budgeting","Meal prepping|Meal prep","Batch cooking","Cooking at home","Buying in bulk|Bulk buying","Generic brands|Store brands","Thrifting|Thrift stores","Buying used|Secondhand","Facebook Marketplace","Selling stuff you don't need|Declutter and sell","Reselling|Flipping","Side hustles|Side hustle","Negotiating salary|Asking for a raise","Negotiating bills","Canceling subscriptions|Cancel subscriptions","Switching phone plans","Switching insurance|Shopping insurance","Refinancing","Paying off debt|Debt snowball","Tax refunds|Tax credits","HSA|Health savings account","Library|Library card","Free events","Carpooling","Walking|Biking","Gas rewards|Gas apps","Credit card rewards|Card rewards","Cash back credit card|Cashback card","Credit union","Switching banks","Bank bonuses","Honey|Cashback browser extensions","Rakuten","Ibotta","Fetch Rewards|Fetch","Dollar-cost averaging","Target-date funds","Rebalancing","Roommates","Used cars","Public transit","Refurbished electronics|Refurbished","Open-box deals","GasBuddy","Free trials","Price tracking tools|CamelCamelCamel","Stacking discounts","Annual plans"],

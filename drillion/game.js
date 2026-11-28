@@ -298,7 +298,10 @@
   const ONLINE = /^https?:$/.test(location.protocol);
   const LOCAL = !ONLINE || ["localhost", "127.0.0.1"].includes(location.hostname);
 
-  function getToken() { return store.get("unlockToken", null); }
+  // All Games Pass token: one key shared by all three games (same origin), checked alongside the per-game token.
+  function sharedAll() { try { const v = localStorage.getItem("allGamesToken"); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function shareAll(t) { if (typeof t === "string" && t.startsWith("all:")) { try { localStorage.setItem("allGamesToken", JSON.stringify(t)); } catch (e) { /* ignore */ } } }
+  function getToken() { return store.get("unlockToken", null) || sharedAll(); }
   function isUnlocked() { const t = getToken(); return !!t && (t !== "dev" || LOCAL); }
 
   async function api(path, opts) {
@@ -323,7 +326,7 @@
     cleanUrl();
     try {
       const { token } = await api("/api/unlock?game=drillion&session_id=" + encodeURIComponent(sid));
-      store.set("unlockToken", token);
+      store.set("unlockToken", token); shareAll(token);
       unlockedNow("Drillion Pass active. Thank you!");
     } catch (e) {
       toast("Couldn't confirm the payment yet. Try “Restore purchase”.");
@@ -335,7 +338,7 @@
     if (!t || t === "dev" || !ONLINE) return;
     try {
       const r = await api("/api/unlock?game=drillion&token=" + encodeURIComponent(t));
-      if (r.valid === false) { store.set("unlockToken", null); renderMenu(); }
+      if (r.valid === false) { store.set("unlockToken", null); try { localStorage.removeItem("allGamesToken"); } catch (e) { /* ignore */ } renderMenu(); }
     } catch (e) { /* network/API missing: keep the unlock */ }
   }
 
@@ -354,7 +357,7 @@
       const { token } = await api("/api/restore?game=drillion", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }),
       });
-      store.set("unlockToken", token);
+      store.set("unlockToken", token); shareAll(token);
       $("#dlg-paywall").close();
       unlockedNow("Pass restored");
     } catch (err) {
@@ -1560,7 +1563,7 @@
       if (LOCAL) { store.set("unlockToken", "dev"); setTimeout(() => toast("Owner unlock active on this computer"), 300); }
       else {
         api("/api/unlock?game=drillion&owner=" + encodeURIComponent(ownerCode))
-          .then(({ token }) => { store.set("unlockToken", token); unlockedNow("Owner unlock active."); })
+          .then(({ token }) => { store.set("unlockToken", token); shareAll(token); unlockedNow("Owner unlock active."); })
           .catch(() => toast("That owner code didn't work."));
       }
     }

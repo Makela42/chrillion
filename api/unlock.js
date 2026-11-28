@@ -2,7 +2,7 @@
 // GET /api/unlock?token=...          ->  { valid }   (re-check a saved token)
 // GET /api/unlock?owner=CODE         ->  { token }   (the site owner's free unlock; CODE is the OWNER_CODE env var)
 const crypto = require("crypto");
-const { stripe, sign, verify, gameOf, scopeId, tokenGame, sessionGame } = require("./_lib");
+const { stripe, sign, verify, gameOf, scopeId, tokenGame, sessionGame, sessionKind } = require("./_lib");
 
 function sameSecret(a, b) {
   const x = Buffer.from(String(a)), y = Buffer.from(String(b));
@@ -13,7 +13,7 @@ module.exports = async (req, res) => {
   const { session_id, token, owner } = req.query || {};
   const game = gameOf(req);
   try {
-    if (token) return res.status(200).json({ valid: verify(String(token)) && tokenGame(token) === game });
+    if (token) return res.status(200).json({ valid: verify(String(token)) && (tokenGame(token) === game || tokenGame(token) === "all") });
 
     if (owner) {
       const code = process.env.OWNER_CODE;
@@ -26,6 +26,8 @@ module.exports = async (req, res) => {
     }
     const s = await stripe("checkout/sessions/" + encodeURIComponent(session_id));
     if (s.payment_status !== "paid") return res.status(402).json({ error: "Not paid" });
+    if (await sessionKind(s) === "all") return res.status(200).json({ token: sign(scopeId("all", s.id)), all: true });
+    if (await sessionKind(s) === "gift") return res.status(403).json({ error: "That purchase is a gift. Use the gift link instead." });
     if (sessionGame(s) !== game) return res.status(403).json({ error: "That purchase is for the other game" });
     res.status(200).json({ token: sign(scopeId(game, s.id)) });
   } catch (e) {

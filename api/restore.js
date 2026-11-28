@@ -1,5 +1,5 @@
 // POST /api/restore  { email }  ->  { token }   (re-unlock on a new device or browser)
-const { stripe, sign, gameOf, scopeId, sessionGame } = require("./_lib");
+const { stripe, sign, gameOf, scopeId, sessionGame, sessionKind } = require("./_lib");
 
 module.exports = async (req, res) => {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
@@ -14,7 +14,11 @@ module.exports = async (req, res) => {
       limit: "10",
     }));
     const game = gameOf(req);
-    const paid = (list.data || []).find((s) => s.payment_status === "paid" && sessionGame(s) === game);
+    const sessions = (list.data || []).filter((s) => s.payment_status === "paid");
+    for (const s of sessions) {
+      if (await sessionKind(s) === "all") return res.status(200).json({ token: sign(scopeId("all", s.id)) });
+    }
+    const paid = (await Promise.all(sessions.map(async (s) => (await sessionKind(s)) === "gift" ? null : s))).find((s) => s && sessionGame(s) === game);
     if (!paid) return res.status(404).json({ error: "No purchase found" });
     res.status(200).json({ token: sign(scopeId(game, paid.id)) });
   } catch (e) {

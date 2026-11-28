@@ -32,6 +32,16 @@
   const PROMPTS = window.CHRILLION_PROMPTS || [];
   const MAX_SCORE = CONFIG.promptsPerDive * TIERS.miracle.pts;
 
+  // Extra answers from extra-*.js files: { promptId: { t75: [...], t50: [...], t25: [...], t10: [...] } }.
+  // Merged before tidying so add-only files can never drop an existing answer.
+  function mergeExtras() {
+    const ex = window.MERRILLION_EXTRA || {};
+    PROMPTS.forEach((p) => {
+      const e = ex[p.id];
+      if (!e) return;
+      ["t10", "t25", "t50", "t75"].forEach((t) => { if (Array.isArray(e[t])) p[t] = (p[t] || []).concat(e[t].filter((x) => typeof x === "string" && x.trim())); });
+    });
+  }
   // Tidy the answer lists once on load: if the same answer was listed in two tiers,
   // keep it only in the more common one (so "Santa Claus" is Obvious, never a Rare Find).
   // The handpicked One in a Merrillion and the Regifted trap always keep their spot.
@@ -310,7 +320,10 @@
   const ONLINE = /^https?:$/.test(location.protocol);
   const LOCAL = !ONLINE || ["localhost", "127.0.0.1"].includes(location.hostname);
 
-  function getToken() { return store.get("unlockToken", null); }
+  // All Games Pass token: one key shared by all three games (same origin), checked alongside the per-game token.
+  function sharedAll() { try { const v = localStorage.getItem("allGamesToken"); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+  function shareAll(t) { if (typeof t === "string" && t.startsWith("all:")) { try { localStorage.setItem("allGamesToken", JSON.stringify(t)); } catch (e) { /* ignore */ } } }
+  function getToken() { return store.get("unlockToken", null) || sharedAll(); }
   function isUnlocked() { const t = getToken(); return !!t && (t !== "dev" || LOCAL); }
 
   async function api(path, opts) {
@@ -335,7 +348,7 @@
     cleanUrl();
     try {
       const { token } = await api("/api/unlock?session_id=" + encodeURIComponent(sid));
-      store.set("unlockToken", token);
+      store.set("unlockToken", token); shareAll(token);
       unlockedNow("You're a supporter. Thank you!");
     } catch (e) {
       toast("Couldn't confirm the payment yet. Try “Restore purchase”.");
@@ -347,7 +360,7 @@
     if (!t || t === "dev" || !ONLINE) return;
     try {
       const r = await api("/api/unlock?token=" + encodeURIComponent(t));
-      if (r.valid === false) { store.set("unlockToken", null); renderMenu(); }
+      if (r.valid === false) { store.set("unlockToken", null); try { localStorage.removeItem("allGamesToken"); } catch (e) { /* ignore */ } renderMenu(); }
     } catch (e) { /* network/API missing: keep the unlock */ }
   }
 
@@ -376,7 +389,7 @@
       const { token } = await api("/api/restore", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email }),
       });
-      store.set("unlockToken", token);
+      store.set("unlockToken", token); shareAll(token);
       $("#dlg-paywall").close();
       unlockedNow("Purchase restored");
     } catch (err) {
@@ -1590,6 +1603,7 @@
   }
 
   function init() {
+    mergeExtras();
     tidyPrompts();
     $$("[data-name]").forEach((el) => { el.textContent = CONFIG.name; });
     if (Spr) Spr.hydrate();
@@ -1618,7 +1632,7 @@
       if (LOCAL) { store.set("unlockToken", "dev"); setTimeout(() => toast("Owner unlock active on this computer"), 300); }
       else {
         api("/api/unlock?owner=" + encodeURIComponent(ownerCode))
-          .then(({ token }) => { store.set("unlockToken", token); unlockedNow("Owner unlock active. Unlimited runs are yours!"); })
+          .then(({ token }) => { store.set("unlockToken", token); shareAll(token); unlockedNow("Owner unlock active. Unlimited runs are yours!"); })
           .catch(() => toast("That owner code didn't work."));
       }
     }

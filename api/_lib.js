@@ -3,7 +3,7 @@ const crypto = require("crypto");
 
 // Values pasted into the Vercel dashboard or piped from a shell can carry an invisible byte-order mark
 // or stray whitespace, which breaks the Stripe Authorization header. Clean them once, before any use.
-for (const k of ["STRIPE_SECRET_KEY", "STRIPE_PRICE_ID", "UNLOCK_SECRET", "SITE_URL", "TRI_PAYMENT_LINK_ID", "DRI_PAYMENT_LINK_ID", "MOG_PAYMENT_LINK_ID", "OWNER_CODE"]) {
+for (const k of ["STRIPE_SECRET_KEY", "STRIPE_PRICE_ID", "UNLOCK_SECRET", "SITE_URL", "TRI_PAYMENT_LINK_ID", "DRI_PAYMENT_LINK_ID", "MOG_PAYMENT_LINK_ID", "GIFT_PAYMENT_LINK_ID", "ALL_PAYMENT_LINK_ID", "OWNER_CODE"]) {
   if (typeof process.env[k] === "string") process.env[k] = process.env[k].replace(/^﻿+/, "").trim();
 }
 
@@ -57,8 +57,8 @@ function gameOf(req) {
   const g = (req.query && req.query.game) || (req.body && req.body.game);
   return g === "mogillion" || g === "trillion" || g === "drillion" ? g : "merrillion";
 }
-function scopeId(game, id) { return game === "mogillion" ? "mog:" + id : game === "trillion" ? "tri:" + id : game === "drillion" ? "dri:" + id : String(id); }
-function tokenGame(token) { const t = String(token); return t.startsWith("mog:") ? "mogillion" : t.startsWith("tri:") ? "trillion" : t.startsWith("dri:") ? "drillion" : "merrillion"; }
+function scopeId(game, id) { return game === "all" ? "all:" + id : game === "mogillion" ? "mog:" + id : game === "trillion" ? "tri:" + id : game === "drillion" ? "dri:" + id : String(id); }
+function tokenGame(token) { const t = String(token); return t.startsWith("all:") ? "all" : t.startsWith("mog:") ? "mogillion" : t.startsWith("tri:") ? "trillion" : t.startsWith("dri:") ? "drillion" : "merrillion"; }
 function sessionGame(s) {
   const mog = process.env.MOG_PAYMENT_LINK_ID, tri = process.env.TRI_PAYMENT_LINK_ID, dri = process.env.DRI_PAYMENT_LINK_ID;
   if (mog && s && s.payment_link === mog) return "mogillion";
@@ -70,3 +70,33 @@ module.exports.gameOf = gameOf;
 module.exports.scopeId = scopeId;
 module.exports.tokenGame = tokenGame;
 module.exports.sessionGame = sessionGame;
+
+// Gift and All Games Pass links. Ids come from GIFT_PAYMENT_LINK_ID / ALL_PAYMENT_LINK_ID when set;
+// otherwise they are resolved once by matching the public payment link URLs, then cached in module scope.
+const GIFT_URL = "https://buy.stripe.com/14A28t3Hx0Z4bGL7Hlg7e05";
+const ALL_URL = "https://buy.stripe.com/fZuaEZ3HxbDIaCH1iXg7e06";
+let linkIds = null;
+async function resolveLinks() {
+  if (linkIds) return linkIds;
+  let gift = process.env.GIFT_PAYMENT_LINK_ID || "", all = process.env.ALL_PAYMENT_LINK_ID || "";
+  if (!gift || !all) {
+    const list = await stripe("payment_links?limit=100");
+    for (const l of list.data || []) {
+      if (!gift && l.url === GIFT_URL) gift = l.id;
+      if (!all && l.url === ALL_URL) all = l.id;
+    }
+  }
+  if (gift && all) linkIds = { gift, all };   // only cache a complete answer
+  return { gift, all };
+}
+// "gift" | "all" | "" for a checkout session
+async function sessionKind(s) {
+  const { gift, all } = await resolveLinks();
+  if (s && s.payment_link) {
+    if (gift && s.payment_link === gift) return "gift";
+    if (all && s.payment_link === all) return "all";
+  }
+  return "";
+}
+module.exports.resolveLinks = resolveLinks;
+module.exports.sessionKind = sessionKind;
