@@ -1281,3 +1281,6 @@ body:has(#menu:not([hidden])) .live-line { color: #ffe9c0; }
   #answer-form { padding-top: 6px; padding-bottom: 6px; }
 }
 @media (max-width: 400px) { #menu .hero-sub { display: none; } #menu .hero-title { font-size: 24px; } }
+
+/* sky band for the Santa sleigh */
+#menu .hero-text { padding-top: 96px !important; }
